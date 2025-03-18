@@ -1,0 +1,224 @@
+/* styles.css - Main stylesheet for Vandals On Mars - 2025-03-18 */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: #ff5722;
+    text-shadow: 0 0 10px rgba(255, 87, 34, 0.7);
+}
+
+.loading-bar-container {
+    width: 300px;
+    height: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 auto 1rem;
+}
+
+#loading-bar {
+    height: 100%;
+    width: 0;
+    background-color: #ff5722;
+    transition: width 0.3s ease;
+}
+
+#loading-text {
+    font-size: 1rem;
+    color: #ccc;
+}
+
+/* Start Screen */
+#start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #300, #000);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 90;
+    display: none;
+}
+
+.start-content {
+    text-align: center;
+    padding: 2rem;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    max-width: 500px;
+}
+
+.start-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #ff5722;
+    text-shadow: 0 0 10px rgba(255, 87, 34, 0.7);
+}
+
+.start-content p {
+    margin-bottom: 2rem;
+    color: #ccc;
+    font-size: 1.2rem;
+}
+
+#start-button {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#start-button:hover {
+    background-color: #e64a19;
+}
+
+.controls-info {
+    margin-top: 2rem;
+    font-size: 0.9rem !important;
+    color: #aaa !important;
+}
+
+/* Game UI */
+#game-ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#ammo-display, #billboard-count {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    z-index: 20;
+    display: none; /* Only show on mobile devices */
+}
+
+#left-joystick, #right-joystick {
+    position: absolute;
+    bottom: 50px;
+    width: 120px;
+    height: 120px;
+}
+
+#left-joystick {
+    left: 50px;
+}
+
+#right-joystick {
+    right: 50px;
+}
+
+/* Show mobile controls on touch devices */
+@media (pointer: coarse) {
+    #mobile-controls {
+        display: block;
+    }
+}
+
+/* Add a crosshair cursor in the center of the screen for FPS mode */
+.crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.7;
+}
+
+/* Horizontal line of the crosshair */
+.crosshair::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: white;
+    transform: translateY(-50%);
+}
+
+/* Vertical line of the crosshair */
+.crosshair::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: white;
+    transform: translateX(-50%);
+}
+
+/* Cursor behavior for the whole document when in FPS mode */
+body.fps-active {
+    cursor: none !important;
+}
+
+/* Make sure all elements inherit the cursor behavior */
+body.fps-active * {
+    cursor: none !important;
+} 

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- Grayscale base for bump mapping -->
+  <rect width="1024" height="512" fill="#666666"/>
+  
+  <!-- Noise filter for texture -->
+  <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" seed="5"/>
+    <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.3 0"/>
+    <feComposite in="SourceGraphic" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+  </filter>
+  
+  <!-- Apply noise texture -->
+  <rect width="1024" height="512" fill="#999999" filter="url(#noise)"/>
+  
+  <!-- Major features (mountains, valleys) -->
+  <!-- Olympus Mons (largest volcano) -->
+  <radialGradient id="olympusMons" cx="30%" cy="40%" r="15%" fx="30%" fy="40%">
+    <stop offset="0%" stop-color="#ffffff" />
+    <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+  </radialGradient>
+  <circle cx="307" cy="205" r="100" fill="url(#olympusMons)" />
+  
+  <!-- Valles Marineris (canyon system) -->
+  <linearGradient id="vallesMarineris" x1="40%" y1="50%" x2="80%" y2="50%">
+    <stop offset="0%" stop-color="#777777" />
+    <stop offset="50%" stop-color="#333333" />
+    <stop offset="100%" stop-color="#777777" />
+  </linearGradient>
+  <rect x="410" y="245" width="400" height="20" fill="url(#vallesMarineris)" />
+  
+  <!-- Craters with raised rims and depressions -->
+  <!-- Crater pattern with each crater having a highlight and shadow -->
+  <g opacity="0.8">
+    <!-- Large craters -->
+    <g>
+      <!-- Hellas Basin (large impact crater) -->
+      <radialGradient id="hellasCrater" cx="75%" cy="65%" r="10%" fx="75%" fy="65%">
+        <stop offset="0%" stop-color="#333333" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#ffffff" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="768" cy="333" r="80" fill="url(#hellasCrater)" />
+      
+      <!-- Argyre Basin -->
+      <radialGradient id="argyreCrater" cx="25%" cy="70%" r="8%" fx="25%" fy="70%">
+        <stop offset="0%" stop-color="#333333" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#ffffff" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="256" cy="358" r="60" fill="url(#argyreCrater)" />
+    </g>
+    
+    <!-- Medium craters -->
+    <g>
+      <radialGradient id="crater1" cx="55%" cy="25%" r="5%" fx="55%" fy="25%">
+        <stop offset="0%" stop-color="#444444" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#cccccc" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="563" cy="128" r="40" fill="url(#crater1)" />
+      
+      <radialGradient id="crater2" cx="85%" cy="35%" r="4%" fx="85%" fy="35%">
+        <stop offset="0%" stop-color="#444444" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#cccccc" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="870" cy="179" r="30" fill="url(#crater2)" />
+      
+      <radialGradient id="crater3" cx="15%" cy="45%" r="4.5%" fx="15%" fy="45%">
+        <stop offset="0%" stop-color="#444444" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#cccccc" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="154" cy="230" r="35" fill="url(#crater3)" />
+    </g>
+    
+    <!-- Small craters -->
+    <g>
+      <radialGradient id="smallCrater1" cx="40%" cy="15%" r="2%" fx="40%" fy="15%">
+        <stop offset="0%" stop-color="#555555" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#bbbbbb" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="410" cy="77" r="15" fill="url(#smallCrater1)" />
+      
+      <radialGradient id="smallCrater2" cx="65%" cy="80%" r="2.5%" fx="65%" fy="80%">
+        <stop offset="0%" stop-color="#555555" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#bbbbbb" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="666" cy="410" r="20" fill="url(#smallCrater2)" />
+      
+      <radialGradient id="smallCrater3" cx="90%" cy="55%" r="1.5%" fx="90%" fy="55%">
+        <stop offset="0%" stop-color="#555555" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#bbbbbb" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="922" cy="282" r="12" fill="url(#smallCrater3)" />
+      
+      <radialGradient id="smallCrater4" cx="10%" cy="85%" r="2%" fx="10%" fy="85%">
+        <stop offset="0%" stop-color="#555555" />
+        <stop offset="80%" stop-color="#666666" />
+        <stop offset="95%" stop-color="#bbbbbb" />
+        <stop offset="100%" stop-color="#999999" stop-opacity="0" />
+      </radialGradient>
+      <circle cx="102" cy="435" r="18" fill="url(#smallCrater4)" />
+    </g>
+  </g>
+  
+  <!-- Polar caps (slight elevation change) -->
+  <ellipse cx="512" cy="50" rx="200" ry="40" fill="#dddddd" opacity="0.8"/>
+  <ellipse cx="512" cy="462" rx="180" ry="35" fill="#dddddd" opacity="0.7"/>
+  
+  <!-- Additional subtle texture -->
+  <filter id="subtleTexture">
+    <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" seed="10"/>
+    <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.1 0"/>
+    <feComposite in="SourceGraphic" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+  </filter>
+  
+  <rect width="1024" height="512" fill="none" filter="url(#subtleTexture)"/>
+</svg> 

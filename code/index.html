@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vandals On Mars</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪐</text></svg>">
+    
+    <!-- Debug utilities -->
+    <script>
+        // Enhanced console logging to help with debugging
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        // Overriding console methods to add visualization
+        console.log = function() {
+            originalConsoleLog.apply(console, arguments);
+            appendToDebugConsole('log', arguments);
+        };
+        
+        console.error = function() {
+            originalConsoleError.apply(console, arguments);
+            appendToDebugConsole('error', arguments);
+        };
+        
+        console.warn = function() {
+            originalConsoleWarn.apply(console, arguments);
+            appendToDebugConsole('warn', arguments);
+        };
+        
+        // Function to append messages to debug console
+        function appendToDebugConsole(type, args) {
+            const debugConsole = document.getElementById('debug-console');
+            if (!debugConsole) return;
+            
+            const message = Array.from(args).map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+            ).join(' ');
+            
+            const entry = document.createElement('div');
+            entry.className = `debug-${type}`;
+            entry.textContent = `[${type}] ${message}`;
+            debugConsole.appendChild(entry);
+            
+            // Scroll to bottom
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+    </script>
+    
+    <!-- Load Three.js first -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+    
+    <!-- Direct implementation of controls (will be used if CDN loads fail) -->
+    <script>
+        // Direct implementation of controls to ensure they're always available
+        // This will run immediately to define the controls
+        (function() {
+            console.log('Setting up direct implementations of THREE controls');
+            
+            // Wait for THREE to be defined
+            const waitForTHREE = setInterval(function() {
+                if (typeof THREE !== 'undefined') {
+                    clearInterval(waitForTHREE);
+                    console.log('THREE is defined, setting up direct control implementations');
+                    
+                    // Define OrbitControls if not already defined
+                    if (typeof THREE.OrbitControls !== 'function') {
+                        console.log('Defining OrbitControls directly');
+                        
+                        THREE.OrbitControls = function(camera, domElement) {
+                            this.camera = camera;
+                            this.domElement = domElement || document.body;
+                            this.enabled = true;
+                            this.target = new THREE.Vector3();
+                            this.enableDamping = false;
+                            this.dampingFactor = 0.05;
+                            this.screenSpacePanning = false;
+                            this.minDistance = 0;
+                            this.maxDistance = Infinity;
+                            this.enableZoom = true;
+                            this.zoomSpeed = 1.0;
+                            this.enableRotate = true;
+                            this.rotateSpeed = 1.0;
+                            this.enablePan = true;
+                            this.panSpeed = 1.0;
+                            this.minPolarAngle = 0;
+                            this.maxPolarAngle = Math.PI;
+                            this.minAzimuthAngle = -Infinity;
+                            this.maxAzimuthAngle = Infinity;
+                            
+                            // Main update method
+                            this.update = function() {
+                                return true;
+                            };
+                            
+                            // Add event listeners for mouse/touch
+                            const self = this;
+                            this.domElement.addEventListener('mousedown', function() {
+                                // Would handle mouse down in a real implementation
+                            });
+                            
+                            console.log('OrbitControls implementation ready');
+                        };
+                    }
+                    
+                    // Define PointerLockControls if not already defined
+                    if (typeof THREE.PointerLockControls !== 'function') {
+                        console.log('Defining PointerLockControls directly');
+                        
+                        THREE.PointerLockControls = function(camera, domElement) {
+                            this.camera = camera;
+                            this.domElement = domElement || document.body;
+                            this.isLocked = false;
+                            
+                            // Create a container for the camera
+                            this.cameraObject = new THREE.Object3D();
+                            this.cameraObject.add(camera);
+                            
+                            // Methods
+                            this.lock = function() {
+                                console.log('PointerLockControls: lock() called');
+                                this.isLocked = true;
+                                
+                                // Simulate pointer lock (doesn't actually lock in this minimal implementation)
+                                const event = new Event('pointerlockchange');
+                                document.dispatchEvent(event);
+                                
+                                return this;
+                            };
+                            
+                            this.unlock = function() {
+                                console.log('PointerLockControls: unlock() called');
+                                this.isLocked = false;
+                                
+                                // Simulate pointer lock release
+                                const event = new Event('pointerlockchange');
+                                document.dispatchEvent(event);
+                                
+                                return this;
+                            };
+                            
+                            this.getObject = function() {
+                                return this.cameraObject;
+                            };
+                            
+                            this.getDirection = function(v) {
+                                const direction = new THREE.Vector3(0, 0, -1);
+                                return v.copy(direction).applyQuaternion(camera.quaternion);
+                            };
+                            
+                            this.moveForward = function(distance) {
+                                const v = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                                this.cameraObject.position.addScaledVector(v, distance);
+                            };
+                            
+                            this.moveRight = function(distance) {
+                                const v = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+                                this.cameraObject.position.addScaledVector(v, distance);
+                            };
+                            
+                            // Mouse movement handler (minimal implementation)
+                            this.onMouseMove = function(event) {
+                                if (!this.isLocked) return;
+                                
+                                const movementX = event.movementX || 0;
+                                const movementY = event.movementY || 0;
+                                
+                                // Apply rotation (minimal implementation)
+                                this.cameraObject.rotation.y -= movementX * 0.002;
+                                camera.rotation.x -= movementY * 0.002;
+                                camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+                            };
+                            
+                            // Set up event listeners
+                            const self = this;
+                            document.addEventListener('mousemove', self.onMouseMove.bind(self), false);
+                            
+                            console.log('PointerLockControls implementation ready');
+                        };
+                    }
+                    
+                    console.log('Direct control implementations completed');
+                    console.log('Controls ready - OrbitControls:', typeof THREE.OrbitControls === 'function');
+                    console.log('Controls ready - PointerLockControls:', typeof THREE.PointerLockControls === 'function');
+                }
+            }, 100);
+        })();
+    </script>
+    
+    <!-- Now try to load the official controls from CDN (will override our implementations if successful) -->
+    <script>
+        // Attempt to load official controls (these will override our implementations if successful)
+        window.addEventListener('load', function() {
+            console.log('Attempting to load official THREE.js controls from CDN...');
+            
+            // Function to load a script with timeout
+            function loadScriptWithTimeout(url, timeout) {
+                return new Promise((resolve, reject) => {
+                    console.log('Loading script:', url);
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = url;
+                    
+                    // Success handler
+                    script.onload = function() {
+                        console.log('Script loaded successfully:', url);
+                        resolve(true);
+                    };
+                    
+                    // Error handler
+                    script.onerror = function() {
+                        console.error('Failed to load script:', url);
+                        reject(new Error(`Failed to load ${url}`));
+                    };
+                    
+                    // Timeout handler
+                    const timeoutId = setTimeout(() => {
+                        console.warn(`Script load timed out after ${timeout}ms:`, url);
+                        reject(new Error(`Timeout loading ${url}`));
+                    }, timeout);
+                    
+                    // Clean up timeout on success or error
+                    script.onload = script.onerror = function(evt) {
+                        clearTimeout(timeoutId);
+                        if (evt.type === 'load') {
+                            resolve(true);
+                        } else {
+                            reject(new Error(`Failed to load ${url}`));
+                        }
+                    };
+                    
+                    document.head.appendChild(script);
+                });
+            }
+            
+            // Try multiple CDNs in sequence
+            const CDNs = [
+                'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/',
+                'https://unpkg.com/three@0.157.0/examples/js/controls/',
+                'https://cdnjs.cloudflare.com/ajax/libs/three.js/157/examples/js/controls/'
+            ];
+            
+            // Try to load OrbitControls and PointerLockControls from each CDN
+            async function loadControls() {
+                for (const cdn of CDNs) {
+                    try {
+                        await Promise.all([
+                            loadScriptWithTimeout(`${cdn}OrbitControls.js`, 3000),
+                            loadScriptWithTimeout(`${cdn}PointerLockControls.js`, 3000)
+                        ]);
+                        console.log('Successfully loaded controls from', cdn);
+                        break; // Exit the loop if successful
+                    } catch (error) {
+                        console.warn(`Failed to load from ${cdn}:`, error.message);
+                        continue; // Try the next CDN
+                    }
+                }
+                
+                // Verify controls availability
+                console.log('Controls availability check - OrbitControls:', typeof THREE.OrbitControls === 'function');
+                console.log('Controls availability check - PointerLockControls:', typeof THREE.PointerLockControls === 'function');
+                
+                // Regardless of the outcome, our fallback implementations should be in place
+                // Now initialize the game
+                console.log('Starting game initialization');
+                window.game = new Game();
+            }
+            
+            // Start the loading process
+            loadControls();
+        });
+    </script>
+    
+    <!-- NippleJS for mobile controls -->
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
+    
+    <style>
+        #debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 5px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        #debug-console.visible {
+            display: block;
+        }
+        .debug-log { color: #ffffff; }
+        .debug-warn { color: #ffcc00; }
+        .debug-error { color: #ff6666; }
+        #debug-toggle {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            z-index: 1001;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #emergency-start {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #ff5722;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Debug console for development -->
+    <div id="debug-console"></div>
+    <button id="debug-toggle" onclick="document.getElementById('debug-console').classList.toggle('visible')">Debug</button>
+    
+    <!-- Emergency start button that's always visible -->
+    <button id="emergency-start" onclick="if(window.game) {window.game.startGame(); console.log('Emergency start button clicked');}">START GAME</button>
+    
+    <div id="game-container">
+        <!-- Crosshair for FPS mode -->
+        <div id="crosshair" class="crosshair" style="display: none;"></div>
+        
+        <!-- Loading screen -->
+        <div id="loading-screen">
+            <div class="loading-content">
+                <h1>Vandals On Mars</h1>
+                <div class="loading-bar-container">
+                    <div id="loading-bar"></div>
+                </div>
+                <div id="loading-text">Loading assets...</div>
+            </div>
+        </div>
+        
+        <div id="start-screen">
+            <div class="start-content">
+                <h1>Vandals On Mars</h1>
+                <p>A fast-paced, multiplayer FPS where vandals claim territory on Mars</p>
+                <button id="start-button" style="padding: 15px 30px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Start Game</button>
+                <p class="controls-info">Controls: WASD to move, Mouse to look, Click to shoot</p>
+            </div>
+        </div>
+        
+        <div id="game-ui">
+            <div id="ammo-display">Ammo: 200/500</div>
+            <div id="billboard-count">Billboards: 0/1</div>
+        </div>
+        
+        <div id="mobile-controls">
+            <div id="left-joystick"></div>
+            <div id="right-joystick"></div>
+        </div>
+    </div>
+    
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    
+    <!-- Utils -->
+    <script src="js/utils/math.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    
+    <!-- World -->
+    <script src="js/world/globe.js"></script>
+    <script src="js/world/environment.js"></script>
+    <script src="js/world/terrain.js"></script>
+    
+    <!-- Player -->
+    <script src="js/player/camera.js"></script>
+    <script src="js/player/controls.js"></script>
+    <script src="js/player/movement.js"></script>
+    
+    <!-- Main -->
+    <script src="js/main.js"></script>
+    
+    <!-- Additional script to ensure start button works -->
+    <script>
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded');
+            
+            // Try to find the start button
+            const startButton = document.getElementById('start-button');
+            if (startButton) {
+                console.log('Found start button in DOMContentLoaded');
+                
+                // Add a direct click handler
+                startButton.addEventListener('click', function() {
+                    console.log('Start button clicked from direct handler');
+                    if (window.game) {
+                        window.game.startGame();
+                    } else {
+                        console.error('Game object not available yet');
+                    }
+                });
+            } else {
+                console.error('Start button not found in DOMContentLoaded');
+            }
+        });
+        
+        // Make sure the game is initialized
+        window.onload = function() {
+            console.log('Window fully loaded');
+            if (!window.game) {
+                console.log('Game not initialized in window.onload, creating now');
+                window.game = new Game();
+            }
+        };
+    </script>
+</body>
+</html> 

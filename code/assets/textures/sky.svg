@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- Deep space background with gradient -->
+  <linearGradient id="spaceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#0a0e21" />
+    <stop offset="50%" stop-color="#141938" />
+    <stop offset="100%" stop-color="#0f1528" />
+  </linearGradient>
+  <rect width="1024" height="512" fill="url(#spaceGradient)" />
+  
+  <!-- Nebula effects -->
+  <radialGradient id="nebula1" cx="20%" cy="30%" r="40%" fx="20%" fy="30%">
+    <stop offset="0%" stop-color="rgba(102, 51, 153, 0.2)" />
+    <stop offset="100%" stop-color="rgba(102, 51, 153, 0)" />
+  </radialGradient>
+  <rect width="1024" height="512" fill="url(#nebula1)" />
+  
+  <radialGradient id="nebula2" cx="70%" cy="60%" r="50%" fx="70%" fy="60%">
+    <stop offset="0%" stop-color="rgba(65, 105, 225, 0.15)" />
+    <stop offset="100%" stop-color="rgba(65, 105, 225, 0)" />
+  </radialGradient>
+  <rect width="1024" height="512" fill="url(#nebula2)" />
+  
+  <!-- Stars - many small dots -->
+  <!-- Large bright stars -->
+  <g fill="#ffffff">
+    <!-- Bright stars with random positions -->
+    <circle cx="120" cy="60" r="1.5" />
+    <circle cx="350" cy="120" r="1.2" />
+    <circle cx="580" cy="30" r="1.3" />
+    <circle cx="750" cy="220" r="1.4" />
+    <circle cx="900" cy="90" r="1.6" />
+    <circle cx="200" cy="180" r="1.7" />
+    <circle cx="450" cy="240" r="1.3" />
+    <circle cx="650" cy="300" r="1.5" />
+    <circle cx="800" cy="400" r="1.2" />
+    <circle cx="100" cy="350" r="1.4" />
+    <circle cx="300" cy="430" r="1.3" />
+    <circle cx="550" cy="470" r="1.5" />
+    <circle cx="950" cy="320" r="1.6" />
+    
+    <!-- Medium stars with different opacities -->
+    <g opacity="0.8">
+      <circle cx="50" cy="100" r="0.8" />
+      <circle cx="220" cy="240" r="0.7" />
+      <circle cx="330" cy="50" r="0.9" />
+      <circle cx="480" cy="170" r="0.7" />
+      <circle cx="620" cy="200" r="0.8" />
+      <circle cx="780" cy="120" r="0.9" />
+      <circle cx="880" cy="250" r="0.7" />
+      <circle cx="150" cy="280" r="0.8" />
+      <circle cx="400" cy="320" r="0.9" />
+      <circle cx="520" cy="390" r="0.7" />
+      <circle cx="670" cy="420" r="0.8" />
+      <circle cx="830" cy="350" r="0.9" />
+      <circle cx="950" cy="450" r="0.7" />
+    </g>
+    
+    <!-- Small distant stars -->
+    <g opacity="0.6">
+      <!-- Adding many small stars as a pattern -->
+      <circle cx="80" cy="40" r="0.4" />
+      <circle cx="150" cy="90" r="0.3" />
+      <circle cx="210" cy="30" r="0.5" />
+      <circle cx="270" cy="150" r="0.3" />
+      <circle cx="340" cy="200" r="0.4" />
+      <circle cx="410" cy="70" r="0.5" />
+      <circle cx="470" cy="220" r="0.3" />
+      <circle cx="540" cy="120" r="0.4" />
+      <circle cx="600" cy="60" r="0.5" />
+      <circle cx="660" cy="190" r="0.3" />
+      <circle cx="730" cy="250" r="0.4" />
+      <circle cx="790" cy="90" r="0.5" />
+      <circle cx="850" cy="180" r="0.3" />
+      <circle cx="920" cy="40" r="0.4" />
+      <circle cx="980" cy="140" r="0.5" />
+      <circle cx="70" cy="280" r="0.4" />
+      <circle cx="140" cy="340" r="0.3" />
+      <circle cx="200" cy="260" r="0.5" />
+      <circle cx="260" cy="380" r="0.3" />
+      <circle cx="330" cy="440" r="0.4" />
+      <circle cx="400" cy="290" r="0.5" />
+      <circle cx="460" cy="410" r="0.3" />
+      <circle cx="530" cy="350" r="0.4" />
+      <circle cx="590" cy="270" r="0.5" />
+      <circle cx="650" cy="430" r="0.3" />
+      <circle cx="720" cy="490" r="0.4" />
+      <circle cx="780" cy="310" r="0.5" />
+      <circle cx="840" cy="460" r="0.3" />
+      <circle cx="910" cy="380" r="0.4" />
+      <circle cx="970" cy="300" r="0.5" />
+    </g>
+  </g>
+  
+  <!-- Large bright star clusters -->
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="1.5" result="blur" />
+    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+  </filter>
+  
+  <g filter="url(#glow)">
+    <circle cx="300" cy="100" r="2" fill="#ffffff" opacity="0.9" />
+    <circle cx="700" cy="250" r="2.2" fill="#ffffff" opacity="0.8" />
+    <circle cx="200" cy="400" r="2.1" fill="#ffffff" opacity="0.9" />
+    <circle cx="850" cy="150" r="2.3" fill="#ffffff" opacity="0.8" />
+    <circle cx="500" cy="340" r="2" fill="#ffffff" opacity="0.9" />
+  </g>
+  
+  <!-- Subtle color tinting for stars -->
+  <g opacity="0.5">
+    <circle cx="250" cy="80" r="1.2" fill="#9fe1ff" />
+    <circle cx="400" cy="200" r="1" fill="#ffedb3" />
+    <circle cx="600" cy="150" r="1.1" fill="#ffb3b3" />
+    <circle cx="750" cy="300" r="0.9" fill="#b3c9ff" />
+    <circle cx="100" cy="250" r="1" fill="#ffd1b3" />
+  </g>
+</svg> 

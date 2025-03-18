@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- Mars base color -->
+  <rect width="1024" height="512" fill="#c1440e"/>
+  
+  <!-- Add some texture and variation -->
+  <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" seed="5"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter>
+  
+  <!-- Darker gradient for atmosphere effect -->
+  <radialGradient id="atmosphere" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+    <stop offset="80%" stop-color="rgba(193, 68, 14, 0)" />
+    <stop offset="100%" stop-color="rgba(99, 35, 7, 0.5)" />
+  </radialGradient>
+  
+  <!-- Lighter areas -->
+  <radialGradient id="highlightGradient" cx="30%" cy="40%" r="40%" fx="30%" fy="40%">
+    <stop offset="0%" stop-color="#e86c3a" />
+    <stop offset="100%" stop-color="rgba(193, 68, 14, 0)" />
+  </radialGradient>
+  
+  <!-- Overlay with noise effect -->
+  <rect width="1024" height="512" fill="url(#highlightGradient)" filter="url(#noise)"/>
+  
+  <!-- Surface features (craters, canyons) -->
+  <g opacity="0.2">
+    <!-- Major craters -->
+    <circle cx="300" cy="200" r="30" fill="#8c3104"/>
+    <circle cx="700" cy="300" r="45" fill="#8c3104"/>
+    <circle cx="500" cy="150" r="25" fill="#8c3104"/>
+    <circle cx="200" cy="350" r="35" fill="#8c3104"/>
+    <circle cx="800" cy="200" r="20" fill="#8c3104"/>
+    
+    <!-- Minor craters -->
+    <circle cx="350" cy="400" r="15" fill="#8c3104"/>
+    <circle cx="650" cy="100" r="10" fill="#8c3104"/>
+    <circle cx="450" cy="250" r="12" fill="#8c3104"/>
+    <circle cx="750" cy="350" r="18" fill="#8c3104"/>
+    <circle cx="250" cy="150" r="8" fill="#8c3104"/>
+  </g>
+  
+  <!-- Polar cap (north) -->
+  <ellipse cx="512" cy="50" rx="200" ry="40" fill="#e9e9e9" opacity="0.7"/>
+  
+  <!-- Polar cap (south) -->
+  <ellipse cx="512" cy="462" rx="180" ry="35" fill="#e9e9e9" opacity="0.6"/>
+  
+  <!-- Atmospheric haze -->
+  <rect width="1024" height="512" fill="url(#atmosphere)"/>
+</svg> 
