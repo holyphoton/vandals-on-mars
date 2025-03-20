@@ -18,6 +18,7 @@ class PlayerControls {
         this.moveLeft = false;
         this.moveRight = false;
         this.sprint = false;
+        this.jump = false;
         
         // Touch controls
         this.joysticks = null;
@@ -226,6 +227,7 @@ class PlayerControls {
         this.moveLeft = this.isKeyPressed(this.keyBindings.left);
         this.moveRight = this.isKeyPressed(this.keyBindings.right);
         this.sprint = this.isKeyPressed(this.keyBindings.sprint);
+        this.jump = this.isKeyPressed(this.keyBindings.jump);
     }
 
     /**

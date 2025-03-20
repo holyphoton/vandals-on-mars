@@ -268,6 +268,24 @@ class MarsGlobe {
         const cart = MathUtils.sphericalToCartesian(radius, theta, phi);
         return new THREE.Vector3(cart.x, cart.y, cart.z).add(this.globe.position);
     }
+
+    /**
+     * Get the globe material
+     * @returns {THREE.Material} - The globe's material
+     */
+    getMaterial() {
+        // Return the main globe material for other objects to reference
+        if (this.globe && this.globe.material) {
+            return this.globe.material;
+        }
+        
+        // Fallback material if globe isn't created yet
+        return new THREE.MeshStandardMaterial({
+            color: CONSTANTS.MARS_COLOR,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+    }
 }
 
 // Export as a module if in a module context

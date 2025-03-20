@@ -221,4 +221,45 @@ body.fps-active {
 /* Make sure all elements inherit the cursor behavior */
 body.fps-active * {
     cursor: none !important;
+}
+
+/* Add these rules to handle cursor styling */
+/* Default cursor style */
+body {
+    cursor: default;
+}
+
+/* When in FPS mode, hide the cursor */
+body.fps-active {
+    cursor: none !important;
+}
+
+/* Ensure crosshair is only visible in FPS mode */
+#crosshair {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    z-index: 100;
+    pointer-events: none; /* Make sure it doesn't interfere with clicks */
+}
+
+/* Only show crosshair when in FPS mode */
+body.fps-active #crosshair {
+    display: block;
+}
+
+/* Hide crosshair when game is paused */
+body.game-paused #crosshair {
+    display: none !important;
+}
+
+/* Game paused mode - show normal cursor */
+body.game-paused {
+    cursor: default !important;
 } 

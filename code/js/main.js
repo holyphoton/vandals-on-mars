@@ -11,6 +11,8 @@ class Game {
         // Game state
         this.isInitialized = false;
         this.isPaused = false;
+        this.isAnimating = false;
+        this.gameStarted = false;
         this.isDebug = CONSTANTS.DEBUG_MODE;
         
         // Three.js objects
@@ -141,11 +143,27 @@ class Game {
         
         // Create terrain
         this.terrain = new Terrain(this.globe, this.scene);
-        this.terrain.generateAll();
+        
+        // Configure terrain - increased rock count and more detailed craters
+        this.terrain.generateAll({
+            craterCount: 70, // More craters
+            rockCount: 250, // More rocks
+            craterOptions: {
+                minSize: 1.5,
+                maxSize: 7,
+                depth: 0.5, // Deeper craters
+                distribution: 'clustered' // Clustered distribution for more realism
+            },
+            rockOptions: {
+                minSize: 0.6,
+                maxSize: 3.0, // Slightly larger rocks
+                distribution: 'clustered' // Clustered distribution for more realism
+            }
+        });
         
         this.updateLoadingProgress(0.7, 'World created');
         
-        // Create player camera
+        // Create player camera - with random spawn location
         this.playerCamera = new PlayerCamera(this.scene, this.globe);
         
         // Create player controls
@@ -158,7 +176,42 @@ class Game {
             this.playerControls
         );
         
+        // Set terrain reference in player movement for collision detection
+        this.playerMovement.setTerrain(this.terrain);
+        
+        // Check if the player's random spawn location is valid (not inside rocks/obstacles)
+        this.validatePlayerSpawnLocation();
+        
         this.updateLoadingProgress(0.9, 'Player ready');
+    }
+    
+    /**
+     * Validate player spawn location to ensure they don't spawn inside obstacles
+     */
+    validatePlayerSpawnLocation() {
+        if (!this.playerCamera || !this.terrain) return;
+        
+        // Get player's current position
+        const playerPos = this.playerCamera.camera.position.clone();
+        
+        // Check for collisions with the terrain
+        const collision = this.terrain.checkCollision(playerPos, 1.0); // 1.0 = safe distance
+        
+        if (collision) {
+            console.log('Player spawned inside an obstacle. Adjusting position...');
+            
+            // Move the player up slightly to avoid being inside the object
+            const sphericalCoords = this.playerCamera.spherical;
+            sphericalCoords.radius += 1.5; // Move 1.5 units up
+            
+            // Update camera position
+            this.playerCamera.updateCameraPositionAndOrientation();
+            
+            // Log the adjusted position
+            console.log('Player position adjusted to avoid obstacles');
+        } else {
+            console.log('Player spawn location is valid');
+        }
     }
 
     /**
@@ -213,11 +266,8 @@ class Game {
                 this.togglePause();
             }
             
-            // Also add 'S' key as an alternative way to start the game
-            if (event.key === 's' || event.key === 'S') {
-                console.log('S key pressed - starting game');
-                this.startGame();
-            }
+            // Remove the S key functionality for starting the game
+            // Only the Start Button should start the game
         });
         
         // Also listen for lockchange events from the camera
@@ -319,17 +369,23 @@ class Game {
     startGame() {
         console.log("Starting the game!");
         try {
+            // Set game started flag
+            this.gameStarted = true;
+            
+            // Hide the start screen immediately
+            this.hideStartScreen();
+            
+            // Show loading screen with progress indicator
+            this.showLoadingScreen();
+            this.updateLoadingProgress(0.05, 'Initializing game...');
+            
             // First ensure THREE.js is properly initialized
             this.verifyDomElements();
-            
-            // Hide the start screen
-            const startScreen = document.getElementById('start-screen');
-            if (startScreen) {
-                startScreen.style.display = 'none';
-            }
+            this.updateLoadingProgress(0.15, 'Checking critical components...');
             
             // Make sure the THREE.js canvas is visible
             this.ensureCanvasIsVisible();
+            this.updateLoadingProgress(0.30, 'Preparing render surface...');
             
             // Start the animation loop FIRST - this should show the 3D world
             this.isPaused = false;
@@ -338,6 +394,7 @@ class Game {
             if (!this.isAnimating) {
                 this.animate();
             }
+            this.updateLoadingProgress(0.50, 'Starting game engine...');
             
             // Enable game controls
             if (this.controls) {
@@ -345,50 +402,62 @@ class Game {
             } else {
                 console.warn("Controls not initialized properly");
             }
+            this.updateLoadingProgress(0.75, 'Configuring player controls...');
             
-            // Enter first-person mode AFTER world is visible
-            if (this.playerCamera) {
-                // Try to request pointer lock to enable FPS controls
-                this.playerCamera.requestPointerLock()
-                    .then(() => {
-                        console.log("Pointer lock acquired, entering first-person mode");
-                        // Show crosshair
-                        const crosshair = document.getElementById('crosshair');
-                        if (crosshair) crosshair.style.display = 'block';
-                        // Add FPS class to body to hide cursor
-                        document.body.classList.add('fps-active');
-                    })
-                    .catch(error => {
-                        console.warn("Pointer lock failed:", error);
-                        // Try manual controls as fallback
-                        if (this.playerCamera) {
-                            this.playerCamera.manualControlActive = true;
-                            
-                            // Show fallback control message
-                            const controlMsg = document.createElement('div');
-                            controlMsg.style.position = 'fixed';
-                            controlMsg.style.top = '50px';
-                            controlMsg.style.left = '50%';
-                            controlMsg.style.transform = 'translateX(-50%)';
-                            controlMsg.style.background = 'rgba(0, 0, 0, 0.7)';
-                            controlMsg.style.color = 'white';
-                            controlMsg.style.padding = '10px';
-                            controlMsg.style.borderRadius = '5px';
-                            controlMsg.style.zIndex = '1000';
-                            controlMsg.textContent = 'Using manual controls. Move mouse to look around.';
-                            document.body.appendChild(controlMsg);
-                            setTimeout(() => controlMsg.remove(), 5000);
-                            
-                            // Still show crosshair
-                            const crosshair = document.getElementById('crosshair');
-                            if (crosshair) crosshair.style.display = 'block';
-                            // Add FPS class to body to hide cursor
-                            document.body.classList.add('fps-active');
-                        }
-                    });
-            } else {
-                console.error("Player camera not initialized!");
-            }
+            // Add a short delay to show loading progress and create a smoother transition
+            setTimeout(() => {
+                this.updateLoadingProgress(0.90, 'Preparing first-person view...');
+                
+                // Hide loading screen only right before entering first-person mode
+                setTimeout(() => {
+                    this.hideLoadingScreen();
+                    
+                    // Enter first-person mode AFTER world is visible
+                    if (this.playerCamera) {
+                        // Try to request pointer lock to enable FPS controls
+                        this.playerCamera.requestPointerLock()
+                            .then(() => {
+                                console.log("Pointer lock acquired, entering first-person mode");
+                                // Show crosshair
+                                const crosshair = document.getElementById('crosshair');
+                                if (crosshair) crosshair.style.display = 'block';
+                                // Add FPS class to body to hide cursor
+                                document.body.classList.add('fps-active');
+                            })
+                            .catch(error => {
+                                console.warn("Pointer lock failed:", error);
+                                // Try manual controls as fallback
+                                if (this.playerCamera) {
+                                    this.playerCamera.manualControlActive = true;
+                                    
+                                    // Show fallback control message
+                                    const controlMsg = document.createElement('div');
+                                    controlMsg.style.position = 'fixed';
+                                    controlMsg.style.top = '50px';
+                                    controlMsg.style.left = '50%';
+                                    controlMsg.style.transform = 'translateX(-50%)';
+                                    controlMsg.style.background = 'rgba(0, 0, 0, 0.7)';
+                                    controlMsg.style.color = 'white';
+                                    controlMsg.style.padding = '10px';
+                                    controlMsg.style.borderRadius = '5px';
+                                    controlMsg.style.zIndex = '1000';
+                                    controlMsg.textContent = 'Using manual controls. Move mouse to look around.';
+                                    document.body.appendChild(controlMsg);
+                                    setTimeout(() => controlMsg.remove(), 5000);
+                                    
+                                    // Still show crosshair
+                                    const crosshair = document.getElementById('crosshair');
+                                    if (crosshair) crosshair.style.display = 'block';
+                                    // Add FPS class to body to hide cursor
+                                    document.body.classList.add('fps-active');
+                                }
+                            });
+                    } else {
+                        console.error("Player camera not initialized!");
+                    }
+                }, 500); // Short delay before transitioning to FPS mode
+                
+            }, 1500); // Show loading progress for at least 1.5 seconds
         } catch (error) {
             console.error("Error starting game:", error);
             // Show error on screen to help debugging
@@ -404,6 +473,9 @@ class Game {
             errorMsg.style.wordBreak = 'break-word';
             errorMsg.innerHTML = `<strong>Error starting game:</strong><br>${error.message || 'Unknown error'}<br>${error.stack || ''}`;
             document.body.appendChild(errorMsg);
+            
+            // Hide loading screen and show error
+            this.hideLoadingScreen();
         }
     }
     
@@ -561,7 +633,11 @@ class Game {
             if (this.isPaused) return;
             
             // Calculate delta time
-            const deltaTime = this.clock ? this.clock.getDelta() : 0.016; // fallback to 60fps
+            let deltaTime = this.clock ? this.clock.getDelta() : 0.016; // fallback to 60fps
+            
+            // Cap delta time to reasonable values (prevents huge jumps after tab switch or initial load)
+            // This is crucial for movement stability
+            deltaTime = Math.min(deltaTime, 0.1); // Cap at 100ms (10fps)
             
             // Make sure we have all required objects
             if (!this.renderer || !this.scene || !this.playerCamera) {

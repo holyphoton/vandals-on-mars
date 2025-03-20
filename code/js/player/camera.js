@@ -29,22 +29,52 @@ class PlayerCamera {
         this.isLocked = false;
         this.manualControlActive = false;
         
+        // Generate random spawn location instead of fixed position
+        const randomSpawnLocation = this.generateRandomSpawnLocation();
+        
         // Spherical coordinates for orientation
         this.spherical = {
             // Position in spherical coordinates
             radius: this.globe ? this.globe.radius + this.playerHeight : 20,
-            // Latitude angle (0 at equator, π/2 at north pole)
-            phi: Math.PI / 2,
-            // Longitude angle
-            theta: 0,
+            // Latitude angle (random instead of fixed at equator)
+            phi: randomSpawnLocation.phi,
+            // Longitude angle (random instead of fixed at 0)
+            theta: randomSpawnLocation.theta,
             // Heading angle (rotation around the local up axis)
-            heading: 0,
+            heading: randomSpawnLocation.heading,
             // Pitch angle (looking up/down)
             pitch: 0
         };
         
+        console.log('Player spawning at:', {
+            phi: (this.spherical.phi * 180 / Math.PI).toFixed(2) + '°',
+            theta: (this.spherical.theta * 180 / Math.PI).toFixed(2) + '°',
+            heading: (this.spherical.heading * 180 / Math.PI).toFixed(2) + '°'
+        });
+        
         // Initialize camera
         this.initialize();
+    }
+    
+    /**
+     * Generate a random spawn location on the globe
+     * @returns {Object} - Random spherical coordinates {phi, theta, heading}
+     */
+    generateRandomSpawnLocation() {
+        // Avoid spawning too close to poles (within 15 degrees)
+        const minPhi = Math.PI * 15/180;  // 15 degrees from north pole
+        const maxPhi = Math.PI - minPhi;  // 15 degrees from south pole
+        
+        // Random phi (latitude) - avoid poles
+        const phi = minPhi + Math.random() * (maxPhi - minPhi);
+        
+        // Random theta (longitude)
+        const theta = Math.random() * Math.PI * 2;
+        
+        // Random initial heading (direction player is facing)
+        const heading = Math.random() * Math.PI * 2;
+        
+        return { phi, theta, heading };
     }
     
     /**
@@ -160,11 +190,37 @@ class PlayerCamera {
             console.log('Pointer lock activated');
             this.isLocked = true;
             this.showCrosshair();
+            
+            // Add FPS active class to body to style cursor
+            document.body.classList.add('fps-active');
+            
+            // Dispatch a custom event for listeners
+            const lockEvent = new CustomEvent('lock-state-changed', {
+                detail: { locked: true }
+            });
+            document.dispatchEvent(lockEvent);
         } else {
             // Pointer is unlocked, disable controls
             console.log('Pointer lock deactivated');
             this.isLocked = false;
             this.hideCrosshair();
+            
+            // Disable any manual controls as well
+            this.manualControlActive = false;
+            
+            // Remove FPS active class to restore normal cursor
+            document.body.classList.remove('fps-active');
+            
+            // Reset any active movement to prevent continued camera movement
+            if (this.velocity) {
+                this.velocity.set(0, 0, 0);
+            }
+            
+            // Dispatch a custom event for listeners
+            const unlockEvent = new CustomEvent('lock-state-changed', {
+                detail: { locked: false }
+            });
+            document.dispatchEvent(unlockEvent);
         }
     }
     

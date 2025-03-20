@@ -311,19 +311,65 @@
             padding: 5px 10px;
             cursor: pointer;
         }
-        #emergency-start {
+        /* Loading Screen with animated elements */
+        #loading-screen {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1001;
-            background: #ff5722;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 15px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+        .loading-content {
+            text-align: center;
+            color: white;
+            max-width: 80%;
+        }
+        .loading-content h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 100, 50, 0.7);
+        }
+        .loading-bar-container {
+            width: 300px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(255, 100, 50, 0.5);
+        }
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff5722, #ff9800);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        #loading-text {
+            margin-top: 10px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        /* Add a Mars loader animation */
+        .mars-loader {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff5722 0%, #b71c1c 100%);
+            margin: 20px auto;
+            box-shadow: 0 0 20px rgba(255, 87, 34, 0.7);
+            animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 20px rgba(255, 87, 34, 0.7); }
+            50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 30px rgba(255, 87, 34, 0.9); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 20px rgba(255, 87, 34, 0.7); }
         }
     </style>
 </head>
@@ -332,17 +378,15 @@
     <div id="debug-console"></div>
     <button id="debug-toggle" onclick="document.getElementById('debug-console').classList.toggle('visible')">Debug</button>
     
-    <!-- Emergency start button that's always visible -->
-    <button id="emergency-start" onclick="if(window.game) {window.game.startGame(); console.log('Emergency start button clicked');}">START GAME</button>
-    
     <div id="game-container">
         <!-- Crosshair for FPS mode -->
         <div id="crosshair" class="crosshair" style="display: none;"></div>
         
-        <!-- Loading screen -->
+        <!-- Loading screen with animation -->
         <div id="loading-screen">
             <div class="loading-content">
                 <h1>Vandals On Mars</h1>
+                <div class="mars-loader"></div>
                 <div class="loading-bar-container">
                     <div id="loading-bar"></div>
                 </div>

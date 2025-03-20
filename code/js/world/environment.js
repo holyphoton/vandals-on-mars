@@ -53,9 +53,10 @@ class Environment {
         // Invert the geometry so we're looking at the inside
         skyGeometry.scale(-1, 1, 1);
         
-        // Create a simple dark blue/black material for space
+        // Change from black to a dusky blue color for space
+        const dusky_blue = new THREE.Color(0x232846); // Dark dusky blue
         const skyMaterial = new THREE.MeshBasicMaterial({
-            color: CONSTANTS.SKY_COLOR,
+            color: dusky_blue,
             side: THREE.BackSide
         });
         
@@ -68,6 +69,9 @@ class Environment {
             if (texture) {
                 console.log('Sky texture loaded successfully');
                 skyMaterial.map = texture;
+                
+                // Apply a blue tint to the texture
+                skyMaterial.color = dusky_blue;
                 skyMaterial.needsUpdate = true;
             }
         });
@@ -78,13 +82,13 @@ class Environment {
      */
     createStars() {
         // Create a particle system for stars
-        const starCount = 5000;
+        const starCount = 8000; // Increased star count
         const starGeometry = new THREE.BufferGeometry();
         const starMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 1,
+            size: 1.2, // Slightly larger stars
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9 // More visible
         });
         
         // Create random positions for stars
@@ -115,11 +119,13 @@ class Environment {
      */
     createSun() {
         // Create a sphere for the sun
-        const sunGeometry = new THREE.SphereGeometry(50, 32, 32);
+        const sunGeometry = new THREE.SphereGeometry(60, 32, 32); // Slightly larger sun
         
         // Create a bright material for the sun
         const sunMaterial = new THREE.MeshBasicMaterial({
-            color: CONSTANTS.SUN_COLOR
+            color: CONSTANTS.SUN_COLOR,
+            emissive: new THREE.Color(0xffee88),
+            emissiveIntensity: 1.2
         });
         
         // Create mesh
@@ -131,25 +137,44 @@ class Environment {
         // Add to scene
         this.scene.add(this.sun);
         
-        // Add a glow effect
+        // Add an enhanced glow effect
         this.addSunGlow();
+        
+        // Add a point light at the sun's position for extra illumination
+        const sunPointLight = new THREE.PointLight(0xffffcc, 2.0, 2000);
+        sunPointLight.position.copy(this.sun.position);
+        this.scene.add(sunPointLight);
     }
 
     /**
      * Add a glow effect to the sun
      */
     addSunGlow() {
-        // Create a sprite for the glow
+        // Create a larger sprite for the glow
         const spriteMaterial = new THREE.SpriteMaterial({
             map: this.createGlowTexture(),
             color: 0xffee88,
             transparent: true,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            opacity: 0.8
         });
         
         const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(150, 150, 1);
+        sprite.scale.set(220, 220, 1); // Larger glow
         this.sun.add(sprite);
+        
+        // Add a second glow layer for more intensity
+        const innerGlowMaterial = new THREE.SpriteMaterial({
+            map: this.createGlowTexture(),
+            color: 0xffffff,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.6
+        });
+        
+        const innerGlow = new THREE.Sprite(innerGlowMaterial);
+        innerGlow.scale.set(120, 120, 1);
+        this.sun.add(innerGlow);
     }
 
     /**
@@ -158,23 +183,23 @@ class Environment {
      */
     createGlowTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
+        canvas.width = 128; // Larger texture for better quality
+        canvas.height = 128;
         const ctx = canvas.getContext('2d');
         
         // Create radial gradient
         const gradient = ctx.createRadialGradient(
-            32, 32, 0,    // inner circle
-            32, 32, 32    // outer circle
+            64, 64, 0,    // inner circle
+            64, 64, 64    // outer circle
         );
         gradient.addColorStop(0, 'rgba(255, 255, 200, 1)');
         gradient.addColorStop(0.3, 'rgba(255, 255, 150, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(255, 255, 0, 0.3)');
+        gradient.addColorStop(0.7, 'rgba(255, 255, 0, 0.4)');
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         
         // Fill with gradient
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillRect(0, 0, 128, 128);
         
         // Create texture
         const texture = new THREE.CanvasTexture(canvas);
@@ -215,60 +240,55 @@ class Environment {
     }
 
     /**
-     * Create lighting for the scene
+     * Create lights
      */
     createLights() {
-        // Ambient light (space ambient)
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-        this.scene.add(ambientLight);
-        this.lights.push(ambientLight);
+        // Main directional light (Sun)
+        this.sunLight = new THREE.DirectionalLight(0xffffff, 1.2); // Increased intensity
+        this.sunLight.position.set(100, 50, 50); // Sun position
+        this.sunLight.castShadow = true;
         
-        // Directional light from the sun
-        const sunLight = new THREE.DirectionalLight(0xffffcc, 1.2);
-        sunLight.position.copy(this.sun.position);
-        this.scene.add(sunLight);
-        this.lights.push(sunLight);
+        // Improve shadow quality
+        this.sunLight.shadow.mapSize.width = 2048;
+        this.sunLight.shadow.mapSize.height = 2048;
+        this.sunLight.shadow.camera.near = 0.5;
+        this.sunLight.shadow.camera.far = 500;
+        this.sunLight.shadow.bias = -0.0003;
         
-        // Hemisphere light (simulates atmospheric scattering)
-        const hemiLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.3);
-        this.scene.add(hemiLight);
-        this.lights.push(hemiLight);
+        this.scene.add(this.sunLight);
+        
+        // Add ambient light to prevent completely dark areas - increased intensity
+        this.ambientLight = new THREE.AmbientLight(0x664444, 0.6); // Increased reddish ambient light for Mars
+        this.scene.add(this.ambientLight);
+        
+        // Add a stronger secondary light to represent light reflection from distant objects
+        this.secondaryLight = new THREE.DirectionalLight(0x7777bb, 0.4); // Stronger bluish tint
+        this.secondaryLight.position.set(-100, -50, -50); // Opposite side from sun
+        this.scene.add(this.secondaryLight);
+        
+        // Add a hemisphere light for better environment simulation
+        this.hemisphereLight = new THREE.HemisphereLight(
+            0x334466, // Sky color - bluer for space
+            0x773322, // Ground color - reddish for Mars surface
+            0.5        // Increased intensity
+        );
+        this.scene.add(this.hemisphereLight);
     }
 
     /**
-     * Update the environment (called once per frame)
+     * Update the environment
      * @param {number} deltaTime - Time since last frame in seconds
      */
     update(deltaTime) {
-        // Rotate stars slightly for a subtle twinkling effect
-        if (this.stars) {
-            this.stars.rotation.y += 0.00005 * deltaTime;
-        }
+        // Update environment elements here if needed
+        // For example, day/night cycle, dust storms, etc.
         
-        // Optional: Slowly update sun and Earth positions to create a day/night cycle
-        // this.updateDayNightCycle(deltaTime);
-    }
-
-    /**
-     * Update day/night cycle
-     * @param {number} deltaTime - Time since last frame in seconds
-     */
-    updateDayNightCycle(deltaTime) {
-        // This is just a basic implementation
-        const cycleSpeed = 0.02 * deltaTime;
-        
-        // Rotate sun and Earth around the scene center
-        if (this.sun) {
-            this.sun.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), cycleSpeed);
-        }
-        
-        if (this.earth) {
-            this.earth.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), cycleSpeed);
-        }
-        
-        // Update directional light position
-        if (this.lights[1]) {
-            this.lights[1].position.copy(this.sun.position);
+        // Slowly rotate the secondary light to simulate changing ambient light conditions
+        if (this.secondaryLight) {
+            this.secondaryLight.position.applyAxisAngle(
+                new THREE.Vector3(0, 1, 0), 
+                0.05 * deltaTime
+            );
         }
     }
 }
