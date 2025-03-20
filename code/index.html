@@ -403,9 +403,22 @@
             </div>
         </div>
         
-        <div id="game-ui">
-            <div id="ammo-display">Ammo: 200/500</div>
-            <div id="billboard-count">Billboards: 0/1</div>
+        <!-- Game UI -->
+        <div id="game-ui" class="ui-container">
+            <div class="hud-section" id="weapon-indicator-container">
+                <div class="weapon-type">
+                    <div class="gun-indicator" data-weapon="billboard">
+                        <span class="gun-icon">🏞️</span> Billboard Gun
+                    </div>
+                    <div class="gun-indicator" data-weapon="shooter">
+                        <span class="gun-icon">🔫</span> Shooter Gun
+                    </div>
+                </div>
+                <div class="ammo-display">Ammo: 30/100</div>
+                <div class="billboard-count">Billboards: 5/5</div>
+                <div class="hud-help">Press Q to switch weapons</div>
+            </div>
+            <div class="crosshair" id="crosshair"></div>
         </div>
         
         <div id="mobile-controls">
@@ -430,6 +443,9 @@
     <script src="js/player/camera.js"></script>
     <script src="js/player/controls.js"></script>
     <script src="js/player/movement.js"></script>
+    
+    <!-- Weapons -->
+    <script src="js/weapons/guns.js"></script>
     
     <!-- Main -->
     <script src="js/main.js"></script>

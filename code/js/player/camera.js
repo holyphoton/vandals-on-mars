@@ -29,6 +29,10 @@ class PlayerCamera {
         this.isLocked = false;
         this.manualControlActive = false;
         
+        // Initialize position and lookAt vectors
+        this.position = new THREE.Vector3();
+        this.lookAt = new THREE.Vector3();
+        
         // Generate random spawn location instead of fixed position
         const randomSpawnLocation = this.generateRandomSpawnLocation();
         
@@ -46,11 +50,36 @@ class PlayerCamera {
             pitch: 0
         };
         
-        console.log('Player spawning at:', {
-            phi: (this.spherical.phi * 180 / Math.PI).toFixed(2) + '°',
-            theta: (this.spherical.theta * 180 / Math.PI).toFixed(2) + '°',
-            heading: (this.spherical.heading * 180 / Math.PI).toFixed(2) + '°'
-        });
+        // Calculate position from spherical coordinates
+        if (this.globe) {
+            const radius = this.globe.radius + this.playerHeight;
+            // Convert spherical to Cartesian coordinates
+            this.position.set(
+                radius * Math.sin(this.spherical.phi) * Math.cos(this.spherical.theta),
+                radius * Math.cos(this.spherical.phi),
+                radius * Math.sin(this.spherical.phi) * Math.sin(this.spherical.theta)
+            );
+            
+            // Calculate lookAt point (forward direction)
+            // Start with up vector from current position
+            const up = this.position.clone().normalize();
+            // Calculate forward direction based on heading
+            const forward = new THREE.Vector3();
+            // Get forward direction perpendicular to up, rotated by heading
+            const axisY = new THREE.Vector3(0, 1, 0);
+            const right = axisY.cross(up).normalize();
+            const fwdHorizontal = up.clone().cross(right).normalize();
+            
+            // Apply heading rotation
+            forward.copy(fwdHorizontal);
+            
+            // Set lookAt point
+            this.lookAt.copy(this.position).add(forward);
+        } else {
+            // Fallback if globe is not available
+            this.position.set(0, this.playerHeight, 0);
+            this.lookAt.set(1, this.playerHeight, 0);
+        }
         
         // Initialize camera
         this.initialize();
@@ -81,8 +110,6 @@ class PlayerCamera {
      * Initialize camera and controls
      */
     initialize() {
-        console.log('Initializing player camera');
-        
         // Create perspective camera
         this.camera = new THREE.PerspectiveCamera(
             this.fov,
@@ -169,11 +196,6 @@ class PlayerCamera {
             
             // Apply the new orientation
             this.updateCameraPositionAndOrientation();
-            
-            // Log rotation for debugging
-            console.log('Camera rotation - Heading:', 
-                        (this.spherical.heading * 180 / Math.PI).toFixed(1) + '°', 
-                        'Pitch:', (this.spherical.pitch * 180 / Math.PI).toFixed(1) + '°');
         }
     }
     
@@ -187,7 +209,6 @@ class PlayerCamera {
         
         if (element) {
             // Pointer is locked, enable controls
-            console.log('Pointer lock activated');
             this.isLocked = true;
             this.showCrosshair();
             
@@ -201,7 +222,6 @@ class PlayerCamera {
             document.dispatchEvent(lockEvent);
         } else {
             // Pointer is unlocked, disable controls
-            console.log('Pointer lock deactivated');
             this.isLocked = false;
             this.hideCrosshair();
             

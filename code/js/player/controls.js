@@ -38,7 +38,8 @@ class PlayerControls {
             right: ['d', 'ArrowRight'],
             sprint: ['Shift'],
             toggleCamera: ['t'],
-            jump: [' '] // Space
+            jump: [' '], // Space
+            switchWeapon: ['q'] // Add switch weapon binding
         };
         
         // Initialize controls
@@ -55,8 +56,20 @@ class PlayerControls {
         document.addEventListener('keydown', this.onKeyDown.bind(this), false);
         document.addEventListener('keyup', this.onKeyUp.bind(this), false);
         
-        // Mouse events
-        document.addEventListener('click', this.onClick.bind(this), false);
+        // Create bound references to event handlers
+        this._boundOnClick = this.onClick.bind(this);
+        this._boundOnMouseDown = this.onMouseDown.bind(this);
+        this._boundOnMouseUp = this.onMouseUp.bind(this);
+        
+        // Mouse events - ensure we're capturing events properly
+        document.addEventListener('click', this._boundOnClick, false);
+        
+        // Use these listeners for continuous firing
+        window.addEventListener('mousedown', this._boundOnMouseDown, false);
+        window.addEventListener('mouseup', this._boundOnMouseUp, false);
+        
+        // Add document level event listener as fallback
+        document.addEventListener('mouseup', this._boundOnMouseUp, false);
         
         // Touch controls for mobile
         if (this.isMobile) {
@@ -167,6 +180,14 @@ class PlayerControls {
         if (this.isKeyPressed(this.keyBindings.toggleCamera)) {
             this.playerCamera.toggleControls();
         }
+        
+        // Weapon switching
+        if (this.isKeyPressed(this.keyBindings.switchWeapon)) {
+            if (this.weaponManager) {
+                this.weaponManager.switchWeapon();
+                this.updateAmmoDisplay();
+            }
+        }
     }
 
     /**
@@ -182,39 +203,61 @@ class PlayerControls {
     }
 
     /**
-     * Handle mouse click events
+     * Handle click events for weapon firing
      * @param {MouseEvent} event - Mouse event
      */
     onClick(event) {
-        // Ignore if not left click
+        // Only handle left mouse button (button 0)
         if (event.button !== 0) return;
         
-        // Request pointer lock on click
+        // If pointer is not locked and in first person, request lock
         if (!this.playerCamera.isLocked && this.playerCamera.isFirstPerson) {
-            console.log("Controls: trying to request pointer lock");
             this.playerCamera.requestPointerLock();
-            
-            // If manual control is active, we should also trigger a "locked" state
-            // to allow the game to function normally
-            if (this.playerCamera.manualControlActive) {
-                console.log("Controls: manual control already active, simulating lock");
-                
-                // Dispatch a fake lockchange event
-                const fakeEvent = new CustomEvent('lockchange', { 
-                    detail: { locked: true, manual: true }
-                });
-                document.dispatchEvent(fakeEvent);
-            }
-            
-            event.preventDefault();
+            return;
         }
         
-        // Handle firing (in first-person mode and locked or manual controls)
-        if ((this.playerCamera.isLocked || this.playerCamera.manualControlActive) && 
-            this.playerCamera.isFirstPerson) {
-            // Handle shooting (will be implemented in later stages)
-            // this.fireTweetGun();
-            console.log("Controls: would fire weapon here");
+        // If manual control is active, simulate a "locked" state and dispatch fake lockchange event
+        if (this.playerCamera.manualControlActive) {
+            const fakeEvent = new Event("lockchange");
+            document.dispatchEvent(fakeEvent);
+        }
+        
+        // If we have a weapon manager and using billboard gun, fire it once
+        if (this.weaponManager && this.weaponManager.isBillboardGunActive()) {
+            this.weaponManager.fire();
+            this.updateAmmoDisplay();
+        }
+    }
+
+    /**
+     * Called when the mouse button is pressed down
+     * @param {MouseEvent} event - The mouse event
+     */
+    onMouseDown(event) {
+        // Only handle left mouse button (button 0)
+        if (event.button !== 0) return;
+        
+        // If we have a weapon manager, start continuous firing
+        if (this.weaponManager && this.weaponManager.isShooterGunActive()) {
+            this.weaponManager.startContinuousFire();
+            // Update ammo display
+            this.updateAmmoDisplay();
+        }
+    }
+
+    /**
+     * Called when the mouse button is released
+     * @param {MouseEvent} event - The mouse event
+     */
+    onMouseUp(event) {
+        // Only handle left mouse button (button 0)
+        if (event.button !== 0) return;
+        
+        // If we have a weapon manager, stop continuous firing
+        if (this.weaponManager && this.weaponManager.isShooterGunActive()) {
+            this.weaponManager.stopContinuousFire();
+            // Update ammo display
+            this.updateAmmoDisplay();
         }
     }
 
@@ -240,22 +283,24 @@ class PlayerControls {
     }
 
     /**
-     * Handle pointer lock change
-     * @param {CustomEvent} event - Lock change event
+     * Handles change in pointer lock state
+     * @param {Event} event - The pointer lock change event
      */
     onLockChange(event) {
-        const isLocked = event.detail?.locked || false;
+        // Update lock state based on document pointer lock element
+        const isLocked = document.pointerLockElement === this.playerCamera.element;
+        this.playerCamera.isLocked = isLocked;
         
-        // Toggle UI elements based on lock state
-        const gameUI = document.getElementById('game-ui');
-        if (gameUI) {
-            gameUI.style.display = isLocked ? 'block' : 'none';
+        // If manual control is active, always consider the pointer locked
+        if (this.playerCamera.manualControlActive) {
+            this.playerCamera.isLocked = true;
         }
         
-        // Show/hide start screen
-        const startScreen = document.getElementById('start-screen');
-        if (startScreen) {
-            startScreen.style.display = isLocked ? 'none' : 'flex';
+        // Update body class for cursor styling
+        if (this.playerCamera.isLocked) {
+            document.body.classList.add('fps-active');
+        } else {
+            document.body.classList.remove('fps-active');
         }
     }
 
@@ -327,16 +372,25 @@ class PlayerControls {
         
         // Log movement debug info if actually moving
         if (movement.x !== 0 || movement.z !== 0) {
-            console.log("Moving with inputs:", {
-                forward: this.moveForward,
-                backward: this.moveBackward,
-                left: this.moveLeft,
-                right: this.moveRight,
-                vector: movement,
-                speed: speed,
-                locked: this.playerCamera.isLocked,
-                manual: this.playerCamera.manualControlActive
-            });
+            // Movement is happening, but no need to log it
+        }
+    }
+
+    /**
+     * Set the weapon manager reference
+     * @param {WeaponManager} weaponManager - Reference to the weapon manager
+     */
+    setWeaponManager(weaponManager) {
+        this.weaponManager = weaponManager;
+        this.updateAmmoDisplay();
+    }
+
+    /**
+     * Updates the ammo display based on weapon manager state
+     */
+    updateAmmoDisplay() {
+        if (this.weaponManager) {
+            this.weaponManager.updateWeaponIndicator();
         }
     }
 }

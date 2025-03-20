@@ -126,21 +126,60 @@ body, html {
 
 /* Game UI */
 #game-ui {
-    position: absolute;
-    top: 20px;
+    position: fixed;
+    bottom: 20px;
     left: 20px;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    display: none;
     z-index: 10;
-    pointer-events: none;
 }
 
 #ammo-display, #billboard-count {
+    margin-bottom: 5px;
+    padding: 5px 10px;
     background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    padding: 0.5rem 1rem;
     border-radius: 5px;
-    margin-bottom: 10px;
-    font-family: 'Courier New', monospace;
-    font-size: 1.2rem;
+    font-size: 16px;
+}
+
+#ammo-display {
+    color: #ff9900;
+}
+
+#billboard-count {
+    color: #66ccff;
+}
+
+.weapon-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 5px;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    display: none;
+}
+
+.weapon-help {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 5px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    display: none;
 }
 
 /* Mobile Controls */
@@ -262,4 +301,75 @@ body.game-paused #crosshair {
 /* Game paused mode - show normal cursor */
 body.game-paused {
     cursor: default !important;
+}
+
+/* Game UI styles */
+.ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+}
+
+.hud-section {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+    font-family: 'Courier New', monospace;
+}
+
+#weapon-indicator-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.weapon-type {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.gun-indicator {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background-color: rgba(50, 50, 50, 0.5);
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.gun-indicator.active {
+    background-color: rgba(100, 100, 100, 0.8);
+    opacity: 1;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.gun-icon {
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+.ammo-display {
+    font-size: 1.2em;
+    text-align: right;
+    text-shadow: 1px 1px 2px black;
+}
+
+.hud-help {
+    font-size: 0.8em;
+    text-align: right;
+    color: #cccccc;
+    margin-top: 5px;
 } 

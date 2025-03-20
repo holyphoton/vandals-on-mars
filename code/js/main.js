@@ -27,6 +27,7 @@ class Game {
         this.playerCamera = null;
         this.playerControls = null;
         this.playerMovement = null;
+        this.weaponManager = null;
         
         // UI elements
         this.loadingScreen = document.getElementById('loading-screen');
@@ -181,6 +182,16 @@ class Game {
         
         // Check if the player's random spawn location is valid (not inside rocks/obstacles)
         this.validatePlayerSpawnLocation();
+        
+        // Create weapon manager
+        this.weaponManager = new WeaponManager(
+            this.playerCamera,
+            this.scene,
+            this.globe
+        );
+        
+        // Set weapon manager reference in player controls
+        this.playerControls.setWeaponManager(this.weaponManager);
         
         this.updateLoadingProgress(0.9, 'Player ready');
     }
@@ -364,119 +375,38 @@ class Game {
 
     /**
      * Start the game
-     * Hides the start screen and begins the main game loop
      */
     startGame() {
-        console.log("Starting the game!");
-        try {
-            // Set game started flag
-            this.gameStarted = true;
-            
-            // Hide the start screen immediately
-            this.hideStartScreen();
-            
-            // Show loading screen with progress indicator
-            this.showLoadingScreen();
-            this.updateLoadingProgress(0.05, 'Initializing game...');
-            
-            // First ensure THREE.js is properly initialized
-            this.verifyDomElements();
-            this.updateLoadingProgress(0.15, 'Checking critical components...');
-            
-            // Make sure the THREE.js canvas is visible
-            this.ensureCanvasIsVisible();
-            this.updateLoadingProgress(0.30, 'Preparing render surface...');
-            
-            // Start the animation loop FIRST - this should show the 3D world
-            this.isPaused = false;
-            
-            // Important: Make sure we have a working animation loop
-            if (!this.isAnimating) {
-                this.animate();
-            }
-            this.updateLoadingProgress(0.50, 'Starting game engine...');
-            
-            // Enable game controls
-            if (this.controls) {
-                this.controls.enabled = true;
-            } else {
-                console.warn("Controls not initialized properly");
-            }
-            this.updateLoadingProgress(0.75, 'Configuring player controls...');
-            
-            // Add a short delay to show loading progress and create a smoother transition
-            setTimeout(() => {
-                this.updateLoadingProgress(0.90, 'Preparing first-person view...');
-                
-                // Hide loading screen only right before entering first-person mode
-                setTimeout(() => {
-                    this.hideLoadingScreen();
-                    
-                    // Enter first-person mode AFTER world is visible
-                    if (this.playerCamera) {
-                        // Try to request pointer lock to enable FPS controls
-                        this.playerCamera.requestPointerLock()
-                            .then(() => {
-                                console.log("Pointer lock acquired, entering first-person mode");
-                                // Show crosshair
-                                const crosshair = document.getElementById('crosshair');
-                                if (crosshair) crosshair.style.display = 'block';
-                                // Add FPS class to body to hide cursor
-                                document.body.classList.add('fps-active');
-                            })
-                            .catch(error => {
-                                console.warn("Pointer lock failed:", error);
-                                // Try manual controls as fallback
-                                if (this.playerCamera) {
-                                    this.playerCamera.manualControlActive = true;
-                                    
-                                    // Show fallback control message
-                                    const controlMsg = document.createElement('div');
-                                    controlMsg.style.position = 'fixed';
-                                    controlMsg.style.top = '50px';
-                                    controlMsg.style.left = '50%';
-                                    controlMsg.style.transform = 'translateX(-50%)';
-                                    controlMsg.style.background = 'rgba(0, 0, 0, 0.7)';
-                                    controlMsg.style.color = 'white';
-                                    controlMsg.style.padding = '10px';
-                                    controlMsg.style.borderRadius = '5px';
-                                    controlMsg.style.zIndex = '1000';
-                                    controlMsg.textContent = 'Using manual controls. Move mouse to look around.';
-                                    document.body.appendChild(controlMsg);
-                                    setTimeout(() => controlMsg.remove(), 5000);
-                                    
-                                    // Still show crosshair
-                                    const crosshair = document.getElementById('crosshair');
-                                    if (crosshair) crosshair.style.display = 'block';
-                                    // Add FPS class to body to hide cursor
-                                    document.body.classList.add('fps-active');
-                                }
-                            });
-                    } else {
-                        console.error("Player camera not initialized!");
-                    }
-                }, 500); // Short delay before transitioning to FPS mode
-                
-            }, 1500); // Show loading progress for at least 1.5 seconds
-        } catch (error) {
-            console.error("Error starting game:", error);
-            // Show error on screen to help debugging
-            const errorMsg = document.createElement('div');
-            errorMsg.style.position = 'fixed';
-            errorMsg.style.top = '10px';
-            errorMsg.style.left = '10px';
-            errorMsg.style.background = 'rgba(255, 0, 0, 0.8)';
-            errorMsg.style.color = 'white';
-            errorMsg.style.padding = '10px';
-            errorMsg.style.zIndex = '9999';
-            errorMsg.style.maxWidth = '80%';
-            errorMsg.style.wordBreak = 'break-word';
-            errorMsg.innerHTML = `<strong>Error starting game:</strong><br>${error.message || 'Unknown error'}<br>${error.stack || ''}`;
-            document.body.appendChild(errorMsg);
-            
-            // Hide loading screen and show error
-            this.hideLoadingScreen();
+        console.log('Starting game');
+        
+        // Hide start screen
+        this.hideStartScreen();
+        
+        // Show the game UI
+        const gameUI = document.getElementById('game-ui');
+        if (gameUI) {
+            gameUI.style.display = 'block';
         }
+        
+        // Request pointer lock to capture mouse
+        if (this.playerCamera && !this.playerCamera.isLocked) {
+            console.log('Requesting pointer lock');
+            this.playerCamera.requestPointerLock();
+        }
+        
+        // Start animation loop if not already running
+        if (!this.isAnimating) {
+            console.log('Starting animation loop');
+            this.isAnimating = true;
+            this.animate();
+        }
+        
+        // Set game started flag
+        this.gameStarted = true;
+        console.log('Game started successfully');
+        
+        // Show gameplay message
+        this.showGameStartedMessage();
     }
     
     /**
@@ -687,6 +617,11 @@ class Game {
         // Update player camera
         if (this.playerCamera) {
             this.playerCamera.update(deltaTime);
+        }
+        
+        // Update weapon manager
+        if (this.weaponManager) {
+            this.weaponManager.update(deltaTime);
         }
     }
 
