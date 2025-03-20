@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Walking Test - X-Axis Locked Camera</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        #start-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            z-index: 100;
+        }
+        #start-button {
+            padding: 12px 24px;
+            background: #c1440e;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        #start-button:hover {
+            background: #e05511;
+        }
+        #error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+    
+    <!-- Load THREE.js with CDN and fallback -->
+    <script>
+        // Create a function to load THREE.js and handle fallbacks
+        function loadThreeJs() {
+            // Try CDN first
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js';
+            
+            // If CDN fails, try local fallback
+            script.onerror = function() {
+                console.warn('THREE.js CDN failed, trying local fallback');
+                var fallbackScript = document.createElement('script');
+                fallbackScript.src = 'js/libs/three.min.js';
+                
+                // If local fallback also fails
+                fallbackScript.onerror = function() {
+                    console.error('THREE.js local fallback also failed');
+                    document.getElementById('error-message').style.display = 'block';
+                    document.getElementById('start-screen').style.display = 'none';
+                };
+                
+                document.head.appendChild(fallbackScript);
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Load THREE.js immediately
+        loadThreeJs();
+    </script>
+</head>
+<body>
+    <div id="start-screen">
+        <h1>Mars Walking Test</h1>
+        <p>X-Axis Locked Camera Movement (Horizon stays level)</p>
+        <button id="start-button">START</button>
+    </div>
+    
+    <div id="info">
+        WASD to move | SPACE to jump | CLICK to look around
+    </div>
+    
+    <div id="error-message">
+        <h2>Error Loading Resources</h2>
+        <p>Unable to load THREE.js library. Please check your internet connection and try refreshing the page.</p>
+    </div>
+    
+    <!-- Game code - Make sure they load AFTER THREE.js -->
+    <script>
+        // Function to load game scripts in sequence, only after THREE.js is loaded
+        function loadGameScripts() {
+            if (typeof THREE === 'undefined') {
+                // If THREE isn't loaded yet, retry in a moment
+                console.log('Waiting for THREE.js to load...');
+                setTimeout(loadGameScripts, 100);
+                return;
+            }
+            
+            console.log('THREE.js loaded successfully! Version:', THREE.REVISION);
+            
+            // List of scripts to load in sequence
+            var scripts = [
+                'js/utils/helpers.js',
+                'js/utils/math.js',
+                'js/config.js',
+                'js/world/globe.js',
+                'js/player/camera.js',
+                'js/player/controls.js',
+                'js/player/movement.js'
+            ];
+            
+            function loadNextScript(index) {
+                if (index >= scripts.length) {
+                    // All scripts loaded, initialize game
+                    console.log('All game scripts loaded!');
+                    initializeGame();
+                    return;
+                }
+                
+                var script = document.createElement('script');
+                script.src = scripts[index];
+                
+                script.onload = function() {
+                    // Load the next script
+                    loadNextScript(index + 1);
+                };
+                
+                script.onerror = function() {
+                    console.error('Failed to load script:', scripts[index]);
+                    document.getElementById('error-message').innerHTML = 
+                        '<h2>Error Loading Game</h2><p>Failed to load: ' + scripts[index] + '</p>';
+                    document.getElementById('error-message').style.display = 'block';
+                };
+                
+                document.body.appendChild(script);
+            }
+            
+            // Start loading the first script
+            loadNextScript(0);
+        }
+        
+        // Wait for document and try to load game scripts
+        window.addEventListener('load', loadGameScripts);
+        
+        // Game initialization and main loop
+        function initializeGame() {
+            let scene, renderer, camera;
+            let globe, playerCamera, playerControls, playerMovement;
+            let clock;
+            
+            // Start button functionality
+            document.getElementById('start-button').addEventListener('click', function() {
+                document.getElementById('start-screen').style.display = 'none';
+                init();
+                animate();
+            });
+            
+            function init() {
+                console.log('Initializing Mars walking test...');
+                
+                try {
+                    // Create scene
+                    scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0x000000);
+                    
+                    // Create renderer
+                    renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    document.body.appendChild(renderer.domElement);
+                    
+                    // Add lighting
+                    const ambientLight = new THREE.AmbientLight(0x404040);
+                    scene.add(ambientLight);
+                    
+                    const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+                    sunLight.position.set(50, 30, 50);
+                    scene.add(sunLight);
+                    
+                    // Create the Mars globe
+                    globe = new MarsGlobe(20, scene);
+                    
+                    // Add some random features to the globe
+                    globe.generateTerrain(30, 100);
+                    
+                    // Create player camera
+                    playerCamera = new PlayerCamera(scene, globe);
+                    
+                    // Create player controls
+                    playerControls = new PlayerControls(playerCamera);
+                    
+                    // Create player movement
+                    playerMovement = new PlayerMovement(playerCamera, globe, playerControls);
+                    
+                    // Create clock for timing
+                    clock = new THREE.Clock();
+                    
+                    // Window resize handler
+                    window.addEventListener('resize', onWindowResize);
+                    
+                    console.log("Mars walking test initialized successfully");
+                } catch (error) {
+                    console.error('Error initializing game:', error);
+                    document.getElementById('error-message').innerHTML = 
+                        '<h2>Error Initializing Game</h2><p>' + error.message + '</p>';
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            }
+            
+            function onWindowResize() {
+                if (playerCamera && playerCamera.camera) {
+                    playerCamera.camera.aspect = window.innerWidth / window.innerHeight;
+                    playerCamera.camera.updateProjectionMatrix();
+                }
+                if (renderer) {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            }
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                try {
+                    const deltaTime = clock.getDelta();
+                    
+                    // Update game objects
+                    if (globe) globe.update(deltaTime);
+                    if (playerMovement) playerMovement.update(deltaTime);
+                    
+                    // Render scene
+                    if (renderer && scene && playerCamera && playerCamera.camera) {
+                        renderer.render(scene, playerCamera.camera);
+                    }
+                } catch (error) {
+                    console.error('Error in animation loop:', error);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

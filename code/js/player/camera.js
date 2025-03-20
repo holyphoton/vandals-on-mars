@@ -29,11 +29,18 @@ class PlayerCamera {
         this.isLocked = false;
         this.manualControlActive = false;
         
-        // Start position (in spherical coordinates)
-        this.position = {
-            radius: this.globe ? this.globe.radius + 2 : 20,
+        // Spherical coordinates for orientation
+        this.spherical = {
+            // Position in spherical coordinates
+            radius: this.globe ? this.globe.radius + this.playerHeight : 20,
+            // Latitude angle (0 at equator, π/2 at north pole)
             phi: Math.PI / 2,
-            theta: 0
+            // Longitude angle
+            theta: 0,
+            // Heading angle (rotation around the local up axis)
+            heading: 0,
+            // Pitch angle (looking up/down)
+            pitch: 0
         };
         
         // Initialize camera
@@ -57,8 +64,8 @@ class PlayerCamera {
         // Set proper rotation order for FPS camera
         this.camera.rotation.order = 'YXZ';
         
-        // Set initial position
-        this.updateCameraPosition();
+        // Set initial position and orientation
+        this.updateCameraPositionAndOrientation();
         
         // Check if pointer lock is supported
         this.checkPointerLockSupport();
@@ -120,17 +127,23 @@ class PlayerCamera {
             const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
             const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
             
-            // Apply rotation directly to the camera (standard FPS controls)
-            this.camera.rotation.y -= movementX * this.mouseSensitivity;
-            this.camera.rotation.x -= movementY * this.mouseSensitivity;
+            // Update heading (Y-axis rotation) - this rotates around the local up vector
+            this.spherical.heading -= movementX * this.mouseSensitivity;
+            // Keep heading in the range [0, 2π]
+            this.spherical.heading = (this.spherical.heading + Math.PI * 2) % (Math.PI * 2);
             
-            // Clamp vertical rotation to prevent flipping
-            this.camera.rotation.x = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, this.camera.rotation.x));
+            // Update pitch (X-axis rotation) - looking up and down
+            this.spherical.pitch -= movementY * this.mouseSensitivity;
+            // Clamp pitch to ±45 degrees (π/4 radians)
+            this.spherical.pitch = Math.max(-Math.PI/4, Math.min(Math.PI/4, this.spherical.pitch));
+            
+            // Apply the new orientation
+            this.updateCameraPositionAndOrientation();
             
             // Log rotation for debugging
-            console.log('Camera rotation:', 
-                        (this.camera.rotation.y * 180 / Math.PI).toFixed(1) + '°', 
-                        (this.camera.rotation.x * 180 / Math.PI).toFixed(1) + '°');
+            console.log('Camera rotation - Heading:', 
+                        (this.spherical.heading * 180 / Math.PI).toFixed(1) + '°', 
+                        'Pitch:', (this.spherical.pitch * 180 / Math.PI).toFixed(1) + '°');
         }
     }
     
@@ -175,21 +188,68 @@ class PlayerCamera {
     }
     
     /**
-     * Update camera position in the world
+     * Update camera position and orientation in the world
      */
-    updateCameraPosition() {
-        if (this.globe) {
-            // Convert spherical to cartesian coordinates
-            const x = this.position.radius * Math.sin(this.position.phi) * Math.cos(this.position.theta);
-            const y = this.position.radius * Math.cos(this.position.phi);
-            const z = this.position.radius * Math.sin(this.position.phi) * Math.sin(this.position.theta);
-            
-            // Set camera position
-            this.camera.position.set(x, y, z);
-        } else {
-            // Default position if no globe
-            this.camera.position.y = this.playerHeight;
+    updateCameraPositionAndOrientation() {
+        if (!this.globe) return;
+        
+        // 1. Calculate position based on spherical coordinates
+        const sinPhi = Math.sin(this.spherical.phi);
+        const cosPhi = Math.cos(this.spherical.phi);
+        const sinTheta = Math.sin(this.spherical.theta);
+        const cosTheta = Math.cos(this.spherical.theta);
+        
+        // Convert spherical to cartesian coordinates
+        const x = this.spherical.radius * sinPhi * cosTheta;
+        const y = this.spherical.radius * cosPhi;
+        const z = this.spherical.radius * sinPhi * sinTheta;
+        
+        // Update camera position
+        this.camera.position.set(x, y, z);
+        
+        // 2. Calculate the local coordinate system at this point on the sphere
+        
+        // The up vector points from the center of the planet to the camera position
+        const up = new THREE.Vector3(x, y, z).normalize();
+        
+        // The forward vector is perpendicular to up and depends on heading
+        // First, get the "north" direction at this position
+        const north = new THREE.Vector3(0, 1, 0);
+        if (Math.abs(Math.abs(this.spherical.phi) - Math.PI/2) < 0.001) {
+            // If at poles, use a different reference vector
+            north.set(1, 0, 0);
         }
+        
+        // Calculate east as the cross product of up and north
+        const east = new THREE.Vector3().crossVectors(north, up).normalize();
+        // Calculate north as the cross product of up and east
+        const northCorrected = new THREE.Vector3().crossVectors(up, east).normalize();
+        
+        // Calculate the local forward direction based on heading and pitch
+        const forward = new THREE.Vector3();
+        
+        // Apply heading rotation (around up axis)
+        const rotatedNorth = northCorrected.clone();
+        const rotatedEast = east.clone();
+        
+        // Using quaternion to rotate around the up vector
+        const headingQuaternion = new THREE.Quaternion().setFromAxisAngle(up, this.spherical.heading);
+        rotatedNorth.applyQuaternion(headingQuaternion);
+        rotatedEast.applyQuaternion(headingQuaternion);
+        
+        // Forward direction is initially the rotated north
+        forward.copy(rotatedNorth);
+        
+        // Apply pitch rotation (around local east axis)
+        const pitchQuaternion = new THREE.Quaternion().setFromAxisAngle(rotatedEast, this.spherical.pitch);
+        forward.applyQuaternion(pitchQuaternion);
+        
+        // Set the camera look-at direction
+        const target = new THREE.Vector3().addVectors(this.camera.position, forward);
+        this.camera.lookAt(target);
+        
+        // Ensure the camera's up vector is aligned with the local up
+        this.camera.up.copy(up);
     }
     
     /**
@@ -351,33 +411,58 @@ class PlayerCamera {
     }
     
     /**
-     * Move the camera in first-person mode
+     * Move the camera on the spherical surface
      * @param {number} forwardBackward - Forward/backward movement (-1 to 1)
      * @param {number} leftRight - Left/right movement (-1 to 1)
      * @param {number} speed - Movement speed
      */
     move(forwardBackward, leftRight, speed) {
-        if (!this.isFirstPerson) return;
+        if (!this.isFirstPerson || !this.globe) return;
         
         const actualSpeed = speed || 0.1;
         
-        // Get camera's forward direction (excluding y component for level movement)
-        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-        forward.y = 0;
-        forward.normalize();
+        // Calculate forward and right directions in the tangent plane
         
-        // Get camera's right direction
-        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
-        right.y = 0;
-        right.normalize();
+        // Get the up vector (from planet center to camera)
+        const up = this.camera.position.clone().normalize();
         
-        // Apply movement
+        // Calculate forward vector based on camera direction, but projected to tangent plane
+        const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+        const forward = cameraDirection.clone();
+        
+        // Project forward onto tangent plane by removing any component in the up direction
+        const upComponent = up.clone().multiplyScalar(forward.dot(up));
+        forward.sub(upComponent).normalize();
+        
+        // Calculate right by cross product of up and forward
+        const right = new THREE.Vector3().crossVectors(up, forward).normalize();
+        
+        // Apply movement in the tangent plane
+        const movement = new THREE.Vector3();
+        
         if (forwardBackward !== 0) {
-            this.camera.position.addScaledVector(forward, forwardBackward * actualSpeed);
+            movement.addScaledVector(forward, forwardBackward * actualSpeed);
         }
         
         if (leftRight !== 0) {
-            this.camera.position.addScaledVector(right, leftRight * actualSpeed);
+            movement.addScaledVector(right, leftRight * actualSpeed);
+        }
+        
+        // If there's movement, apply it
+        if (movement.lengthSq() > 0) {
+            // Move the camera
+            this.camera.position.add(movement);
+            
+            // Maintain constant distance from planet center (spherical.radius)
+            this.camera.position.normalize().multiplyScalar(this.spherical.radius);
+            
+            // Update spherical coordinates based on new position
+            const position = this.camera.position;
+            this.spherical.phi = Math.acos(position.y / this.spherical.radius);
+            this.spherical.theta = Math.atan2(position.z, position.x);
+            
+            // Update camera orientation to maintain level horizon
+            this.updateCameraPositionAndOrientation();
         }
     }
     
@@ -386,9 +471,10 @@ class PlayerCamera {
      * @param {number} deltaTime - Time since last frame in seconds
      */
     update(deltaTime) {
-        // Update the camera position
+        // Any per-frame updates can go here
         if (this.isFirstPerson) {
-            // First-person updates are handled by move() method
+            // Ensure camera orientation stays correct
+            this.updateCameraPositionAndOrientation();
         }
     }
     

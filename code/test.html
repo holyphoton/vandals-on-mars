@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Walking - Spherical Coordinates</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+        }
+        
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            z-index: 10;
+        }
+        
+        #startButton {
+            padding: 15px 30px;
+            background-color: #c1440e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        #startButton:hover {
+            background-color: #e05511;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 5;
+        }
+        
+        #debug {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 5;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.7;
+            z-index: 100;
+            display: none;
+        }
+        
+        #errorMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 20;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <div id="startScreen">
+        <h1>Mars Walking Test</h1>
+        <p>Click the button to start. Use mouse to look around and WASD to move.</p>
+        <button id="startButton">START (enables pointer lock)</button>
+    </div>
+    
+    <div id="info">
+        <p>W/S: Move forward/backward</p>
+        <p>A/D: Move left/right</p>
+        <p>SPACE: Jump</p>
+        <p>ESC: Exit pointer lock</p>
+    </div>
+    
+    <div id="debug">Debug info will appear here</div>
+    
+    <div id="crosshair"></div>
+    
+    <div id="errorMessage"></div>
+    
+    <script>
+        // Try to load Three.js from CDN, or fall back to local file
+        function loadThreeJs() {
+            return new Promise((resolve, reject) => {
+                // Try to load from CDN first
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js';
+                cdnScript.onload = () => resolve('CDN');
+                cdnScript.onerror = () => {
+                    console.warn('Failed to load Three.js from CDN, trying local file...');
+                    // Fall back to local file
+                    const localScript = document.createElement('script');
+                    localScript.src = 'js/libs/three.min.js';
+                    localScript.onload = () => resolve('Local');
+                    localScript.onerror = () => reject(new Error('Could not load Three.js from CDN or local file'));
+                    document.head.appendChild(localScript);
+                };
+                document.head.appendChild(cdnScript);
+            });
+        }
+        
+        // Main variables
+        let canvas, scene, camera, renderer;
+        let mars, player;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let jumping = false;
+        let playerVelocity, playerDirection;
+        let debugElement, errorElement, crosshairElement;
+        let isLocked = false;
+        
+        // Spherical coordinate variables
+        let playerSpherical = {
+            r: 0,         // Radial distance from planet center (r)
+            theta: 0,     // Polar angle from vertical axis (θ)
+            phi: 0        // Azimuthal angle around vertical axis (φ)
+        };
+        
+        // Player view rotation angles (local to the surface)
+        let playerView = {
+            yaw: 0,       // Left/right rotation (around up axis)
+            pitch: 0      // Up/down rotation (around tangent axis)
+        };
+        
+        // Constants
+        const MARS_RADIUS = 20;
+        const GRAVITY = 9.8;
+        const JUMP_FORCE = 5;
+        const PLAYER_HEIGHT = 1.8;
+        const MOVE_SPEED = 5.0;
+        const ROTATION_SENSITIVITY = 0.002;
+        
+        // First load Three.js, then initialize
+        window.addEventListener('load', async function() {
+            try {
+                debugElement = document.getElementById('debug');
+                errorElement = document.getElementById('errorMessage');
+                crosshairElement = document.getElementById('crosshair');
+                canvas = document.getElementById('renderCanvas');
+                
+                // Load THREE.js
+                await loadThreeJs();
+                console.log(`Loaded Three.js successfully, version: ${THREE.REVISION}`);
+                
+                // Initialize THREE-dependent variables AFTER THREE is loaded
+                playerVelocity = new THREE.Vector3();
+                playerDirection = new THREE.Vector3();
+                
+                // Initialize the scene
+                initScene();
+                
+                // Add event listeners
+                initPointerLock();
+                initKeyboardControls();
+                
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize, false);
+                
+                // Start rendering loop
+                animate();
+                
+                // Update debug with initialization info
+                updateDebugInfo({initialized: true});
+                
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                showError(`Error: ${error.message}`);
+            }
+        });
+        
+        function initScene() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            // Add fog to simulate Mars atmosphere
+            scene.fog = new THREE.FogExp2(0xcd6d4c, 0.02);
+            
+            // Create camera with rotation order set explicitly to YXZ
+            // Y = left/right rotation (yaw)
+            // X = up/down rotation (pitch)
+            // Z = roll (not used in this implementation)
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.rotation.order = 'YXZ';
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            
+            // Create Mars globe
+            createMars();
+            
+            // Set initial player position on the surface of Mars
+            resetPlayerPosition();
+            
+            // Add lights
+            addLights();
+        }
+        
+        function createMars() {
+            // Create Mars globe with a reddish material
+            const marsGeometry = new THREE.SphereGeometry(MARS_RADIUS, 64, 64);
+            const marsMaterial = new THREE.MeshStandardMaterial({
+                color: 0xc1440e,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            
+            mars = new THREE.Mesh(marsGeometry, marsMaterial);
+            mars.receiveShadow = true;
+            scene.add(mars);
+            
+            // Add some simple terrain features (craters)
+            for (let i = 0; i < 20; i++) {
+                // Random position on sphere
+                const phi = Math.acos(2 * Math.random() - 1);
+                const theta = 2 * Math.PI * Math.random();
+                
+                // Convert to Cartesian
+                const x = MARS_RADIUS * Math.sin(phi) * Math.cos(theta);
+                const y = MARS_RADIUS * Math.sin(phi) * Math.sin(theta);
+                const z = MARS_RADIUS * Math.cos(phi);
+                
+                // Create crater geometry
+                const craterGeometry = new THREE.CircleGeometry(Math.random() * 3 + 1, 32);
+                const craterMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x999999,
+                    roughness: 1.0,
+                    side: THREE.DoubleSide
+                });
+                
+                const crater = new THREE.Mesh(craterGeometry, craterMaterial);
+                crater.position.set(x, y, z);
+                crater.lookAt(0, 0, 0);
+                
+                scene.add(crater);
+            }
+        }
+        
+        function addLights() {
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            // Add directional light (sun)
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            sunLight.position.set(50, 30, 50);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+            
+            // Add hemisphere light for better environment lighting
+            const hemisphereLight = new THREE.HemisphereLight(0xffd580, 0x080820, 0.5);
+            scene.add(hemisphereLight);
+        }
+        
+        function resetPlayerPosition() {
+            // Start position (on the equator)
+            // In spherical coordinates:
+            playerSpherical = {
+                r: MARS_RADIUS + PLAYER_HEIGHT,  // Distance from center
+                theta: Math.PI / 2,              // 90 degrees (equator)
+                phi: 0                           // 0 degrees longitude
+            };
+            
+            // Initialize player view angles
+            playerView = {
+                yaw: 0,                          // Initially looking forward
+                pitch: 0                         // Initially looking straight ahead
+            };
+            
+            // Convert spherical to cartesian coordinates
+            const cartesian = sphericalToCartesian(playerSpherical);
+            camera.position.set(cartesian.x, cartesian.y, cartesian.z);
+            
+            // Create local coordinate system at this position and orient camera
+            updateCameraOrientation();
+        }
+        
+        // Helper function to convert from spherical to cartesian coordinates
+        function sphericalToCartesian(spherical) {
+            // Note: THREE.js spherical coordinates use different conventions
+            // than the standard mathematical notation
+            // Here we use the mathematical convention where:
+            // theta (θ) is the polar angle from the y-axis
+            // phi (φ) is the azimuthal angle in the x-z plane
+            
+            const sinTheta = Math.sin(spherical.theta);
+            const cosTheta = Math.cos(spherical.theta);
+            const sinPhi = Math.sin(spherical.phi);
+            const cosPhi = Math.cos(spherical.phi);
+            
+            return {
+                x: spherical.r * sinTheta * cosPhi,
+                y: spherical.r * cosTheta,
+                z: spherical.r * sinTheta * sinPhi
+            };
+        }
+        
+        // Helper function to convert from cartesian to spherical coordinates
+        function cartesianToSpherical(position) {
+            const r = Math.sqrt(position.x * position.x + 
+                               position.y * position.y + 
+                               position.z * position.z);
+            
+            // Handle the case where r is zero (at the origin)
+            if (r === 0) {
+                return { r: 0, theta: 0, phi: 0 };
+            }
+            
+            // Calculate theta (polar angle from y-axis)
+            const theta = Math.acos(position.y / r);
+            
+            // Calculate phi (azimuthal angle in x-z plane)
+            // Use atan2 to get the correct quadrant
+            let phi = Math.atan2(position.z, position.x);
+            
+            // Ensure phi is in the range [0, 2π)
+            if (phi < 0) {
+                phi += 2 * Math.PI;
+            }
+            
+            return { r, theta, phi };
+        }
+        
+        function updateCameraOrientation() {
+            // Get the local up vector (points from planet center to player)
+            const upVector = camera.position.clone().normalize();
+            
+            // Calculate local forward and right directions on the tangent plane
+            // First, find a reference direction (we'll use a consistent world up for stability)
+            const worldUp = new THREE.Vector3(0, 1, 0);
+            
+            // Handle the case where player is at the poles (aligned with world up)
+            if (Math.abs(upVector.dot(worldUp)) > 0.99) {
+                // At poles, use world-Z as reference instead
+                worldUp.set(0, 0, 1);
+            }
+            
+            // Calculate the right vector (perpendicular to up and world up)
+            const rightVector = new THREE.Vector3().crossVectors(upVector, worldUp).normalize();
+            
+            // Calculate the forward vector (perpendicular to up and right)
+            const forwardVector = new THREE.Vector3().crossVectors(rightVector, upVector).normalize();
+            
+            // Create a rotation matrix for the base orientation (aligned with the planet surface)
+            // This matrix represents the local coordinate system where:
+            // - The Y-axis points along the radial direction (up)
+            // - The X-axis points to the right on the tangent plane
+            // - The Z-axis points forward on the tangent plane
+            const baseMatrix = new THREE.Matrix4().makeBasis(rightVector, upVector, forwardVector);
+            
+            // Create quaternion from this base orientation
+            const baseQuaternion = new THREE.Quaternion().setFromRotationMatrix(baseMatrix);
+            
+            // Apply the player's view rotations in the correct order:
+            // 1. First apply the base orientation to align with planet surface
+            camera.quaternion.copy(baseQuaternion);
+            
+            // 2. Then apply yaw (rotation around up vector)
+            const yawQuat = new THREE.Quaternion().setFromAxisAngle(upVector, playerView.yaw);
+            camera.quaternion.multiply(yawQuat);
+            
+            // 3. Finally apply pitch (rotation around right vector after yaw has been applied)
+            // We need the updated right vector after applying yaw
+            const pitchAxis = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+            const pitchQuat = new THREE.Quaternion().setFromAxisAngle(pitchAxis, playerView.pitch);
+            camera.quaternion.multiply(pitchQuat);
+            
+            // Update camera's Euler angles for debugging
+            camera.rotation.setFromQuaternion(camera.quaternion, camera.rotation.order);
+        }
+        
+        function initPointerLock() {
+            const startButton = document.getElementById('startButton');
+            
+            startButton.addEventListener('click', function() {
+                // Request pointer lock
+                canvas.requestPointerLock = canvas.requestPointerLock || 
+                                           canvas.mozRequestPointerLock ||
+                                           canvas.webkitRequestPointerLock;
+                                           
+                if (canvas.requestPointerLock) {
+                    canvas.requestPointerLock();
+                }
+            });
+            
+            // Set up pointer lock change events
+            document.addEventListener('pointerlockchange', onPointerLockChange, false);
+            document.addEventListener('mozpointerlockchange', onPointerLockChange, false);
+            document.addEventListener('webkitpointerlockchange', onPointerLockChange, false);
+        }
+        
+        function onPointerLockChange() {
+            if (document.pointerLockElement === canvas ||
+                document.mozPointerLockElement === canvas ||
+                document.webkitPointerLockElement === canvas) {
+                
+                // Pointer is locked, hide the start screen
+                document.getElementById('startScreen').style.display = 'none';
+                isLocked = true;
+                showCrosshair();
+                
+                // Add mouse move event listener
+                document.addEventListener('mousemove', onMouseMove, false);
+                debugElement.textContent = 'Pointer lock enabled';
+                console.log('Pointer lock enabled');
+            } else {
+                // Pointer is unlocked, show the start screen
+                document.getElementById('startScreen').style.display = 'flex';
+                isLocked = false;
+                hideCrosshair();
+                
+                // Remove mouse move event listener
+                document.removeEventListener('mousemove', onMouseMove, false);
+                debugElement.textContent = 'Pointer lock disabled. Click to enable.';
+                console.log('Pointer lock disabled');
+            }
+        }
+        
+        function onMouseMove(event) {
+            if (!isLocked) return;
+            
+            // Get mouse movement
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+            
+            // Store original rotation values for debugging
+            const originalYaw = playerView.yaw;
+            const originalPitch = playerView.pitch;
+            
+            // Update player view angles based on mouse movement
+            // Mouse X affects yaw (left/right rotation around the radial axis)
+            playerView.yaw -= movementX * ROTATION_SENSITIVITY;
+            
+            // Mouse Y affects pitch (up/down rotation around the tangential axis)
+            playerView.pitch -= movementY * ROTATION_SENSITIVITY;
+            
+            // Clamp the pitch to prevent flipping
+            playerView.pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, playerView.pitch));
+            
+            // Normalize yaw to keep it in the range [0, 2π)
+            playerView.yaw = (playerView.yaw % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+            
+            // Update camera orientation with the new view angles
+            updateCameraOrientation();
+            
+            // Update debug display
+            updateDebugInfo({
+                movementX: movementX,
+                movementY: movementY,
+                originalYaw: originalYaw,
+                originalPitch: originalPitch
+            });
+        }
+        
+        function initKeyboardControls() {
+            // Keyboard event listeners for movement
+            document.addEventListener('keydown', function(event) {
+                switch(event.code) {
+                    case 'KeyW':
+                    case 'ArrowUp':
+                        moveForward = true;
+                        break;
+                    case 'KeyS':
+                    case 'ArrowDown':
+                        moveBackward = true;
+                        break;
+                    case 'KeyA':
+                    case 'ArrowLeft':
+                        moveLeft = true;
+                        break;
+                    case 'KeyD':
+                    case 'ArrowRight':
+                        moveRight = true;
+                        break;
+                    case 'Space':
+                        if (!jumping) {
+                            jumping = true;
+                            playerVelocity.y = JUMP_FORCE;
+                        }
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', function(event) {
+                switch(event.code) {
+                    case 'KeyW':
+                    case 'ArrowUp':
+                        moveForward = false;
+                        break;
+                    case 'KeyS':
+                    case 'ArrowDown':
+                        moveBackward = false;
+                        break;
+                    case 'KeyA':
+                    case 'ArrowLeft':
+                        moveLeft = false;
+                        break;
+                    case 'KeyD':
+                    case 'ArrowRight':
+                        moveRight = false;
+                        break;
+                }
+            });
+        }
+        
+        function updatePosition(deltaTime) {
+            if (!isLocked) return;
+            
+            // Get the local up vector (radial direction)
+            const upVector = camera.position.clone().normalize();
+            
+            // Calculate the forward and right vectors based on the camera's orientation
+            // We need vectors tangent to the surface for movement
+            
+            // The actual direction the camera is looking
+            const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            
+            // Forward is the projected camera direction onto the tangent plane
+            const forward = cameraDirection.clone()
+                .sub(upVector.clone().multiplyScalar(cameraDirection.dot(upVector)))
+                .normalize();
+                
+            // Right is perpendicular to forward and up
+            const right = new THREE.Vector3().crossVectors(forward, upVector).normalize();
+            
+            // Calculate movement vector based on input (tangent to the surface)
+            const movement = new THREE.Vector3();
+            
+            if (moveForward) movement.add(forward);
+            if (moveBackward) movement.sub(forward);
+            if (moveRight) movement.add(right);
+            if (moveLeft) movement.sub(right);
+            
+            // Apply movement if there is any (along the tangent plane)
+            if (movement.lengthSq() > 0) {
+                movement.normalize().multiplyScalar(MOVE_SPEED * deltaTime);
+                camera.position.add(movement);
+                
+                // Project back to the sphere's surface + player height
+                // This ensures the player stays at the correct height after moving
+                camera.position.normalize().multiplyScalar(MARS_RADIUS + PLAYER_HEIGHT);
+            }
+            
+            // Handle jumping and gravity
+            if (jumping) {
+                // Jump direction is along the up vector (radial)
+                const jumpVec = upVector.clone().multiplyScalar(playerVelocity.y * deltaTime);
+                camera.position.add(jumpVec);
+                
+                // Apply gravity (always pulls toward planet center)
+                playerVelocity.y -= GRAVITY * deltaTime;
+                
+                // Check if landed
+                const currentHeight = camera.position.length();
+                if (currentHeight <= MARS_RADIUS + PLAYER_HEIGHT) {
+                    jumping = false;
+                    playerVelocity.y = 0;
+                    
+                    // Ensure player is at the correct height
+                    camera.position.normalize().multiplyScalar(MARS_RADIUS + PLAYER_HEIGHT);
+                }
+            }
+            
+            // Ensure player stays at the correct height when not jumping
+            if (!jumping) {
+                const currentHeight = camera.position.length();
+                if (Math.abs(currentHeight - (MARS_RADIUS + PLAYER_HEIGHT)) > 0.01) {
+                    camera.position.normalize().multiplyScalar(MARS_RADIUS + PLAYER_HEIGHT);
+                }
+            }
+            
+            // Update spherical coordinates based on new position
+            playerSpherical = cartesianToSpherical(camera.position);
+            
+            // Update camera orientation to align with the new position
+            updateCameraOrientation();
+        }
+        
+        function updateDebugInfo(data = {}) {
+            if (!debugElement) return;
+            
+            // Convert radians to degrees for display
+            const yawDeg = (playerView.yaw * 180 / Math.PI).toFixed(2);
+            const pitchDeg = (playerView.pitch * 180 / Math.PI).toFixed(2);
+            
+            // Convert spherical coordinates to degrees for display
+            const thetaDeg = (playerSpherical.theta * 180 / Math.PI).toFixed(2);
+            const phiDeg = (playerSpherical.phi * 180 / Math.PI).toFixed(2);
+            
+            let debugText = `Spherical Coordinates:\n`;
+            debugText += `r (radial distance): ${playerSpherical.r.toFixed(2)}\n`;
+            debugText += `θ (theta/polar): ${thetaDeg}°\n`;
+            debugText += `φ (phi/azimuthal): ${phiDeg}°\n\n`;
+            
+            debugText += `Player View Angles:\n`;
+            debugText += `Yaw (L/R): ${yawDeg}°\n`;
+            debugText += `Pitch (U/D): ${pitchDeg}°\n\n`;
+            
+            debugText += `Camera Position:\n`;
+            debugText += `X: ${camera.position.x.toFixed(2)}\n`;
+            debugText += `Y: ${camera.position.y.toFixed(2)}\n`;
+            debugText += `Z: ${camera.position.z.toFixed(2)}\n\n`;
+            
+            debugText += `Height above surface: ${(playerSpherical.r - MARS_RADIUS).toFixed(2)}\n\n`;
+            
+            if (data.movementX !== undefined) {
+                debugText += `Mouse Movement:\n`;
+                debugText += `X: ${data.movementX.toFixed(2)} → Yaw\n`;
+                debugText += `Y: ${data.movementY.toFixed(2)} → Pitch\n\n`;
+                
+                if (data.originalYaw !== undefined) {
+                    const originalYawDeg = (data.originalYaw * 180 / Math.PI).toFixed(2);
+                    const originalPitchDeg = (data.originalPitch * 180 / Math.PI).toFixed(2);
+                    
+                    debugText += `View Change:\n`;
+                    debugText += `Yaw: ${originalYawDeg}° → ${yawDeg}°\n`;
+                    debugText += `Pitch: ${originalPitchDeg}° → ${pitchDeg}°\n\n`;
+                }
+            }
+            
+            debugText += `Controls:\n`;
+            debugText += `Forward: ${moveForward ? 'ON' : 'off'}\n`;
+            debugText += `Backward: ${moveBackward ? 'ON' : 'off'}\n`;
+            debugText += `Left: ${moveLeft ? 'ON' : 'off'}\n`;
+            debugText += `Right: ${moveRight ? 'ON' : 'off'}\n`;
+            debugText += `Jumping: ${jumping ? 'ON' : 'off'}\n\n`;
+            
+            debugText += `Pointer Lock: ${isLocked ? 'ACTIVE' : 'INACTIVE'}`;
+            
+            debugElement.textContent = debugText;
+        }
+        
+        function showCrosshair() {
+            crosshairElement.style.display = 'block';
+        }
+        
+        function hideCrosshair() {
+            crosshairElement.style.display = 'none';
+        }
+        
+        function showError(message) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            try {
+                const deltaTime = 0.016; // Approximately 60fps
+                
+                // Update player position
+                updatePosition(deltaTime);
+                
+                // Update debug info even when not moving the mouse
+                updateDebugInfo();
+                
+                // Render scene
+                renderer.render(scene, camera);
+            } catch (error) {
+                console.error('Error in animation loop:', error);
+                showError(`Animation Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -122,53 +122,75 @@ class PlayerMovement {
         // Handle jumping and gravity
         this.updateJumping(deltaTime);
         
-        // Get camera position and direction
+        // Skip movement if camera is not properly set up
+        if (!this.camera.isFirstPerson) {
+            return;
+        }
+        
+        // Get camera position
         const cameraPosition = this.camera.camera.position.clone();
+        
+        // Calculate local up vector (from planet center to player)
+        const up = cameraPosition.clone().normalize();
+        
+        // Calculate movement direction in the tangent plane
+        let moveDirection = new THREE.Vector3(0, 0, 0);
+        
+        // Get camera's forward direction in the tangent plane
         const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.camera.quaternion);
+        const forward = cameraDirection.clone();
         
-        // Calculate movement vector based on keyboard input
-        const movement = new THREE.Vector3();
+        // Project forward onto tangent plane by removing any component in the up direction
+        const upComponent = up.clone().multiplyScalar(forward.dot(up));
+        forward.sub(upComponent).normalize();
         
+        // Calculate right vector as cross product of up and forward
+        const right = new THREE.Vector3().crossVectors(up, forward).normalize();
+        
+        // Add movement components based on input
         if (this.moveForward) {
-            movement.add(cameraDirection);
+            moveDirection.add(forward);
         }
         if (this.moveBackward) {
-            movement.sub(cameraDirection);
+            moveDirection.sub(forward);
         }
-        
-        // For left/right movement, get the right vector by crossing the camera direction with the world up
-        const right = new THREE.Vector3();
-        right.crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0)).normalize();
-        
         if (this.moveRight) {
-            movement.add(right);
+            moveDirection.add(right);
         }
         if (this.moveLeft) {
-            movement.sub(right);
+            moveDirection.sub(right);
         }
         
-        // If there's movement, normalize and apply it
-        if (movement.lengthSq() > 0) {
-            movement.normalize();
-            movement.multiplyScalar(this.playerSpeed * deltaTime);
-            
-            // Project the movement vector onto the tangent plane of the sphere at the player's position
-            const radialDirection = cameraPosition.clone().normalize();
-            
-            // Remove any component in the radial direction
-            const dotProduct = movement.dot(radialDirection);
-            movement.sub(radialDirection.multiplyScalar(dotProduct));
+        // Apply movement if there is any
+        if (moveDirection.lengthSq() > 0) {
+            // Normalize and scale by speed and delta time
+            moveDirection.normalize().multiplyScalar(this.playerSpeed * deltaTime);
             
             // Update position
-            this.camera.camera.position.add(movement);
+            this.camera.camera.position.add(moveDirection);
             
-            // Constrain to sphere surface plus player height and jump height
-            const distanceFromCenter = this.camera.camera.position.length();
+            // Maintain constant distance from planet center (accounting for jump height)
             const targetDistance = this.globe.radius + this.playerHeight + this.jumpHeight;
-            
-            // Normalize the position and scale to the correct distance
             this.camera.camera.position.normalize().multiplyScalar(targetDistance);
+            
+            // Update the camera's spherical coordinates based on new position
+            this.updateCameraSphericalCoordinates();
         }
+    }
+    
+    /**
+     * Update camera's spherical coordinates based on its current position
+     */
+    updateCameraSphericalCoordinates() {
+        if (!this.camera || !this.camera.spherical) return;
+        
+        // Get position
+        const position = this.camera.camera.position;
+        
+        // Update spherical coordinates
+        this.camera.spherical.radius = position.length();
+        this.camera.spherical.phi = Math.acos(position.y / this.camera.spherical.radius);
+        this.camera.spherical.theta = Math.atan2(position.z, position.x);
     }
     
     /**
@@ -189,6 +211,21 @@ class PlayerMovement {
                 this.isJumping = false;
                 this.canJump = true;
                 this.velocity.y = 0;
+            }
+            
+            // Update camera position to account for jump height
+            if (this.camera && this.camera.camera) {
+                const position = this.camera.camera.position;
+                const direction = position.clone().normalize();
+                const targetDistance = this.globe.radius + this.playerHeight + this.jumpHeight;
+                
+                // Set new position with correct distance from center
+                this.camera.camera.position.copy(direction.multiplyScalar(targetDistance));
+                
+                // Update camera orientation
+                if (typeof this.camera.updateCameraPositionAndOrientation === 'function') {
+                    this.camera.updateCameraPositionAndOrientation();
+                }
             }
         } else if (!this.canJump) {
             // If we're falling (not jumping but not on ground)

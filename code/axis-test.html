@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THREE.js Axis Rotation Test</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #222; color: white; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+            z-index: 10;
+        }
+        #debug {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 300px;
+            white-space: pre;
+            z-index: 10;
+        }
+        .axis-group {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+        button {
+            padding: 10px 15px;
+            background: #c1440e;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e05511;
+        }
+        .arrow-key {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #444;
+            color: #fff;
+            line-height: 50px;
+            text-align: center;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .arrow-key:hover {
+            background: #555;
+        }
+        .arrows {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+        .arrows .arrow-key:nth-child(1) { grid-column: 2; grid-row: 1; }
+        .arrows .arrow-key:nth-child(2) { grid-column: 1; grid-row: 2; }
+        .arrows .arrow-key:nth-child(3) { grid-column: 2; grid-row: 2; visibility: hidden; }
+        .arrows .arrow-key:nth-child(4) { grid-column: 3; grid-row: 2; }
+        .arrows .arrow-key:nth-child(5) { grid-column: 2; grid-row: 3; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>THREE.js Axis Rotation Test</h2>
+        <p>This test shows the difference between X, Y, and Z axis rotations in THREE.js.</p>
+        <p>Use the buttons below to rotate around different axes.</p>
+        <p>Arrow keys also control rotation:</p>
+        <ul>
+            <li>Up/Down: X-axis rotation</li>
+            <li>Left/Right: Y-axis rotation</li>
+        </ul>
+    </div>
+    
+    <div id="debug">Rotation values will appear here</div>
+    
+    <div class="axis-group">
+        <button id="reset-btn">Reset Position</button>
+        <button id="x-plus">Rotate X+</button>
+        <button id="x-minus">Rotate X-</button>
+        <button id="y-plus">Rotate Y+</button>
+        <button id="y-minus">Rotate Y-</button>
+        <button id="z-plus">Rotate Z+</button>
+        <button id="z-minus">Rotate Z-</button>
+    </div>
+    
+    <div class="arrows">
+        <div class="arrow-key" data-key="ArrowUp">↑</div>
+        <div class="arrow-key" data-key="ArrowLeft">←</div>
+        <div class="arrow-key"></div>
+        <div class="arrow-key" data-key="ArrowRight">→</div>
+        <div class="arrow-key" data-key="ArrowDown">↓</div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+    
+    <script>
+        // Fallback loading mechanism in case the script tag fails
+        function loadThreeJs() {
+            return new Promise((resolve, reject) => {
+                // Check if THREE is already defined (from the script tag)
+                if (typeof THREE !== 'undefined') {
+                    console.log('THREE.js already loaded from script tag');
+                    resolve('ScriptTag');
+                    return;
+                }
+                
+                // Try to load from CDN
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js';
+                cdnScript.onload = () => resolve('CDN');
+                cdnScript.onerror = () => {
+                    console.warn('Failed to load Three.js from CDN, trying local file...');
+                    // Fall back to local file
+                    const localScript = document.createElement('script');
+                    localScript.src = 'js/libs/three.min.js';
+                    localScript.onload = () => resolve('Local');
+                    localScript.onerror = () => reject(new Error('Could not load Three.js from CDN or local file'));
+                    document.head.appendChild(localScript);
+                };
+                document.head.appendChild(cdnScript);
+            });
+        }
+        
+        // Main variables
+        let scene, camera, renderer;
+        let cube, axesHelper;
+        let debugElement;
+        
+        // Wait for everything to load
+        window.addEventListener('load', async function() {
+            try {
+                // Try to load THREE.js if it's not already available
+                if (typeof THREE === 'undefined') {
+                    await loadThreeJs();
+                }
+                
+                // Check if THREE is loaded
+                if (typeof THREE === 'undefined') {
+                    throw new Error('THREE.js failed to load!');
+                }
+                
+                console.log('THREE.js loaded successfully! Version:', THREE.REVISION);
+                
+                // Get debug element
+                debugElement = document.getElementById('debug');
+                
+                // Initialize scene
+                initScene();
+                
+                // Setup controls
+                setupControls();
+                
+                // Start animation loop
+                animate();
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        function initScene() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            
+            // Create a cube with labeled faces
+            createLabeledCube();
+            
+            // Add axes helper
+            axesHelper = new THREE.AxesHelper(3);
+            scene.add(axesHelper);
+            
+            // Add some lighting
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function createLabeledCube() {
+            // Create geometry
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            
+            // Create materials for each face with different colors
+            const materials = [
+                new THREE.MeshStandardMaterial({ color: 0xff0000 }), // Right - Red
+                new THREE.MeshStandardMaterial({ color: 0x00ff00 }), // Left - Green
+                new THREE.MeshStandardMaterial({ color: 0x0000ff }), // Top - Blue
+                new THREE.MeshStandardMaterial({ color: 0xffff00 }), // Bottom - Yellow
+                new THREE.MeshStandardMaterial({ color: 0xff00ff }), // Front - Magenta
+                new THREE.MeshStandardMaterial({ color: 0x00ffff })  // Back - Cyan
+            ];
+            
+            // Create cube
+            cube = new THREE.Mesh(geometry, materials);
+            cube.rotation.order = 'YXZ'; // Same as camera default
+            scene.add(cube);
+            
+            // Add labels to each face
+            const faceNames = ["Right", "Left", "Top", "Bottom", "Front", "Back"];
+            const positions = [
+                [1.01, 0, 0], [-1.01, 0, 0], [0, 1.01, 0],
+                [0, -1.01, 0], [0, 0, 1.01], [0, 0, -1.01]
+            ];
+            
+            // Add text for each face
+            for (let i = 0; i < 6; i++) {
+                createLabel(faceNames[i], positions[i]);
+            }
+            
+            // Add axis labels
+            createLabel("X", [3.5, 0, 0], 0xff0000);
+            createLabel("Y", [0, 3.5, 0], 0x00ff00);
+            createLabel("Z", [0, 0, 3.5], 0x0000ff);
+        }
+        
+        function createLabel(text, position, color = 0xffffff) {
+            // Create canvas for text
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            
+            // Draw text
+            context.fillStyle = '#ffffff';
+            context.font = 'Bold 40px Arial';
+            context.textAlign = 'center';
+            context.fillText(text, 64, 48);
+            
+            // Create texture and sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture, color: color });
+            const sprite = new THREE.Sprite(material);
+            
+            // Scale and position
+            sprite.scale.set(1, 0.5, 1);
+            sprite.position.set(position[0], position[1], position[2]);
+            
+            // Add to scene
+            scene.add(sprite);
+        }
+        
+        function setupControls() {
+            // Reset button
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                cube.rotation.set(0, 0, 0);
+                updateDebugInfo();
+            });
+            
+            // X rotation buttons
+            document.getElementById('x-plus').addEventListener('click', function() {
+                cube.rotation.x += Math.PI / 12; // 15 degrees
+                updateDebugInfo();
+            });
+            
+            document.getElementById('x-minus').addEventListener('click', function() {
+                cube.rotation.x -= Math.PI / 12;
+                updateDebugInfo();
+            });
+            
+            // Y rotation buttons
+            document.getElementById('y-plus').addEventListener('click', function() {
+                cube.rotation.y += Math.PI / 12;
+                updateDebugInfo();
+            });
+            
+            document.getElementById('y-minus').addEventListener('click', function() {
+                cube.rotation.y -= Math.PI / 12;
+                updateDebugInfo();
+            });
+            
+            // Z rotation buttons
+            document.getElementById('z-plus').addEventListener('click', function() {
+                cube.rotation.z += Math.PI / 12;
+                updateDebugInfo();
+            });
+            
+            document.getElementById('z-minus').addEventListener('click', function() {
+                cube.rotation.z -= Math.PI / 12;
+                updateDebugInfo();
+            });
+            
+            // Arrow key buttons
+            document.querySelectorAll('.arrow-key[data-key]').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    handleArrowKey(this.getAttribute('data-key'));
+                });
+            });
+            
+            // Keyboard controls
+            document.addEventListener('keydown', function(event) {
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                    handleArrowKey(event.key);
+                    event.preventDefault(); // Prevent page scrolling
+                }
+            });
+        }
+        
+        function handleArrowKey(key) {
+            const rotationAmount = Math.PI / 24; // 7.5 degrees
+            
+            switch(key) {
+                case 'ArrowUp':
+                    cube.rotation.x -= rotationAmount; // Tilt up
+                    break;
+                case 'ArrowDown':
+                    cube.rotation.x += rotationAmount; // Tilt down
+                    break;
+                case 'ArrowLeft':
+                    cube.rotation.y -= rotationAmount; // Turn left
+                    break;
+                case 'ArrowRight':
+                    cube.rotation.y += rotationAmount; // Turn right
+                    break;
+            }
+            
+            updateDebugInfo();
+        }
+        
+        function updateDebugInfo() {
+            // Convert to degrees for display
+            const xDeg = (cube.rotation.x * 180 / Math.PI).toFixed(1);
+            const yDeg = (cube.rotation.y * 180 / Math.PI).toFixed(1);
+            const zDeg = (cube.rotation.z * 180 / Math.PI).toFixed(1);
+            
+            // Update debug text
+            debugElement.textContent = 
+                `Cube Rotation (degrees):\n` +
+                `X: ${xDeg}° (Up/Down)\n` +
+                `Y: ${yDeg}° (Left/Right)\n` +
+                `Z: ${zDeg}°\n\n` +
+                `Rotation Order: ${cube.rotation.order}\n\n` +
+                `Notes:\n` +
+                `- X rotation: Tilt forward/backward\n` +
+                `- Y rotation: Turn left/right\n` +
+                `- Z rotation: Roll clockwise/counter-clockwise`;
+            
+            // Log to console
+            console.log(`Rotation: X=${xDeg}°, Y=${yDeg}°, Z=${zDeg}°`);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html> 
