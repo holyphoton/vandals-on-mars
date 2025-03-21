@@ -65,11 +65,11 @@ class Gun {
      */
     fire() {
         const now = Date.now();
-        if (now - this.lastFireTime < this.fireRate) {
+        if (now - this.lastFired < this.fireRate) {
             return false;
         }
         
-        this.lastFireTime = now;
+        this.lastFired = now;
         
         // Play sound if implemented
         this.playSound();
@@ -355,10 +355,10 @@ class ShooterGun extends Gun {
 
         // Set default options for the shooter gun
         this.options = {
-            ammo: 30,
-            maxAmmo: 100,
-            fireRate: 0.2, // seconds between shots
-            bulletSpeed: 5,
+            ammo: 100,
+            maxAmmo: 500,
+            fireRate: 0.1, // seconds between shots
+            bulletSpeed: 20,
             bulletSize: 0.1,
             ...options
         };
@@ -372,6 +372,7 @@ class ShooterGun extends Gun {
         this.isFiring = false;
         this.ammo = this.options.ammo; // Set initial ammo
         this.maxAmmo = this.options.maxAmmo;
+        this.fireRate = this.options.fireRate * 1000; // Convert seconds to milliseconds
         
         // Create the gun model
         this.createGunModel();
@@ -427,7 +428,7 @@ class ShooterGun extends Gun {
         const now = Date.now();
         
         // Check if enough time has passed since last fire
-        if (now - this.lastFired < this.options.fireRate) {
+        if (now - this.lastFired < this.fireRate) {
             return false;
         }
         
@@ -550,12 +551,18 @@ class ShooterGun extends Gun {
                     if (distance < hitRadius) {
                         console.log(`Hit detected! Distance: ${distance.toFixed(2)}, Billboard index: ${j}`);
                         
-                        // Show hit effect and reduce billboard health
-                        this.showHitEffect(billboard);
+                        // Store the bullet position before removing it
+                        const bulletPosition = bullet.position.clone();
                         
-                        // Remove bullet from scene and array
+                        // Remove bullet from scene and array FIRST
                         this.scene.remove(bullet);
                         this.bullets.splice(i, 1);
+                        
+                        // THEN create explosion at the stored bullet position
+                        this.createBulletImpactEffect(bulletPosition);
+                        
+                        // Show hit effect and reduce billboard health
+                        this.showHitEffect(billboard);
                         
                         collided = true;
                         break;
@@ -595,8 +602,8 @@ class ShooterGun extends Gun {
             billboard.health = 100;
         }
         
-        // Increase damage amount for more noticeable effect
-        const damageAmount = 25; // Was 20
+        // Set damage amount for 20 hits to destroy (100/5 = 20 hits)
+        const damageAmount = 4; // Changed from 25 to require 20 hits
         billboard.health -= damageAmount;
         console.log(`Billboard hit! Health reduced to: ${billboard.health}`);
         
@@ -755,6 +762,91 @@ class ShooterGun extends Gun {
         };
         
         animate();
+    }
+
+    /**
+     * Creates a bullet impact explosion effect
+     * @param {THREE.Vector3} position - The position of the impact
+     */
+    createBulletImpactEffect(position) {
+        // Create a flash of light at impact point
+        const impactLight = new THREE.PointLight(0xffaa00, 2, 3);
+        impactLight.position.copy(position);
+        this.scene.add(impactLight);
+        
+        // Create particle explosion
+        const particleCount = 10;
+        const particles = [];
+        
+        for (let i = 0; i < particleCount; i++) {
+            // Small sphere for each particle
+            const particleGeometry = new THREE.SphereGeometry(0.05, 4, 4);
+            const particleMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff3300,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            particle.position.copy(position);
+            
+            // Random velocity for each particle
+            const velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 2,
+                (Math.random() - 0.5) * 2,
+                (Math.random() - 0.5) * 2
+            );
+            velocity.normalize().multiplyScalar(0.05);
+            
+            particle.userData.velocity = velocity;
+            particle.userData.lifetime = 300; // milliseconds
+            particle.userData.born = Date.now();
+            
+            this.scene.add(particle);
+            particles.push(particle);
+        }
+        
+        // Animate and remove particles
+        const animateParticles = () => {
+            const now = Date.now();
+            let allDone = true;
+            
+            particles.forEach(particle => {
+                const age = now - particle.userData.born;
+                
+                if (age < particle.userData.lifetime) {
+                    // Move particle
+                    particle.position.add(particle.userData.velocity);
+                    
+                    // Fade out
+                    const opacity = 1 - (age / particle.userData.lifetime);
+                    particle.material.opacity = opacity;
+                    
+                    allDone = false;
+                } else if (particle.parent) {
+                    // Remove expired particle
+                    this.scene.remove(particle);
+                }
+            });
+            
+            // Remove light after short time
+            if (now - impactLight.userData.born > 150) {
+                this.scene.remove(impactLight);
+            } else {
+                allDone = false;
+            }
+            
+            // Continue animation if needed
+            if (!allDone) {
+                requestAnimationFrame(animateParticles);
+            }
+        };
+        
+        // Store creation time for the light
+        impactLight.userData = { born: Date.now() };
+        
+        // Start animation
+        requestAnimationFrame(animateParticles);
     }
 }
 
