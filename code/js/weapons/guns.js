@@ -43,8 +43,20 @@ class Gun {
      */
     addToScene() {
         if (this.gunModel) {
+            console.log(`Adding ${this.constructor.name} to scene`);
+            
+            // Make sure we have access to the camera
+            if (!this.playerCamera || !this.playerCamera.camera) {
+                console.error('Cannot add gun to scene: playerCamera or camera not available', {
+                    hasPlayerCamera: !!this.playerCamera,
+                    hasCamera: this.playerCamera ? !!this.playerCamera.camera : false
+                });
+                return;
+            }
+            
             // Make sure we remove it first in case it was already added
             if (this.gunModel.parent) {
+                console.log(`Removing ${this.constructor.name} from previous parent`);
                 this.gunModel.parent.remove(this.gunModel);
             }
             
@@ -54,9 +66,16 @@ class Gun {
             // Set the visibility based on whether it's the active weapon
             this.gunModel.visible = true;
             
-            console.log("Gun model added to camera:", this.constructor.name);
+            // Force update position
+            this.gunModel.position.set(0.3, -0.3, -0.5);
+            
+            console.log(`${this.constructor.name} added to camera:`, {
+                isVisible: this.gunModel.visible,
+                hasParent: !!this.gunModel.parent,
+                parentIsCamera: this.gunModel.parent === this.playerCamera.camera
+            });
         } else {
-            console.error("Gun model not created before adding to scene");
+            console.error(`${this.constructor.name} model not created before adding to scene`);
         }
     }
     
@@ -106,32 +125,34 @@ class Gun {
  */
 class BillboardGun extends Gun {
     /**
-     * Creates a billboard placement gun
-     * @param {THREE.Scene} scene - The scene to add the gun to
-     * @param {PlayerCamera} playerCamera - The player's camera
-     * @param {MarsGlobe} globe - The Mars globe for billboard placement
+     * Create a new billboard gun
+     * @param {PlayerCamera} playerCamera - The player camera
+     * @param {THREE.Scene} scene - The game scene
+     * @param {MarsGlobe} globe - The Mars globe
      * @param {Object} options - Optional configuration
      */
-    constructor(scene, playerCamera, globe, options = {}) {
-        super(scene, playerCamera, options);
+    constructor(playerCamera, scene, globe, options = {}) {
+        super(scene, playerCamera);
         
+        // Store globe reference
         this.globe = globe;
+        
+        // Billboard properties
+        this.placedBillboards = []; // Array to track billboards
         this.ammo = options.ammo || 5; // Number of billboards that can be placed
         this.maxAmmo = options.maxAmmo || 5;
-        this.placedBillboards = [];
         
-        console.log("BillboardGun initialized with ammo:", this.ammo);
+        // Set up text canvas for billboard textures
+        this.textCanvas = document.createElement('canvas');
+        this.textCanvas.width = 512; // Doubled from 256
+        this.textCanvas.height = 256; // Doubled from 128
+        this.textContext = this.textCanvas.getContext('2d');
         
         // Create the gun model
         this.createGunModel();
         this.addToScene();
         
-        // Font for billboard text
-        this.textCanvas = document.createElement('canvas');
-        this.textCanvas.width = 512;  // Doubled from 256
-        this.textCanvas.height = 256; // Doubled from 128
-        this.textContext = this.textCanvas.getContext('2d');
-        this.defaultFont = "bold 48px Arial"; // Doubled from 24px
+        console.log('Billboard gun created with ammo:', this.ammo);
     }
     
     /**
@@ -177,12 +198,19 @@ class BillboardGun extends Gun {
             billboardText = window.game.getBillboardText();
         }
         
+        // Generate unique ID for the billboard
+        const billboardId = this.generateUUID();
+        
         // Create a billboard object for tracking
         const billboard = {
+            id: billboardId,
             mesh: billboardGroup,
             position: position.clone(),
+            width: 5, // Initial width
+            height: 5, // Initial height
             health: 100,
-            text: billboardText
+            text: billboardText,
+            owner: window.game ? window.game.getUsername() : "Anonymous"
         };
         
         // Create text texture for the billboard
@@ -279,7 +307,229 @@ class BillboardGun extends Gun {
         // Add to tracked billboards
         this.placedBillboards.push(billboard);
         
+        // Sync with server if game is multiplayer enabled
+        this.syncBillboard(billboard);
+        
         return billboard;
+    }
+    
+    /**
+     * Creates a billboard from server data
+     * @param {Object} data - Billboard data from server
+     */
+    createBillboardFromData(data) {
+        // Check if we already have this billboard
+        const existingIndex = this.placedBillboards.findIndex(b => b.id === data.id);
+        if (existingIndex !== -1) {
+            // Update existing billboard
+            this.updateBillboard(data);
+            return;
+        }
+        
+        // Create a billboard group that contains sign and legs
+        const billboardGroup = new THREE.Group();
+        
+        // Create a billboard object for tracking
+        const billboard = {
+            id: data.id,
+            mesh: billboardGroup,
+            position: new THREE.Vector3(data.position.x, data.position.y, data.position.z),
+            width: data.width || 5,
+            height: data.height || 5,
+            health: data.health || 100,
+            text: data.text || "Default Turf",
+            owner: data.owner || "Anonymous"
+        };
+        
+        // Create text texture for the billboard
+        const textTexture = this.createTextTexture(billboard.text);
+        
+        // Create the sign part of the billboard (the actual display)
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0);
+        const signMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            side: THREE.DoubleSide,
+            map: textTexture,
+            transparent: true
+        });
+        const signMesh = new THREE.Mesh(signGeometry, signMaterial);
+        
+        // Position the sign halfway up the legs
+        signMesh.position.y = 2.8;
+        billboardGroup.add(signMesh);
+        
+        // Create legs for the billboard
+        const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8);
+        const legMaterial = new THREE.MeshStandardMaterial({
+            color: 0x333333
+        });
+        
+        // Left leg
+        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+        leftLeg.position.set(-1.2, 0.5, 0);
+        billboardGroup.add(leftLeg);
+        
+        // Right leg
+        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+        rightLeg.position.set(1.2, 0.5, 0);
+        billboardGroup.add(rightLeg);
+        
+        // Set position from data
+        billboardGroup.position.copy(billboard.position);
+        
+        // If quaternion data is available, use it for orientation
+        if (data.quaternion) {
+            billboardGroup.quaternion.set(
+                data.quaternion.x,
+                data.quaternion.y,
+                data.quaternion.z,
+                data.quaternion.w
+            );
+            console.log(`Set billboard ${data.id} orientation from quaternion data`);
+        }
+        // Otherwise orient the billboard properly on the planet surface
+        else if (this.globe && this.globe.globe) {
+            const globeCenter = this.globe.globe.position.clone();
+            const upVector = billboard.position.clone().sub(globeCenter).normalize();
+            
+            // Use world up as reference
+            const worldUp = new THREE.Vector3(0, 1, 0);
+            const reference = Math.abs(upVector.dot(worldUp)) > 0.9 
+                ? new THREE.Vector3(1, 0, 0) 
+                : worldUp;
+            
+            // Calculate orientation vectors
+            const rightVector = new THREE.Vector3().crossVectors(upVector, reference).normalize();
+            const forwardVector = new THREE.Vector3().crossVectors(rightVector, upVector).normalize();
+            
+            // Create rotation matrix
+            const matrix = new THREE.Matrix4().makeBasis(rightVector, upVector, forwardVector);
+            billboardGroup.quaternion.setFromRotationMatrix(matrix);
+        }
+        
+        // Add the billboard to the scene
+        this.scene.add(billboardGroup);
+        
+        // Scale according to health/size
+        const healthScale = 0.5 + (billboard.health / 100) * 0.5;
+        billboardGroup.scale.set(healthScale, healthScale, healthScale);
+        
+        // Add to tracked billboards
+        this.placedBillboards.push(billboard);
+        
+        return billboard;
+    }
+    
+    /**
+     * Updates an existing billboard with server data
+     * @param {Object} data - Billboard data from server
+     */
+    updateBillboard(data) {
+        // Find the billboard in our local array
+        const index = this.placedBillboards.findIndex(b => b.id === data.id);
+        if (index === -1) {
+            console.warn(`Billboard ${data.id} not found in local array`);
+            return null;
+        }
+        
+        const billboard = this.placedBillboards[index];
+        const mesh = billboard.mesh;
+        
+        if (!mesh) {
+            console.warn(`Billboard ${data.id} has no mesh`);
+            return null;
+        }
+        
+        console.log(`Updating billboard ${data.id} with data:`, data);
+        
+        // Update properties
+        billboard.width = data.width || billboard.width;
+        billboard.height = data.height || billboard.height;
+        
+        // Important: Update health value which affects scaling
+        const oldHealth = billboard.health;
+        billboard.health = data.health || billboard.health;
+        
+        // Log health change
+        if (oldHealth !== billboard.health) {
+            console.log(`Billboard health changed from ${oldHealth} to ${billboard.health}`);
+        }
+        
+        billboard.text = data.text || billboard.text;
+        billboard.owner = data.owner || billboard.owner;
+        
+        // Update position if provided
+        if (data.position) {
+            const newPosition = new THREE.Vector3(
+                data.position.x,
+                data.position.y,
+                data.position.z
+            );
+            billboard.position.copy(newPosition);
+            mesh.position.copy(newPosition);
+        }
+        
+        // Update rotation/orientation if quaternion is provided
+        if (data.quaternion) {
+            mesh.quaternion.set(
+                data.quaternion.x,
+                data.quaternion.y,
+                data.quaternion.z,
+                data.quaternion.w
+            );
+            console.log(`Updated billboard ${data.id} orientation with quaternion data`);
+        }
+        
+        // Scale according to health/size
+        const healthScale = 0.5 + (billboard.health / 100) * 0.5;
+        mesh.scale.set(healthScale, healthScale, healthScale);
+        
+        console.log(`Billboard ${data.id} scaled to: ${healthScale.toFixed(2)}`);
+        
+        // Update text if changed
+        if (data.text && data.text !== billboard.text) {
+            // Update the texture
+            const signMesh = mesh.children[0];
+            if (signMesh) {
+                const textTexture = this.createTextTexture(data.text);
+                if (signMesh.material) {
+                    signMesh.material.map = textTexture;
+                    signMesh.material.needsUpdate = true;
+                }
+            }
+        }
+        
+        return billboard;
+    }
+    
+    /**
+     * Sync billboard with the server
+     * @param {Object} billboard - The billboard to sync
+     */
+    syncBillboard(billboard) {
+        if (!window.game || !window.game.syncBillboardData) {
+            console.log('Game or sync function not available');
+            return;
+        }
+        
+        window.game.syncBillboardData(billboard);
+    }
+    
+    /**
+     * Generate a UUID for a billboard
+     * @returns {string} - Unique identifier
+     */
+    generateUUID() {
+        // Use helper if available
+        if (window.Helpers && window.Helpers.generateUUID) {
+            return window.Helpers.generateUUID();
+        }
+        
+        // Simple implementation if helper not available
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
     
     /**
@@ -382,41 +632,35 @@ class BillboardGun extends Gun {
     }
 
     /**
-     * Fires the gun to place a billboard at the target location
+     * Fires the billboard gun
+     * @returns {boolean} - Whether the gun was fired successfully
      */
     fire() {
         // Check ammo
         if (this.ammo <= 0) {
-            console.log("BillboardGun: Out of ammo!");
+            console.log("Out of ammo!");
             return false;
         }
         
-        // Get the camera position and direction
-        const cameraPosition = new THREE.Vector3();
-        this.playerCamera.camera.getWorldPosition(cameraPosition);
-        const direction = this.getCameraDirection();
+        // Get ray from camera center
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), this.playerCamera.camera);
         
-        // First try to use raycasting to find an intersection with the planet
-        if (this.globe && this.globe.globe) {
-            // Create a raycaster from camera in view direction
-            const raycaster = new THREE.Raycaster(cameraPosition, direction);
-            const intersects = raycaster.intersectObject(this.globe.globe, true);
-            
-            // If we found an intersection point with the planet
-            if (intersects.length > 0) {
-                const intersectionPoint = intersects[0].point;
-                this.placeBillboard(intersectionPoint, cameraPosition);
-                this.ammo--;
-                console.log(`Billboard placed! Ammo remaining: ${this.ammo}/${this.maxAmmo}`);
-                return true;
-            }
-        }
+        // Store camera position for billboard orientation
+        const cameraPosition = this.playerCamera.camera.position.clone();
         
-        // If raycasting didn't find a hit or globe doesn't exist,
-        // place billboard 10 units away and project to surface
+        // Direction vector from camera
+        const direction = this.playerCamera.camera.getWorldDirection(new THREE.Vector3());
         
-        // Calculate position 10 units in front of player
-        const targetPosition = cameraPosition.clone().add(direction.clone().multiplyScalar(10));
+        // Calculate placement position - place it farther away (10 units) from camera
+        const placementDistance = 10;
+        let targetPosition = cameraPosition.clone().add(
+            direction.clone().multiplyScalar(placementDistance)
+        );
+        
+        // Debug the placement position
+        console.log("Billboard placement - Camera pos:", cameraPosition);
+        console.log("Billboard placement - Target pos:", targetPosition);
         
         // If we have a globe reference, project to surface
         if (this.globe && this.globe.globe) {
@@ -431,7 +675,9 @@ class BillboardGun extends Gun {
             
             // Normalize and scale to radius for surface position
             centerToTarget.normalize();
-            const surfacePosition = globeCenter.clone().add(centerToTarget.multiplyScalar(radius));
+            const surfacePosition = globeCenter.clone().add(centerToTarget.multiplyScalar(radius + 0.1)); // Slight offset above surface
+            
+            console.log("Billboard placement - Surface pos:", surfacePosition);
             
             // Place billboard at this surface position
             this.placeBillboard(surfacePosition, cameraPosition);
@@ -443,8 +689,54 @@ class BillboardGun extends Gun {
         // Decrease ammo
         this.ammo--;
         
+        // Play sound and visual effect
+        this.playSound();
+        
         console.log(`Billboard placed! Ammo remaining: ${this.ammo}/${this.maxAmmo}`);
         return true;
+    }
+
+    /**
+     * Sync billboard removal with the server
+     * @param {Object} billboard - The billboard to remove
+     */
+    syncBillboardRemoval(billboard) {
+        if (!window.game || !window.game.socket || window.game.socket.readyState !== WebSocket.OPEN) {
+            console.log('Game or socket not available for removal sync');
+            return;
+        }
+        
+        const removalData = {
+            type: 'billboard_remove',
+            id: billboard.id,
+            timestamp: Date.now()
+        };
+        
+        window.game.socket.send(JSON.stringify(removalData));
+        console.log('Sent billboard removal sync to server:', billboard.id);
+    }
+    
+    /**
+     * Remove billboard from local tracking
+     * @param {string} billboardId - ID of the billboard to remove
+     */
+    removeBillboard(billboardId) {
+        const index = this.placedBillboards.findIndex(b => b.id === billboardId);
+        if (index !== -1) {
+            const billboard = this.placedBillboards[index];
+            
+            // Remove from scene if it exists
+            if (billboard.mesh) {
+                this.scene.remove(billboard.mesh);
+            }
+            
+            // Remove from tracking array
+            this.placedBillboards.splice(index, 1);
+            console.log(`Billboard ${billboardId} removed from tracking`);
+            return true;
+        }
+        
+        return false;
     }
 }
 
@@ -725,30 +1017,9 @@ class ShooterGun extends Gun {
         
         // Log billboard children for debugging
         console.log(`Billboard has ${billboard.mesh.children.length} children`);
-        billboard.mesh.children.forEach((child, index) => {
-            console.log(`Billboard child ${index} type:`, child.type, child.geometry ? child.geometry.type : "no geometry");
-        });
         
-        // Update billboard text to the player's billboard text
-        if (signMesh && signMesh.material && signMesh.material.map) {
-            // Get the player's current billboard text from game
-            if (window.game && typeof window.game.getBillboardText === 'function') {
-                // Update billboard object with new text
-                billboard.text = window.game.getBillboardText();
-                
-                // Get the instance of BillboardGun to use its text creation method
-                if (this.weaponManager && this.weaponManager.billboardGun) {
-                    // Create new texture with updated text
-                    const newTexture = this.weaponManager.billboardGun.createTextTexture(billboard.text);
-                    
-                    // Update the sign material's texture
-                    signMesh.material.map = newTexture;
-                    signMesh.material.needsUpdate = true;
-                    
-                    console.log(`Billboard text updated to: ${billboard.text}`);
-                }
-            }
-        }
+        // DO NOT update billboard text - keep original owner and text
+        // This prevents the ownership change issue
         
         // Flash the billboard red
         if (signMesh && signMesh.material) {
@@ -780,8 +1051,15 @@ class ShooterGun extends Gun {
         // Create impact particles
         this.createBulletImpactEffect(billboard.mesh.position);
         
-        // If health <= 0, destroy the billboard
+        // Sync the updated billboard (health/scale) with the server
+        if (window.game && typeof window.game.syncBillboardData === 'function') {
+            window.game.syncBillboardData(billboard);
+            console.log(`Synced damaged billboard with server. Health: ${billboard.health}`);
+        }
+        
+        // If health is zero or less, destroy the billboard
         if (billboard.health <= 0) {
+            console.log("Billboard destroyed due to health reaching zero");
             this.destroyBillboard(billboard);
         }
     }
@@ -795,11 +1073,19 @@ class ShooterGun extends Gun {
         
         console.log("Billboard destroyed!");
         
+        // Store the billboard ID before animation starts
+        const billboardId = billboard.id;
+        
         // Create explosion effect at the billboard's position
         this.createExplosion(billboard.mesh.position);
         
         // Trigger the falling animation
         this.animateBillboardDestruction(billboard);
+        
+        // Sync billboard removal with the server
+        if (this.weaponManager && this.weaponManager.billboardGun) {
+            this.weaponManager.billboardGun.syncBillboardRemoval(billboard);
+        }
         
         // Remove from billboards array after a delay (animation will remove from scene)
         setTimeout(() => {
@@ -1013,13 +1299,9 @@ class WeaponManager {
         
         // Create billboard gun
         this.billboardGun = new BillboardGun(
-            this.scene,
             this.playerCamera,
-            this.globe,
-            {
-                ammo: 3,
-                maxAmmo: 5
-            }
+            this.scene,
+            this.globe
         );
         this.weapons.push(this.billboardGun);
         
@@ -1052,13 +1334,41 @@ class WeaponManager {
      * Update the weapon indicator in the UI
      */
     updateWeaponIndicator() {
+        console.log("Updating weapon indicator UI");
+        
+        // First, make sure the container is visible
+        const weaponContainer = document.getElementById('weapon-indicator-container');
+        const gameUI = document.getElementById('game-ui');
+        
+        if (gameUI) {
+            gameUI.style.display = 'block';
+            console.log("Game UI container display set to block");
+        } else {
+            console.warn("Game UI container not found");
+        }
+        
+        if (weaponContainer) {
+            weaponContainer.style.display = 'flex';
+            console.log("Weapon indicator container display set to flex");
+        } else {
+            console.warn("Weapon indicator container not found");
+        }
+        
         const billboardIndicator = document.querySelector('.gun-indicator[data-weapon="billboard"]');
         const shooterIndicator = document.querySelector('.gun-indicator[data-weapon="shooter"]');
         const ammoDisplay = document.querySelector('.ammo-display');
         const billboardCount = document.querySelector('.billboard-count');
         
+        console.log("UI Elements found:", {
+            billboardIndicator: !!billboardIndicator,
+            shooterIndicator: !!shooterIndicator,
+            ammoDisplay: !!ammoDisplay,
+            billboardCount: !!billboardCount
+        });
+        
         // Skip if elements don't exist yet
         if (!billboardIndicator || !shooterIndicator || !ammoDisplay || !billboardCount) {
+            console.warn("Cannot update weapon indicator: UI elements not found");
             return;
         }
         
@@ -1066,9 +1376,11 @@ class WeaponManager {
         if (this.isBillboardGunActive()) {
             billboardIndicator.classList.add('active');
             shooterIndicator.classList.remove('active');
+            console.log("Billboard gun indicator activated");
         } else {
             billboardIndicator.classList.remove('active');
             shooterIndicator.classList.add('active');
+            console.log("Shooter gun indicator activated");
         }
         
         // Update ammo display
@@ -1076,6 +1388,7 @@ class WeaponManager {
         if (ammoInfo) {
             ammoDisplay.textContent = `Ammo: ${ammoInfo.ammo}/${ammoInfo.maxAmmo}`;
             billboardCount.textContent = `Billboards: ${ammoInfo.billboards}/${ammoInfo.maxBillboards}`;
+            console.log("Ammo display updated:", ammoInfo);
         }
     }
     
@@ -1126,12 +1439,49 @@ class WeaponManager {
      * Update weapon visibility based on active weapon
      */
     updateWeaponVisibility() {
-        if (this.billboardGun && this.billboardGun.gunModel) {
-            this.billboardGun.gunModel.visible = this.isBillboardGunActive();
+        // Ensure both weapons are created
+        if (!this.billboardGun || !this.shooterGun) {
+            console.warn("Cannot update weapon visibility: weapons not fully initialized");
+            return;
         }
         
-        if (this.shooterGun && this.shooterGun.gunModel) {
-            this.shooterGun.gunModel.visible = this.isShooterGunActive();
+        // Ensure gun models exist
+        if (!this.billboardGun.gunModel || !this.shooterGun.gunModel) {
+            console.warn("Cannot update weapon visibility: gun models not created");
+            return;
+        }
+
+        console.log("Updating weapon visibility - active index:", this.activeWeaponIndex);
+        
+        // Make sure both guns are added to the scene if not already
+        if (!this.billboardGun.gunModel.parent) {
+            console.log("Billboard gun not in scene - adding it");
+            this.billboardGun.addToScene();
+        }
+        
+        if (!this.shooterGun.gunModel.parent) {
+            console.log("Shooter gun not in scene - adding it");
+            this.shooterGun.addToScene();
+        }
+        
+        // Set visibility based on active weapon
+        this.billboardGun.gunModel.visible = this.isBillboardGunActive();
+        this.shooterGun.gunModel.visible = this.isShooterGunActive();
+        
+        console.log("Weapon visibility updated:", {
+            billboard: this.billboardGun.gunModel.visible,
+            shooter: this.shooterGun.gunModel.visible,
+            billboardParent: this.billboardGun.gunModel.parent ? "attached" : "detached",
+            shooterParent: this.shooterGun.gunModel.parent ? "attached" : "detached"
+        });
+
+        // Force gun model position update
+        if (this.billboardGun.gunModel) {
+            this.billboardGun.gunModel.position.set(0.3, -0.3, -0.5);
+        }
+        
+        if (this.shooterGun.gunModel) {
+            this.shooterGun.gunModel.position.set(0.3, -0.3, -0.5);
         }
     }
     
@@ -1216,4 +1566,43 @@ class WeaponManager {
             maxBillboards: this.billboardGun.maxAmmo
         };
     }
-} 
+
+    /**
+     * Create billboard from data - delegates to billboardGun
+     * @param {Object} data - Billboard data from server
+     */
+    createBillboardFromData(data) {
+        if (this.billboardGun && typeof this.billboardGun.createBillboardFromData === 'function') {
+            return this.billboardGun.createBillboardFromData(data);
+        } else {
+            console.warn('BillboardGun not available or missing createBillboardFromData method');
+            return null;
+        }
+    }
+    
+    /**
+     * Update an existing billboard - delegates to billboardGun
+     * @param {Object} data - Billboard data from server
+     */
+    updateBillboard(data) {
+        if (this.billboardGun && typeof this.billboardGun.updateBillboard === 'function') {
+            return this.billboardGun.updateBillboard(data);
+        } else {
+            console.warn('BillboardGun not available or missing updateBillboard method');
+            return null;
+        }
+    }
+
+    /**
+     * Remove billboard by ID
+     * @param {string} billboardId - ID of billboard to remove
+     */
+    removeBillboard(billboardId) {
+        if (this.billboardGun && typeof this.billboardGun.removeBillboard === 'function') {
+            return this.billboardGun.removeBillboard(billboardId);
+        } else {
+            console.warn('BillboardGun not available or missing removeBillboard method');
+            return false;
+        }
+    }
+}

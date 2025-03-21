@@ -178,30 +178,47 @@ class PlayerControls {
             return;
         }
         
-        // Store key state
-        this.keys[event.key.toLowerCase()] = true;
+        // Get key name (lowercase for consistency)
+        const key = event.key.toLowerCase();
         
-        // Update movement flags
-        this.updateMovementFlags();
+        // Mark key as pressed
+        this.keys[key] = true;
         
-        // Special keys
-        if (this.isKeyPressed(this.keyBindings.toggleCamera)) {
-            this.playerCamera.toggleControls();
+        // Handle key bindings for movement
+        if (this.keyBindings.forward.includes(key)) this.moveForward = true;
+        if (this.keyBindings.backward.includes(key)) this.moveBackward = true;
+        if (this.keyBindings.left.includes(key)) this.moveLeft = true;
+        if (this.keyBindings.right.includes(key)) this.moveRight = true;
+        if (this.keyBindings.sprint.includes(key)) this.sprint = true;
+        if (this.keyBindings.jump.includes(key)) this.jump = true;
+        
+        // Toggle camera view
+        if (this.keyBindings.toggleCamera.includes(key)) {
+            if (this.playerCamera) {
+                this.playerCamera.toggleCameraView();
+            }
         }
         
-        // Weapon switching
-        if (this.isKeyPressed(this.keyBindings.switchWeapon)) {
+        // Switch weapon
+        if (this.keyBindings.switchWeapon.includes(key)) {
             if (this.weaponManager) {
                 this.weaponManager.switchWeapon();
                 this.updateAmmoDisplay();
             }
         }
         
-        // Billboard text editing
-        if (this.isKeyPressed(this.keyBindings.editBillboard)) {
-            // If game instance exists, show billboard popup
-            if (window.game && typeof window.game.showBillboardPopup === 'function') {
+        // Edit billboard text
+        if (this.keyBindings.editBillboard.includes(key)) {
+            if (window.game) {
                 window.game.showBillboardPopup();
+            }
+        }
+        
+        // Admin command: Reveal billboards (Alt+R)
+        if (key === 'r' && event.altKey) {
+            if (window.Helpers) {
+                Helpers.executeAdminCommand('reveal_billboards');
+                Helpers.showNotification('Admin command: Revealing all billboards');
             }
         }
     }

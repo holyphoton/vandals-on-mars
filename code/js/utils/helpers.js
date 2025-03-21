@@ -284,6 +284,86 @@ const Helpers = {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(context, args), delay);
         };
+    },
+
+    /**
+     * Show notification for admin commands
+     * @param {string} message - Message to display
+     * @param {number} duration - Duration in milliseconds
+     */
+    showNotification: function(message, duration = 3000) {
+        // Check if notification container exists
+        let container = document.getElementById('notification-container');
+        
+        if (!container) {
+            // Create container if it doesn't exist
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            container.style.position = 'absolute';
+            container.style.top = '10px';
+            container.style.right = '10px';
+            container.style.zIndex = '1000';
+            document.body.appendChild(container);
+        }
+        
+        // Create notification
+        const notification = document.createElement('div');
+        notification.className = 'game-notification';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        notification.style.color = 'white';
+        notification.style.padding = '10px';
+        notification.style.marginBottom = '5px';
+        notification.style.borderRadius = '5px';
+        notification.style.transition = 'opacity 0.3s ease-in-out';
+        notification.style.opacity = '0';
+        notification.textContent = message;
+        
+        // Add to container
+        container.appendChild(notification);
+        
+        // Fade in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+        }, 10);
+        
+        // Remove after duration
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                container.removeChild(notification);
+                
+                // Remove container if empty
+                if (container.children.length === 0) {
+                    document.body.removeChild(container);
+                }
+            }, 300);
+        }, duration);
+    },
+
+    /**
+     * Format number with commas
+     * @param {number} x - The number to format
+     * @returns {string} The formatted number
+     */
+    numberWithCommas: function(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
+
+    /**
+     * Execute admin commands
+     * @param {string} command - The command to execute
+     */
+    executeAdminCommand: function(command) {
+        if (!window.game) {
+            console.error('Game instance not available');
+            return;
+        }
+        
+        if (typeof window.game.executeAdminCommand === 'function') {
+            window.game.executeAdminCommand(command);
+        } else {
+            console.error('Admin command execution not available');
+        }
     }
 };
 

@@ -31,6 +31,11 @@ class Game {
         this.playerMovement = null;
         this.weaponManager = null;
         
+        // WebSocket connection for multiplayer
+        this.socket = null;
+        this.connectedToServer = false;
+        this.billboards = []; // Global billboard data store
+        
         // UI elements
         this.loadingScreen = document.getElementById('loading-screen');
         this.loadingBar = document.getElementById('loading-bar');
@@ -395,16 +400,25 @@ class Game {
      * Start the game
      */
     startGame() {
-        console.log('Starting game');
-        
-        // Get username from input
-        if (this.usernameInput && this.usernameInput.value.trim()) {
-            this.username = this.usernameInput.value.trim();
+        if (!this.isInitialized) {
+            console.error('Game not initialized');
+            return;
         }
         
-        // Set default billboard text
-        this.billboardText = `${this.username}'s Turf`;
-        console.log(`Starting game with username: ${this.username}, default billboard text: ${this.billboardText}`);
+        if (this.gameStarted) {
+            console.warn('Game already started');
+            return;
+        }
+        
+        console.log('Starting game');
+        
+        // Get username from input field
+        if (this.usernameInput && this.usernameInput.value.trim() !== '') {
+            this.username = this.usernameInput.value.trim();
+            console.log(`Username set to: ${this.username}`);
+        } else {
+            console.log(`Using default username: ${this.username}`);
+        }
         
         // Hide start screen
         this.hideStartScreen();
@@ -413,29 +427,55 @@ class Game {
         const gameUI = document.getElementById('game-ui');
         if (gameUI) {
             gameUI.style.display = 'block';
+            console.log('Game UI displayed');
+        } else {
+            console.error('Game UI element not found');
         }
         
-        // Request pointer lock with a short delay to ensure it works for key events
-        setTimeout(() => {
-            if (this.playerCamera && !this.playerCamera.isLocked) {
-                console.log('Requesting pointer lock');
-                this.playerCamera.requestPointerLock();
+        // Ensure camera is in first-person mode
+        if (this.playerCamera) {
+            // Make sure first-person mode is enabled
+            this.playerCamera.isFirstPerson = true;
+            
+            // If the toggleControls method exists, use it to ensure first-person mode
+            if (typeof this.playerCamera.toggleControls === 'function') {
+                if (!this.playerCamera.isFirstPerson) {
+                    this.playerCamera.toggleControls();
+                }
             }
-        }, 100); // 100ms delay before requesting pointer lock
+            
+            // Update camera position and orientation
+            if (typeof this.playerCamera.updateCameraPositionAndOrientation === 'function') {
+                this.playerCamera.updateCameraPositionAndOrientation();
+            }
+        }
         
-        // Start animation loop if not already running
-        if (!this.isAnimating) {
-            console.log('Starting animation loop');
+        // Connect to the WebSocket server
+        this.connectToServer();
+        
+        // Wait for a short time before requesting pointer lock to give the UI time to update
+        setTimeout(() => {
+            // Verify DOM elements
+            this.verifyDomElements();
+            
+            // Ensure canvas is visible
+            this.ensureCanvasIsVisible();
+            
+            // Start animation loop
             this.isAnimating = true;
             this.animate();
-        }
-        
-        // Set game started flag
-        this.gameStarted = true;
-        console.log('Game started successfully');
-        
-        // Show gameplay message
-        this.showGameStartedMessage();
+            
+            // Set game started flag
+            this.gameStarted = true;
+            
+            // Show game started message
+            this.showGameStartedMessage();
+            
+            // Request pointer lock for camera
+            this.playerCamera.requestPointerLock();
+            
+            console.log('Game started');
+        }, 100);
     }
     
     /**
@@ -624,8 +664,15 @@ class Game {
      * @param {number} deltaTime - Time since last frame in seconds
      */
     update(deltaTime) {
-        // Skip if not initialized
-        if (!this.isInitialized) return;
+        // Skip update if game is paused
+        if (this.isPaused) return;
+        
+        // Check for pending billboard request (if we connected before weapon manager was ready)
+        if (this.pendingBillboardRequest && this.weaponManager && this.connectedToServer) {
+            console.log('Weapon manager now initialized, sending delayed billboard request');
+            this.requestAllBillboards();
+            this.pendingBillboardRequest = false;
+        }
         
         // Update globe
         if (this.globe) {
@@ -655,6 +702,11 @@ class Game {
         // Update weapon manager
         if (this.weaponManager) {
             this.weaponManager.update(deltaTime);
+        }
+        
+        // Send a position update to the server periodically
+        if (this.connectedToServer && this.playerCamera) {
+            this.syncPlayerPosition();
         }
     }
 
@@ -802,6 +854,480 @@ class Game {
      */
     getUsername() {
         return this.username;
+    }
+
+    /**
+     * Connect to the WebSocket server
+     */
+    connectToServer() {
+        // Force direct connection to port 8090 with timestamp to prevent caching
+        const wsUrl = `ws://${window.location.hostname}:8090?t=${Date.now()}`;
+        console.log(`Connecting to WebSocket server at ${wsUrl}`);
+        this.socket = new WebSocket(wsUrl);
+        
+        // Connection opened
+        this.socket.addEventListener('open', (event) => {
+            console.log('Connected to the server');
+            this.connectedToServer = true;
+            
+            // Send initial player data
+            this.sendPlayerData();
+            
+            // Only request billboards if we're fully initialized and weapon manager exists
+            // This ensures we can properly create the billboards when data arrives
+            if (this.weaponManager) {
+                console.log('Weapon manager initialized, requesting billboards from server');
+                this.requestAllBillboards();
+            } else {
+                console.warn('Delaying billboard request: weapon manager not yet initialized');
+                // Set a flag to request billboards once weapon manager is ready
+                this.pendingBillboardRequest = true;
+            }
+        });
+        
+        // Listen for messages
+        this.socket.addEventListener('message', (event) => {
+            this.handleServerMessage(event.data);
+        });
+        
+        // Connection closed
+        this.socket.addEventListener('close', (event) => {
+            console.log('Disconnected from the server');
+            this.connectedToServer = false;
+        });
+        
+        // Connection error
+        this.socket.addEventListener('error', (event) => {
+            console.error('WebSocket error:', event);
+            this.showErrorMessage('Failed to connect to the server. Playing in offline mode.');
+            this.connectedToServer = false;
+        });
+    }
+    
+    /**
+     * Send player data to the server
+     */
+    sendPlayerData() {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+        
+        const playerData = {
+            type: 'player_join',
+            username: this.getUsername(),
+            timestamp: Date.now()
+        };
+        
+        this.socket.send(JSON.stringify(playerData));
+    }
+    
+    /**
+     * Request all billboards from the server
+     */
+    requestAllBillboards() {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+        
+        const request = {
+            type: 'request_billboards'
+        };
+        
+        this.socket.send(JSON.stringify(request));
+    }
+    
+    /**
+     * Handle messages from the server
+     * @param {string|Blob} message - Message data
+     */
+    handleServerMessage(message) {
+        try {
+            // Check if the message is a Blob (binary data)
+            if (message instanceof Blob) {
+                console.log('Received binary data from server, converting to text');
+                
+                // Convert Blob to text
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        // Parse the text data as JSON
+                        const jsonData = JSON.parse(event.target.result);
+                        this.processServerMessage(jsonData);
+                    } catch (error) {
+                        console.error('Failed to parse binary message as JSON:', error);
+                    }
+                };
+                reader.readAsText(message);
+                return;
+            }
+            
+            // Handle string data
+            const data = JSON.parse(message);
+            this.processServerMessage(data);
+        } catch (error) {
+            console.error('Failed to parse message:', error, typeof message, message);
+        }
+    }
+    
+    /**
+     * Process parsed server message data
+     * @param {Object} data - Parsed message data
+     */
+    processServerMessage(data) {
+        switch (data.type) {
+            case 'billboard_data':
+                this.processBillboardData(data);
+                break;
+                
+            case 'billboard_list':
+                this.processAllBillboards(data.billboards);
+                break;
+                
+            case 'billboard_remove':
+                this.processBillboardRemoval(data);
+                break;
+                
+            case 'player_join':
+                console.log(`Player joined: ${data.username}`);
+                break;
+                
+            case 'admin_command':
+                this.processAdminCommand(data);
+                break;
+                
+            default:
+                console.log('Unknown message type:', data.type);
+        }
+    }
+    
+    /**
+     * Process billboard data from the server
+     * @param {Object} data - Billboard data
+     */
+    processBillboardData(data) {
+        // Reject if missing required data
+        if (!data.id || !data.position) {
+            console.warn('Received invalid billboard data from server');
+            return;
+        }
+        
+        console.log(`Received billboard data for: ${data.id}`);
+        
+        // Check if we already have this billboard
+        const existingIndex = this.billboards.findIndex(b => b.id === data.id);
+        
+        if (existingIndex !== -1) {
+            // Update existing billboard in our array
+            this.billboards[existingIndex] = {
+                ...this.billboards[existingIndex],
+                ...data
+            };
+            console.log(`Updated billboard ${data.id} in data storage`);
+            
+            // Update visual if we have a weapon manager with billboard gun
+            if (this.weaponManager && typeof this.weaponManager.updateBillboard === 'function') {
+                console.log(`Updating visual billboard ${data.id}`);
+                this.weaponManager.updateBillboard(data);
+            } else {
+                console.log('WeaponManager or updateBillboard function not available');
+            }
+        } else {
+            // Add new billboard
+            this.billboards.push(data);
+            console.log(`Added new billboard ${data.id} to data storage`);
+            
+            // Create visual billboard
+            if (this.weaponManager) {
+                if (typeof this.weaponManager.createBillboardFromData === 'function') {
+                    console.log(`Creating visual billboard for ${data.id}`);
+                    this.weaponManager.createBillboardFromData(data);
+                } else if (typeof this.weaponManager.billboardGun?.createBillboardFromData === 'function') {
+                    console.log(`Creating visual billboard using billboardGun for ${data.id}`);
+                    this.weaponManager.billboardGun.createBillboardFromData(data);
+                } else if (typeof this.weaponManager.addBillboard === 'function') {
+                    console.log(`Adding billboard using legacy method for ${data.id}`);
+                    this.weaponManager.addBillboard(data);
+                } else {
+                    console.log('Cannot create billboard: missing appropriate creation method');
+                }
+            } else {
+                console.log('WeaponManager not available to create visual billboard');
+            }
+        }
+    }
+    
+    /**
+     * Process all billboards received from the server
+     * @param {Array} billboards - Array of billboard data
+     */
+    processAllBillboards(billboards) {
+        console.log(`Received ${billboards.length} billboards from server`);
+        
+        // Validate billboards array
+        if (!Array.isArray(billboards)) {
+            console.error('Invalid billboards data received:', billboards);
+            return;
+        }
+        
+        // Log each billboard for debugging
+        billboards.forEach((billboard, index) => {
+            console.log(`Billboard ${index + 1}/${billboards.length}: ID=${billboard.id}, Owner=${billboard.owner}, Text=${billboard.text}`);
+        });
+        
+        // Clear existing billboards first
+        this.billboards = [];
+        
+        // Add all billboards from the server
+        billboards.forEach(data => {
+            this.billboards.push(data);
+            
+            // Create visual representation
+            if (this.weaponManager) {
+                // Try different possible methods for creating billboards
+                if (typeof this.weaponManager.createBillboardFromData === 'function') {
+                    console.log(`Creating billboard ${data.id} using weaponManager.createBillboardFromData`);
+                    this.weaponManager.createBillboardFromData(data);
+                } else if (typeof this.weaponManager.createBillboard === 'function') {
+                    console.log(`Creating billboard ${data.id} using weaponManager.createBillboard`);
+                    this.weaponManager.createBillboard(data);
+                } else if (typeof this.weaponManager.addBillboard === 'function') {
+                    console.log(`Creating billboard ${data.id} using weaponManager.addBillboard`);
+                    this.weaponManager.addBillboard(data);
+                } else {
+                    console.error('Billboard added to data store, but no creation method found in weaponManager');
+                }
+            } else {
+                console.error('WeaponManager not available to create billboards');
+            }
+        });
+        
+        console.log(`Successfully processed ${this.billboards.length} billboards from server`);
+    }
+    
+    /**
+     * Process billboard removal from the server
+     * @param {Object} data - Billboard removal data
+     */
+    processBillboardRemoval(data) {
+        if (!data.id) {
+            console.warn('Missing billboard ID in removal message');
+            return;
+        }
+        
+        console.log(`Received request to remove billboard: ${data.id}`);
+        
+        // Remove the billboard from our local array
+        const existingIndex = this.billboards.findIndex(b => b.id === data.id);
+        if (existingIndex !== -1) {
+            // Remove from local data store
+            this.billboards.splice(existingIndex, 1);
+            console.log(`Removed billboard ${data.id} from data store`);
+            
+            // Remove visual representation if available
+            if (this.weaponManager) {
+                if (typeof this.weaponManager.removeBillboard === 'function') {
+                    const removed = this.weaponManager.removeBillboard(data.id);
+                    console.log(`Visual billboard removal ${removed ? 'successful' : 'failed'}`);
+                } else {
+                    console.log('WeaponManager does not have removeBillboard method');
+                }
+            }
+        } else {
+            console.log(`Billboard ${data.id} not found in data store`);
+        }
+    }
+    
+    /**
+     * Process admin command from the server
+     * @param {Object} data - Admin command data
+     */
+    processAdminCommand(data) {
+        switch (data.command) {
+            case 'reveal_billboards':
+                console.log('Admin command: Revealing all billboards');
+                this.showAllBillboardsInfo();
+                break;
+                
+            default:
+                console.log('Unknown admin command:', data.command);
+        }
+    }
+    
+    /**
+     * Show information about all billboards (admin command)
+     */
+    showAllBillboardsInfo() {
+        console.log('--- ALL BILLBOARDS ---');
+        this.billboards.forEach(billboard => {
+            console.log(`ID: ${billboard.id}`);
+            console.log(`  Owner: ${billboard.owner}`);
+            console.log(`  Text: ${billboard.text}`);
+            console.log(`  Size: ${billboard.width}x${billboard.height}`);
+            console.log(`  Position: x=${billboard.position.x.toFixed(2)}, y=${billboard.position.y.toFixed(2)}, z=${billboard.position.z.toFixed(2)}`);
+            console.log(`  Health: ${billboard.health}`);
+        });
+        console.log('---------------------');
+        
+        // Create and show an overlay with billboard information
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.top = '10px';
+        overlay.style.left = '10px';
+        overlay.style.padding = '10px';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        overlay.style.color = 'white';
+        overlay.style.zIndex = '1000';
+        overlay.style.maxHeight = '80vh';
+        overlay.style.overflowY = 'auto';
+        overlay.style.maxWidth = '400px';
+        overlay.style.borderRadius = '5px';
+        
+        let html = '<h3>All Billboards</h3>';
+        html += `<p>Total: ${this.billboards.length}</p>`;
+        
+        this.billboards.forEach(billboard => {
+            html += `<div style="margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 5px;">`;
+            html += `<strong>ID:</strong> ${billboard.id}<br>`;
+            html += `<strong>Owner:</strong> ${billboard.owner}<br>`;
+            html += `<strong>Text:</strong> ${billboard.text}<br>`;
+            html += `<strong>Size:</strong> ${billboard.width}x${billboard.height}<br>`;
+            html += `<strong>Health:</strong> ${billboard.health}<br>`;
+            html += `</div>`;
+        });
+        
+        html += '<button id="close-billboard-info" style="padding: 5px 10px; margin-top: 10px;">Close</button>';
+        
+        overlay.innerHTML = html;
+        document.body.appendChild(overlay);
+        
+        // Add close button listener
+        document.getElementById('close-billboard-info').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+    }
+    
+    /**
+     * Sync player position with the server (called periodically)
+     */
+    syncPlayerPosition() {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+        
+        // Only sync every 500ms to reduce network traffic
+        const now = Date.now();
+        if (!this.lastPositionSync || now - this.lastPositionSync > 500) {
+            this.lastPositionSync = now;
+            
+            const position = this.playerCamera.camera.position;
+            const rotation = this.playerCamera.camera.rotation;
+            
+            const playerPosition = {
+                type: 'player_position',
+                username: this.getUsername(),
+                position: {
+                    x: position.x,
+                    y: position.y,
+                    z: position.z
+                },
+                rotation: {
+                    x: rotation.x,
+                    y: rotation.y,
+                    z: rotation.z
+                },
+                timestamp: now
+            };
+            
+            this.socket.send(JSON.stringify(playerPosition));
+        }
+    }
+    
+    /**
+     * Get billboard data for sync
+     * @param {Object} billboardObj - The billboard object to sync
+     * @returns {Object} - Billboard data ready for sync
+     */
+    getBillboardDataForSync(billboardObj) {
+        const position = billboardObj.position.clone();
+        
+        // Get quaternion rotation for more accurate sync
+        let quaternion = { x: 0, y: 0, z: 0, w: 1 }; // Default identity quaternion
+        if (billboardObj.mesh && billboardObj.mesh.quaternion) {
+            quaternion = {
+                x: billboardObj.mesh.quaternion.x,
+                y: billboardObj.mesh.quaternion.y,
+                z: billboardObj.mesh.quaternion.z,
+                w: billboardObj.mesh.quaternion.w
+            };
+        }
+        
+        return {
+            type: 'billboard_data',
+            id: billboardObj.id,
+            position: {
+                x: position.x,
+                y: position.y,
+                z: position.z
+            },
+            // Send quaternion instead of Euler angles for more accurate rotation
+            quaternion: quaternion,
+            width: billboardObj.width || 5,
+            height: billboardObj.height || 5,
+            health: billboardObj.health || 100,
+            text: billboardObj.text || "Default Text",
+            owner: billboardObj.owner || this.getUsername(),
+            timestamp: Date.now()
+        };
+    }
+    
+    /**
+     * Sync billboard data with the server
+     * @param {Object} billboardObj - The billboard to sync
+     */
+    syncBillboardData(billboardObj) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            console.log('WebSocket not available for billboard sync');
+            return;
+        }
+        
+        // Get serializable billboard data
+        const billboardData = this.getBillboardDataForSync(billboardObj);
+        
+        // Store or update in local array
+        const existingIndex = this.billboards.findIndex(b => b.id === billboardObj.id);
+        if (existingIndex !== -1) {
+            // Update existing entry
+            this.billboards[existingIndex] = {
+                ...this.billboards[existingIndex],
+                ...billboardData
+            };
+            console.log(`Updated local billboard: ${billboardObj.id}`);
+        } else {
+            // Add new entry
+            this.billboards.push(billboardData);
+            console.log(`Added local billboard: ${billboardObj.id}`);
+        }
+        
+        // Send to server
+        console.log('Syncing billboard to server:', billboardData);
+        this.socket.send(JSON.stringify(billboardData));
+    }
+    
+    /**
+     * Execute admin command
+     * @param {string} command - Admin command
+     */
+    executeAdminCommand(command) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            // Handle locally in offline mode
+            if (command === 'reveal_billboards') {
+                this.showAllBillboardsInfo();
+            }
+            return;
+        }
+        
+        const adminCommand = {
+            type: 'admin_command',
+            command: command,
+            username: this.getUsername(),
+            timestamp: Date.now()
+        };
+        
+        this.socket.send(JSON.stringify(adminCommand));
     }
 }
 
