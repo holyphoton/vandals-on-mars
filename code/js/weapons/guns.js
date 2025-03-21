@@ -125,6 +125,13 @@ class BillboardGun extends Gun {
         // Create the gun model
         this.createGunModel();
         this.addToScene();
+        
+        // Font for billboard text
+        this.textCanvas = document.createElement('canvas');
+        this.textCanvas.width = 512;  // Doubled from 256
+        this.textCanvas.height = 256; // Doubled from 128
+        this.textContext = this.textCanvas.getContext('2d');
+        this.defaultFont = "bold 48px Arial"; // Doubled from 24px
     }
     
     /**
@@ -164,23 +171,35 @@ class BillboardGun extends Gun {
         // Create a billboard group that contains sign and legs
         const billboardGroup = new THREE.Group();
         
+        // Get billboard text from game if available
+        let billboardText = "Default Turf";
+        if (window.game && typeof window.game.getBillboardText === 'function') {
+            billboardText = window.game.getBillboardText();
+        }
+        
         // Create a billboard object for tracking
         const billboard = {
             mesh: billboardGroup,
             position: position.clone(),
-            health: 100
+            health: 100,
+            text: billboardText
         };
         
+        // Create text texture for the billboard
+        const textTexture = this.createTextTexture(billboardText);
+        
         // Create the sign part of the billboard (the actual display)
-        const signGeometry = new THREE.PlaneGeometry(1.5, 1.0); // Width x Height (3:2 aspect ratio)
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height (doubled from 1.5, 1.0)
         const signMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            map: textTexture,
+            transparent: true
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
-        // Position the sign above the ground to account for the taller legs
-        signMesh.position.y = 2.0; // Raised higher because legs are taller now
+        // Position the sign halfway up the legs instead of at the top
+        signMesh.position.y = 2.8; // Changed from 2.0 (legs are 4.0 units tall, so halfway is 1.0)
         billboardGroup.add(signMesh);
         
         // Create legs for the billboard - now twice as tall
@@ -189,14 +208,14 @@ class BillboardGun extends Gun {
             color: 0x333333 // Dark gray
         });
         
-        // Left leg - positioned at lower left corner of sign
+        // Left leg - positioned at lower left corner of sign (adjusted for wider sign)
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-0.6, 0, 0); // Wider placement for the 3:2 aspect ratio
+        leftLeg.position.set(-1.2, 0, 0); // Wider placement for the doubled width
         billboardGroup.add(leftLeg);
         
-        // Right leg - positioned at lower right corner of sign
+        // Right leg - positioned at lower right corner of sign (adjusted for wider sign)
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(0.6, 0, 0); // Wider placement for the 3:2 aspect ratio
+        rightLeg.position.set(1.2, 0, 0); // Wider placement for the doubled width
         billboardGroup.add(rightLeg);
         
         // Set the billboard position
@@ -261,6 +280,96 @@ class BillboardGun extends Gun {
         this.placedBillboards.push(billboard);
         
         return billboard;
+    }
+    
+    /**
+     * Create a texture with the given text
+     * @param {string} text - Text to display on the billboard
+     * @returns {THREE.Texture} - Texture with text
+     */
+    createTextTexture(text) {
+        // Clear the canvas
+        this.textContext.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
+        
+        // Create a gradient background
+        const gradient = this.textContext.createLinearGradient(0, 0, 0, this.textCanvas.height);
+        gradient.addColorStop(0, '#4a6fa5');
+        gradient.addColorStop(1, '#23395d');
+        this.textContext.fillStyle = gradient;
+        this.textContext.fillRect(0, 0, this.textCanvas.width, this.textCanvas.height);
+        
+        // Add a border
+        this.textContext.strokeStyle = '#ffffff';
+        this.textContext.lineWidth = 8; // Doubled from 4
+        this.textContext.strokeRect(8, 8, this.textCanvas.width - 16, this.textCanvas.height - 16); // Doubled padding
+        
+        // Dynamically calculate font size based on text length
+        const baseFontSize = 48; // Our default size (previously fixed)
+        const maxCharsPerLine = 15; // Approximate threshold for adjusting font size
+        const minFontSize = 24; // Minimum font size to ensure readability
+        
+        // Estimate total text length (consider all characters)
+        const textLength = text.length;
+        
+        // Calculate font size based on text length
+        let fontSize = baseFontSize;
+        if (textLength > maxCharsPerLine) {
+            // Gradually reduce font size as text gets longer
+            const reduction = Math.min(0.6, (textLength - maxCharsPerLine) / 40); // Max 60% reduction
+            fontSize = Math.max(minFontSize, Math.floor(baseFontSize * (1 - reduction)));
+        }
+        
+        // Set up text with dynamic font size
+        this.textContext.fillStyle = '#ffffff';
+        this.textContext.font = `bold ${fontSize}px Arial`;
+        this.textContext.textAlign = 'center';
+        this.textContext.textBaseline = 'middle';
+        
+        // Handle multiline text
+        const maxWidth = this.textCanvas.width - 40; // Doubled padding (was 20)
+        const lineHeight = fontSize + 4; // Scale line height with font size
+        const words = text.split(' ');
+        let lines = [];
+        let currentLine = words[0];
+        
+        for (let i = 1; i < words.length; i++) {
+            const testLine = currentLine + ' ' + words[i];
+            const metrics = this.textContext.measureText(testLine);
+            const testWidth = metrics.width;
+            
+            if (testWidth > maxWidth) {
+                lines.push(currentLine);
+                currentLine = words[i];
+            } else {
+                currentLine = testLine;
+            }
+        }
+        lines.push(currentLine);
+        
+        // Limit to 6 lines max (increased from 4 to accommodate smaller font)
+        if (lines.length > 6) {
+            lines = lines.slice(0, 5);
+            lines.push('...');
+        }
+        
+        // Calculate vertical center
+        const totalHeight = lines.length * lineHeight;
+        const startY = (this.textCanvas.height - totalHeight) / 2 + lineHeight / 2;
+        
+        // Draw each line centered
+        for (let i = 0; i < lines.length; i++) {
+            this.textContext.fillText(
+                lines[i],
+                this.textCanvas.width / 2,
+                startY + i * lineHeight
+            );
+        }
+        
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(this.textCanvas);
+        texture.needsUpdate = true;
+        
+        return texture;
     }
     
     /**
@@ -597,13 +706,16 @@ class ShooterGun extends Gun {
             return;
         }
         
+        // Get the signMesh (first child of the billboard group)
+        const signMesh = billboard.mesh.children[0];
+        
         // Decrease billboard health
         if (typeof billboard.health === 'undefined') {
             billboard.health = 100;
         }
         
-        // Set damage amount for 20 hits to destroy (100/5 = 20 hits)
-        const damageAmount = 4; // Changed from 25 to require 20 hits
+        // Standard damage amount
+        const damageAmount = 5;
         billboard.health -= damageAmount;
         console.log(`Billboard hit! Health reduced to: ${billboard.health}`);
         
@@ -611,50 +723,64 @@ class ShooterGun extends Gun {
         const healthScale = 0.5 + (billboard.health / 100) * 0.5;
         billboard.mesh.scale.set(healthScale, healthScale, healthScale);
         
-        // Find the sign part (first child is typically the sign)
-        let signMesh = null;
+        // Log billboard children for debugging
+        console.log(`Billboard has ${billboard.mesh.children.length} children`);
         billboard.mesh.children.forEach((child, index) => {
             console.log(`Billboard child ${index} type:`, child.type, child.geometry ? child.geometry.type : "no geometry");
-            // The sign is usually the plane geometry
-            if (child.geometry && child.geometry.type === 'PlaneGeometry') {
-                signMesh = child;
-                console.log("Found sign mesh!");
-            }
         });
         
-        // Change sign color based on damage
-        if (signMesh && signMesh.material) {
-            const damageColor = new THREE.Color(1, billboard.health / 100, billboard.health / 100);
-            signMesh.material.color.copy(damageColor);
-        } else {
-            console.log("Could not find sign mesh to change color");
+        // Update billboard text to the player's billboard text
+        if (signMesh && signMesh.material && signMesh.material.map) {
+            // Get the player's current billboard text from game
+            if (window.game && typeof window.game.getBillboardText === 'function') {
+                // Update billboard object with new text
+                billboard.text = window.game.getBillboardText();
+                
+                // Get the instance of BillboardGun to use its text creation method
+                if (this.weaponManager && this.weaponManager.billboardGun) {
+                    // Create new texture with updated text
+                    const newTexture = this.weaponManager.billboardGun.createTextTexture(billboard.text);
+                    
+                    // Update the sign material's texture
+                    signMesh.material.map = newTexture;
+                    signMesh.material.needsUpdate = true;
+                    
+                    console.log(`Billboard text updated to: ${billboard.text}`);
+                }
+            }
         }
         
-        // Create a more noticeable hit effect
-        const hitLight = new THREE.PointLight(0xff0000, 4, 5); // Brighter light
+        // Flash the billboard red
+        if (signMesh && signMesh.material) {
+            const originalColor = signMesh.material.color.clone();
+            const damageColor = new THREE.Color(1, billboard.health / 100, billboard.health / 100);
+            
+            signMesh.material.color = damageColor;
+            signMesh.material.emissive = new THREE.Color(0.5, 0, 0);
+            
+            // Reset after a short time
+            setTimeout(() => {
+                if (signMesh.material) {
+                    signMesh.material.color = originalColor;
+                    signMesh.material.emissive = new THREE.Color(0, 0, 0);
+                }
+            }, 200);
+        }
+        
+        // Add a hit light
+        const hitLight = new THREE.PointLight(0xff0000, 2, 5);
         hitLight.position.copy(billboard.mesh.position);
-        // Raise the light to be at sign height, not ground level
-        hitLight.position.y += 2.0; // Match the sign height from ground
         this.scene.add(hitLight);
         
-        // Add a small explosion effect at hit point
-        const explosionGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-        const explosionMaterial = new THREE.MeshBasicMaterial({
-            color: 0xff5500,
-            transparent: true,
-            opacity: 0.8
-        });
-        const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
-        explosionMesh.position.copy(hitLight.position);
-        this.scene.add(explosionMesh);
-        
-        // Remove the light and explosion after a short time
+        // Remove light after 200ms
         setTimeout(() => {
             this.scene.remove(hitLight);
-            this.scene.remove(explosionMesh);
-        }, 300);
+        }, 200);
         
-        // If billboard is destroyed, trigger destruction effect
+        // Create impact particles
+        this.createBulletImpactEffect(billboard.mesh.position);
+        
+        // If health <= 0, destroy the billboard
         if (billboard.health <= 0) {
             this.destroyBillboard(billboard);
         }
@@ -851,63 +977,75 @@ class ShooterGun extends Gun {
 }
 
 /**
- * WeaponManager class - Manages the player's weapons
+ * WeaponManager class for handling all weapons
  */
 class WeaponManager {
     /**
      * Create a new weapon manager
-     * @param {PlayerCamera} playerCamera - The player camera
-     * @param {Scene} scene - The Three.js scene
-     * @param {MarsGlobe} globe - The Mars globe
+     * @param {PlayerCamera} playerCamera - Reference to player camera
+     * @param {THREE.Scene} scene - Three.js scene
+     * @param {MarsGlobe} globe - Mars globe reference
      */
     constructor(playerCamera, scene, globe) {
+        console.log('Creating WeaponManager');
+        
         this.playerCamera = playerCamera;
         this.scene = scene;
         this.globe = globe;
         
-        console.log("Initializing weapons manager with scene:", scene);
-        console.log("Mars globe provided:", globe ? "Yes" : "No");
-        
-        // First create billboard gun
-        this.billboardGun = new BillboardGun(scene, playerCamera, globe);
-        console.log("BillboardGun created with placedBillboards array:", this.billboardGun.placedBillboards);
-        
-        // CRITICAL: Store a direct reference to the billboards array to ensure consistent reference
-        const billboardsReference = this.billboardGun.placedBillboards;
-        
-        // Then create shooter gun, passing the DIRECT reference to billboard gun's billboards
-        this.shooterGun = new ShooterGun(scene, playerCamera, billboardsReference);
-        console.log("ShooterGun created with billboards reference:", this.shooterGun.billboards);
-        
-        // Verify reference consistency
-        console.log("Reference check - same object?", this.shooterGun.billboards === this.billboardGun.placedBillboards);
-        
-        // Make sure gun models are created
-        if (!this.billboardGun.gunModel) {
-            console.log("Creating missing BillboardGun model");
-            this.billboardGun.createGunModel();
-        }
-        
-        if (!this.shooterGun.gunModel) {
-            console.log("Creating missing ShooterGun model");
-            this.shooterGun.createGunModel();
-        }
-        
-        // Make sure gun models are added to the scene
-        this.billboardGun.addToScene();
-        this.shooterGun.addToScene();
-        
-        // Set active weapon
+        this.weapons = [];
         this.activeWeaponIndex = 0;
-        this.weapons = [this.billboardGun, this.shooterGun];
+        this.billboardGun = null; // Expose billboard gun
+        this.shooterGun = null; // Expose shooter gun
         
-        // Initialize visibility
-        this.updateWeaponVisibility();
+        // Create weapons
+        this.initializeWeapons();
         
         // Update weapon indicators
         this.updateWeaponIndicator();
+    }
+    
+    /**
+     * Initialize all weapons
+     */
+    initializeWeapons() {
+        console.log('Initializing weapons');
         
-        console.log("Weapons initialized! Active weapon:", this.getActiveWeapon().constructor.name);
+        // Create billboard gun
+        this.billboardGun = new BillboardGun(
+            this.scene,
+            this.playerCamera,
+            this.globe,
+            {
+                ammo: 3,
+                maxAmmo: 5
+            }
+        );
+        this.weapons.push(this.billboardGun);
+        
+        // Create shooter gun (for destroying billboards)
+        this.shooterGun = new ShooterGun(
+            this.scene,
+            this.playerCamera,
+            this.billboardGun ? this.billboardGun.placedBillboards : [],
+            {
+                ammo: 100,
+                maxAmmo: 200,
+                fireRate: 0.1 // 10 shots per second
+            }
+        );
+        this.weapons.push(this.shooterGun);
+        
+        // We need to set the weapon manager in the shooter gun for billboard updates
+        if (this.shooterGun) {
+            this.shooterGun.weaponManager = this;
+        }
+        
+        // Set first weapon as active
+        this.activeWeaponIndex = 0;
+        this.updateWeaponVisibility();
+        
+        console.log(`Initialized ${this.weapons.length} weapons`);
     }
     
     /**

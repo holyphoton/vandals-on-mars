@@ -14,6 +14,8 @@ class Game {
         this.isAnimating = false;
         this.gameStarted = false;
         this.isDebug = CONSTANTS.DEBUG_MODE;
+        this.username = "Anonymous"; // Default username
+        this.billboardText = null; // Custom billboard text
         
         // Three.js objects
         this.renderer = null;
@@ -35,6 +37,13 @@ class Game {
         this.loadingText = document.getElementById('loading-text');
         this.startScreen = document.getElementById('start-screen');
         this.startButton = document.getElementById('start-button');
+        this.usernameInput = document.getElementById('username-input');
+        
+        // Popup elements
+        this.billboardPopup = document.getElementById('billboard-popup');
+        this.billboardTextInput = document.getElementById('billboard-text-input');
+        this.confirmBillboardButton = document.getElementById('confirm-billboard');
+        this.cancelBillboardButton = document.getElementById('cancel-billboard');
         
         // Debug log DOM elements
         console.log('DOM Elements:', {
@@ -42,7 +51,8 @@ class Game {
             loadingBar: !!this.loadingBar,
             loadingText: !!this.loadingText,
             startScreen: !!this.startScreen,
-            startButton: !!this.startButton
+            startButton: !!this.startButton,
+            usernameInput: !!this.usernameInput
         });
         
         // Initialize the game
@@ -248,27 +258,35 @@ class Game {
             
             // Also add direct inline function as backup
             this.startButton.onclick = () => {
-                console.log('Start button onclick triggered');
+                console.log('Start button clicked (via onclick)!');
                 this.startGame();
             };
-            
-            console.log('Start button event listeners added');
         } else {
-            console.error('Start button not found in DOM!');
-            
-            // Try to find it again - maybe DOM wasn't fully loaded
-            setTimeout(() => {
-                const startButton = document.getElementById('start-button');
-                if (startButton) {
-                    console.log('Found start button on retry');
-                    startButton.addEventListener('click', () => {
-                        console.log('Start button clicked (from retry)');
-                        this.startGame();
-                    });
-                } else {
-                    console.error('Start button still not found after retry');
+            console.error('Start button not found, cannot add click handler');
+        }
+        
+        // Add Enter key support for the username input field
+        if (this.usernameInput) {
+            this.usernameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    console.log('Enter key pressed in username input!');
+                    event.preventDefault();
+                    this.startGame();
                 }
-            }, 1000);
+            });
+        }
+        
+        // Billboard popup buttons
+        if (this.confirmBillboardButton) {
+            this.confirmBillboardButton.addEventListener('click', () => {
+                this.saveBillboardText();
+            });
+        }
+        
+        if (this.cancelBillboardButton) {
+            this.cancelBillboardButton.addEventListener('click', () => {
+                this.hideBillboardPopup();
+            });
         }
         
         // Add keyboard listener for pausing
@@ -379,6 +397,15 @@ class Game {
     startGame() {
         console.log('Starting game');
         
+        // Get username from input
+        if (this.usernameInput && this.usernameInput.value.trim()) {
+            this.username = this.usernameInput.value.trim();
+        }
+        
+        // Set default billboard text
+        this.billboardText = `${this.username}'s Turf`;
+        console.log(`Starting game with username: ${this.username}, default billboard text: ${this.billboardText}`);
+        
         // Hide start screen
         this.hideStartScreen();
         
@@ -388,11 +415,13 @@ class Game {
             gameUI.style.display = 'block';
         }
         
-        // Request pointer lock to capture mouse
-        if (this.playerCamera && !this.playerCamera.isLocked) {
-            console.log('Requesting pointer lock');
-            this.playerCamera.requestPointerLock();
-        }
+        // Request pointer lock with a short delay to ensure it works for key events
+        setTimeout(() => {
+            if (this.playerCamera && !this.playerCamera.isLocked) {
+                console.log('Requesting pointer lock');
+                this.playerCamera.requestPointerLock();
+            }
+        }, 100); // 100ms delay before requesting pointer lock
         
         // Start animation loop if not already running
         if (!this.isAnimating) {
@@ -468,30 +497,34 @@ class Game {
      */
     showGameStartedMessage() {
         const message = document.createElement('div');
-        message.textContent = 'Game Started!';
+        message.textContent = `Game Started! Welcome, ${this.username}!`;
         message.style.position = 'fixed';
         message.style.top = '50%';
         message.style.left = '50%';
         message.style.transform = 'translate(-50%, -50%)';
-        message.style.background = 'rgba(0, 255, 0, 0.5)';
-        message.style.color = 'white';
+        message.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        message.style.color = '#ffffff';
         message.style.padding = '20px';
         message.style.borderRadius = '10px';
         message.style.fontSize = '24px';
-        message.style.fontWeight = 'bold';
+        message.style.textAlign = 'center';
         message.style.zIndex = '1000';
         document.body.appendChild(message);
         
-        // Fade out and remove after 2 seconds
+        // Add second line with B key hint
+        const hintLine = document.createElement('div');
+        hintLine.textContent = 'Press B to edit your billboard text';
+        hintLine.style.fontSize = '16px';
+        hintLine.style.marginTop = '10px';
+        hintLine.style.color = '#cccccc';
+        message.appendChild(hintLine);
+        
+        // Remove after 1.5 seconds (reduced from 3 seconds)
         setTimeout(() => {
-            message.style.transition = 'opacity 1s ease-out';
-            message.style.opacity = '0';
-            setTimeout(() => {
-                if (message.parentNode) {
-                    message.parentNode.removeChild(message);
-                }
-            }, 1000);
-        }, 2000);
+            if (document.body.contains(message)) {
+                document.body.removeChild(message);
+            }
+        }, 1500);
     }
     
     /**
@@ -648,6 +681,127 @@ class Game {
         } catch (error) {
             console.error("Error rendering scene:", error);
         }
+    }
+
+    /**
+     * Show billboard text edit popup
+     */
+    showBillboardPopup() {
+        if (!this.billboardPopup || !this.billboardTextInput) return;
+        
+        // Set current billboard text in input
+        this.billboardTextInput.value = this.billboardText || `${this.username}'s Turf`;
+        
+        // Show popup
+        this.billboardPopup.style.display = 'flex';
+        
+        // Add keyboard listener for Enter and Escape keys
+        this.addPopupKeyboardListeners();
+        
+        // Focus after a small delay to prevent the 'B' key from being entered
+        setTimeout(() => {
+            this.billboardTextInput.focus();
+            // Select all text to make it easy to replace
+            this.billboardTextInput.select();
+        }, 50);
+        
+        // Pause the game
+        this.isPaused = true;
+        
+        // Unlock pointer
+        if (this.playerCamera && this.playerCamera.isLocked) {
+            document.exitPointerLock();
+        }
+    }
+    
+    /**
+     * Hide billboard text edit popup
+     */
+    hideBillboardPopup() {
+        if (!this.billboardPopup) return;
+        
+        // Hide popup
+        this.billboardPopup.style.display = 'none';
+        
+        // Remove keyboard listeners
+        this.removePopupKeyboardListeners();
+        
+        // Resume the game
+        this.isPaused = false;
+        
+        // Re-lock pointer with a short delay to ensure it works for key events
+        setTimeout(() => {
+            if (this.playerCamera && !this.playerCamera.isLocked) {
+                this.playerCamera.requestPointerLock();
+            }
+        }, 100); // 100ms delay before requesting pointer lock
+    }
+    
+    /**
+     * Add keyboard listeners for the popup
+     */
+    addPopupKeyboardListeners() {
+        // Store the listener so we can remove it later
+        this._popupKeyListener = (event) => {
+            if (event.key === 'Enter') {
+                this.saveBillboardText();
+                event.preventDefault();
+            } else if (event.key === 'Escape') {
+                this.hideBillboardPopup();
+                event.preventDefault();
+            }
+        };
+        
+        // Add the listener
+        document.addEventListener('keydown', this._popupKeyListener);
+    }
+    
+    /**
+     * Remove keyboard listeners for the popup
+     */
+    removePopupKeyboardListeners() {
+        if (this._popupKeyListener) {
+            document.removeEventListener('keydown', this._popupKeyListener);
+            this._popupKeyListener = null;
+        }
+    }
+    
+    /**
+     * Save billboard text
+     */
+    saveBillboardText() {
+        if (!this.billboardTextInput) return;
+        
+        // Get text from input
+        const text = this.billboardTextInput.value.trim();
+        
+        // Set billboard text if not empty, otherwise use default
+        if (text) {
+            this.billboardText = text;
+            console.log(`Billboard text updated: ${this.billboardText}`);
+        } else {
+            this.billboardText = `${this.username}'s Turf`;
+            console.log(`Billboard text reset to default: ${this.billboardText}`);
+        }
+        
+        // Hide popup
+        this.hideBillboardPopup();
+    }
+    
+    /**
+     * Get the current billboard text
+     * @returns {string} Current billboard text
+     */
+    getBillboardText() {
+        return this.billboardText || `${this.username}'s Turf`;
+    }
+    
+    /**
+     * Get the username
+     * @returns {string} Current username
+     */
+    getUsername() {
+        return this.username;
     }
 }
 

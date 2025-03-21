@@ -372,4 +372,79 @@ body.game-paused {
     text-align: right;
     color: #cccccc;
     margin-top: 5px;
+}
+
+/* Billboard Text Edit Popup */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none;
+}
+
+.popup-container {
+    background-color: #222;
+    border-radius: 10px;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 0 20px rgba(255, 87, 34, 0.7);
+    border: 2px solid #ff5722;
+}
+
+.popup-title {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #ff5722;
+    text-align: center;
+}
+
+.popup-content {
+    margin-bottom: 20px;
+}
+
+.popup-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.popup-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.popup-button.confirm {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.popup-button.cancel {
+    background-color: #f44336;
+    color: white;
+}
+
+.popup-button:hover {
+    opacity: 0.9;
 } 

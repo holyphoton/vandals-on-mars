@@ -329,81 +329,50 @@ class PlayerCamera {
     }
     
     /**
-     * Request pointer lock to enable first-person controls
-     * @returns {Promise} A promise that resolves when pointer lock is acquired
+     * Request pointer lock for first person camera
      */
     requestPointerLock() {
-        // Return a Promise that resolves when pointer lock is acquired
-        return new Promise((resolve, reject) => {
-            // Get the element to request pointer lock on (usually the document body)
-            const element = document.body;
+        // Check if already locked
+        if (this.isLocked) return;
+        
+        // If we're in manual control mode, just set the flag
+        if (this.manualControlActive) {
+            this.isLocked = true;
             
-            if (!element) {
-                reject(new Error('No valid element to lock pointer on'));
+            // Dispatch a fake lockchange event
+            const event = new CustomEvent('lockchange', { detail: { locked: true } });
+            document.dispatchEvent(event);
+            return;
+        }
+        
+        try {
+            // Set the element to request pointer lock on
+            this.element = document.body;
+            
+            // Only request pointer lock if not clicking on input elements
+            if (document.activeElement && 
+                (document.activeElement.tagName === 'INPUT' || 
+                 document.activeElement.tagName === 'TEXTAREA')) {
+                console.log('Not requesting pointer lock while input is focused');
                 return;
             }
             
-            if (this.isLocked) {
-                resolve('Pointer is already locked');
-                return;
+            // Request pointer lock
+            this.element.requestPointerLock = this.element.requestPointerLock ||
+                                            this.element.mozRequestPointerLock ||
+                                            this.element.webkitRequestPointerLock;
+            if (this.element.requestPointerLock) {
+                this.element.requestPointerLock();
+            } else {
+                console.warn('Pointer lock not supported');
+                // Fall back to manual control mode
+                this.enableManualControl();
             }
-            
-            // Create a temporary event listener to detect when pointer lock is acquired
-            const pointerLockChangeHandler = () => {
-                if (this.isLocked) {
-                    document.removeEventListener('pointerlockchange', pointerLockChangeHandler);
-                    document.removeEventListener('mozpointerlockchange', pointerLockChangeHandler);
-                    document.removeEventListener('webkitpointerlockchange', pointerLockChangeHandler);
-                    resolve('Pointer lock acquired');
-                }
-            };
-            
-            // Listen for the pointer lock change event
-            document.addEventListener('pointerlockchange', pointerLockChangeHandler);
-            document.addEventListener('mozpointerlockchange', pointerLockChangeHandler);
-            document.addEventListener('webkitpointerlockchange', pointerLockChangeHandler);
-            
-            // Create a temporary event listener for pointer lock errors
-            const pointerLockErrorHandler = (error) => {
-                document.removeEventListener('pointerlockerror', pointerLockErrorHandler);
-                document.removeEventListener('mozpointerlockerror', pointerLockErrorHandler);
-                document.removeEventListener('webkitpointerlockerror', pointerLockErrorHandler);
-                this.showNotification('First-person mode not fully supported', 3000);
-                reject(new Error('Pointer lock failed: ' + (error || 'Unknown error')));
-            };
-            
-            // Listen for pointer lock errors
-            document.addEventListener('pointerlockerror', pointerLockErrorHandler);
-            document.addEventListener('mozpointerlockerror', pointerLockErrorHandler);
-            document.addEventListener('webkitpointerlockerror', pointerLockErrorHandler);
-            
-            // Use the appropriate method based on browser support
-            try {
-                if (element.requestPointerLock) {
-                    element.requestPointerLock();
-                } else if (element.mozRequestPointerLock) {
-                    element.mozRequestPointerLock();
-                } else if (element.webkitRequestPointerLock) {
-                    element.webkitRequestPointerLock();
-                } else {
-                    console.error('Pointer lock not supported');
-                    this.showNotification('Your browser does not support pointer lock', 3000);
-                    reject(new Error('Pointer lock not supported by this browser'));
-                }
-                
-                // Set a timeout in case the pointer lock change events don't fire
-                setTimeout(() => {
-                    if (!this.isLocked) {
-                        document.removeEventListener('pointerlockchange', pointerLockChangeHandler);
-                        document.removeEventListener('mozpointerlockchange', pointerLockChangeHandler);
-                        document.removeEventListener('webkitpointerlockchange', pointerLockChangeHandler);
-                        reject(new Error('Pointer lock timed out'));
-                    }
-                }, 2000);
-            } catch (error) {
-                pointerLockErrorHandler(error);
-            }
-        });
+        } catch (error) {
+            console.error('Error requesting pointer lock:', error);
+            // Fall back to manual control mode
+            this.enableManualControl();
+        }
     }
     
     /**

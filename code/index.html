@@ -398,6 +398,11 @@
             <div class="start-content">
                 <h1>Vandals On Mars</h1>
                 <p>A fast-paced, multiplayer FPS where vandals claim territory on Mars</p>
+                
+                <div class="username-container">
+                    <input type="text" id="username-input" placeholder="Enter Username" maxlength="15" style="padding: 10px; width: 100%; margin-bottom: 15px; font-size: 16px; border-radius: 5px; border: none;">
+                </div>
+                
                 <button id="start-button" style="padding: 15px 30px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Start Game</button>
                 <p class="controls-info">Controls: WASD to move, Mouse to look, Click to shoot</p>
             </div>
@@ -424,6 +429,21 @@
         <div id="mobile-controls">
             <div id="left-joystick"></div>
             <div id="right-joystick"></div>
+        </div>
+        
+        <!-- Billboard Text Edit Popup -->
+        <div id="billboard-popup" class="popup-overlay">
+            <div class="popup-container">
+                <div class="popup-title">Edit Billboard Text</div>
+                <div class="popup-content">
+                    <input type="text" id="billboard-text-input" class="popup-input" maxlength="200" placeholder="Enter billboard text">
+                    <div style="color: #aaa; font-size: 14px;">Press B to open this dialog when shooting billboards (max 200 characters).</div>
+                </div>
+                <div class="popup-buttons">
+                    <button id="cancel-billboard" class="popup-button cancel">Cancel</button>
+                    <button id="confirm-billboard" class="popup-button confirm">Save</button>
+                </div>
+            </div>
         </div>
     </div>
     

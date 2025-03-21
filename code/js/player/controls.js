@@ -39,7 +39,8 @@ class PlayerControls {
             sprint: ['Shift'],
             toggleCamera: ['t'],
             jump: [' '], // Space
-            switchWeapon: ['q'] // Add switch weapon binding
+            switchWeapon: ['q'], // Switch weapon binding
+            editBillboard: ['b'] // Edit billboard text
         };
         
         // Initialize controls
@@ -170,6 +171,13 @@ class PlayerControls {
      * @param {KeyboardEvent} event - Key event
      */
     onKeyDown(event) {
+        // Skip key handling if input or textarea is focused
+        if (document.activeElement && 
+            (document.activeElement.tagName === 'INPUT' || 
+             document.activeElement.tagName === 'TEXTAREA')) {
+            return;
+        }
+        
         // Store key state
         this.keys[event.key.toLowerCase()] = true;
         
@@ -186,6 +194,14 @@ class PlayerControls {
             if (this.weaponManager) {
                 this.weaponManager.switchWeapon();
                 this.updateAmmoDisplay();
+            }
+        }
+        
+        // Billboard text editing
+        if (this.isKeyPressed(this.keyBindings.editBillboard)) {
+            // If game instance exists, show billboard popup
+            if (window.game && typeof window.game.showBillboardPopup === 'function') {
+                window.game.showBillboardPopup();
             }
         }
     }
@@ -209,6 +225,13 @@ class PlayerControls {
     onClick(event) {
         // Only handle left mouse button (button 0)
         if (event.button !== 0) return;
+        
+        // Check if we're clicking on an input element
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || 
+            event.target.tagName === 'BUTTON') {
+            // Don't handle the click if it's on an input, textarea, or button
+            return;
+        }
         
         // If pointer is not locked and in first person, request lock
         if (!this.playerCamera.isLocked && this.playerCamera.isFirstPerson) {
