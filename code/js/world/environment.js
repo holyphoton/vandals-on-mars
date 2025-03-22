@@ -17,6 +17,15 @@ class Environment {
         this.stars = null;
         this.lights = [];
         
+        // Fixed positions for celestial objects to ensure consistency across all clients
+        this.celestialPositions = {
+            // Fixed position for the sun (x, y, z)
+            sun: new THREE.Vector3(800, 100, -200),
+            
+            // Fixed position for the earth (x, y, z)
+            earth: new THREE.Vector3(-500, 100, 200)
+        };
+        
         // Initialize the environment
         this.initialize();
     }
@@ -25,7 +34,7 @@ class Environment {
      * Initialize the environment
      */
     initialize() {
-        console.log('Initializing environment');
+        console.log('Initializing environment with fixed celestial positions');
         
         // Create sky
         this.createSky();
@@ -131,8 +140,8 @@ class Environment {
         // Create mesh
         this.sun = new THREE.Mesh(sunGeometry, sunMaterial);
         
-        // Position the sun far away but visible
-        this.sun.position.set(800, 100, -200);
+        // Position the sun at its fixed position for consistency across clients
+        this.sun.position.copy(this.celestialPositions.sun);
         
         // Add to scene
         this.scene.add(this.sun);
@@ -144,6 +153,8 @@ class Environment {
         const sunPointLight = new THREE.PointLight(0xffffcc, 2.0, 2000);
         sunPointLight.position.copy(this.sun.position);
         this.scene.add(sunPointLight);
+        
+        console.log('Sun created at fixed position:', this.celestialPositions.sun);
     }
 
     /**
@@ -223,8 +234,8 @@ class Environment {
         // Create mesh
         this.earth = new THREE.Mesh(earthGeometry, earthMaterial);
         
-        // Position Earth opposite to the sun
-        this.earth.position.set(-500, 100, 200);
+        // Position Earth at its fixed position for consistency across clients
+        this.earth.position.copy(this.celestialPositions.earth);
         
         // Add to scene
         this.scene.add(this.earth);
@@ -237,6 +248,8 @@ class Environment {
                 earthMaterial.needsUpdate = true;
             }
         });
+        
+        console.log('Earth created at fixed position:', this.celestialPositions.earth);
     }
 
     /**

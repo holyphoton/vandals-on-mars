@@ -135,6 +135,55 @@ const MathUtils = {
     },
 
     /**
+     * Get a deterministic random point on a sphere using a seeded random generator
+     * @param {number} radius - Sphere radius
+     * @param {Helpers.SeededRandom} seededRandom - Seeded random generator
+     * @returns {Object} - {phi, theta} Deterministic random spherical coordinates
+     */
+    seededRandomSpherePoint: function(radius, seededRandom) {
+        // Random longitude (0 to 2π)
+        const theta = seededRandom.next() * 2 * Math.PI;
+        
+        // Random latitude (0 to π)
+        // Using cos distribution to ensure uniform distribution on sphere
+        const phi = Math.acos(2 * seededRandom.next() - 1);
+        
+        return { phi, theta, radius };
+    },
+
+    /**
+     * Get a deterministic cluster of points on a sphere using a seeded random generator
+     * @param {number} radius - Sphere radius
+     * @param {Object} centerPoint - {phi, theta} Center of the cluster
+     * @param {number} clusterRadius - Maximum angular distance from center
+     * @param {Helpers.SeededRandom} seededRandom - Seeded random generator
+     * @returns {Object} - {phi, theta} Deterministic random spherical coordinates within cluster
+     */
+    seededClusterPoint: function(radius, centerPoint, clusterRadius, seededRandom) {
+        // Random distance from center (0 to clusterRadius)
+        // Using square root for uniform distribution in circle
+        const distance = clusterRadius * Math.sqrt(seededRandom.next());
+        
+        // Random angle around center (0 to 2π)
+        const angle = seededRandom.next() * 2 * Math.PI;
+        
+        // Calculate offset from center
+        // This is a simple approximation that works well for small clusters
+        const phiOffset = distance * Math.cos(angle);
+        const thetaOffset = distance * Math.sin(angle) / Math.sin(centerPoint.phi);
+        
+        // Apply offset to center coordinates
+        let phi = centerPoint.phi + phiOffset;
+        let theta = centerPoint.theta + thetaOffset;
+        
+        // Normalize coordinates
+        phi = this.clamp(phi, 0.01, Math.PI - 0.01); // Avoid exact poles for numerical stability
+        theta = this.normalizeAngle(theta);
+        
+        return { phi, theta, radius };
+    },
+
+    /**
      * Lerp (Linear interpolation) between two values
      * @param {number} a - Start value
      * @param {number} b - End value

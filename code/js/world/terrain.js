@@ -8,8 +8,9 @@ class Terrain {
      * Create a new terrain generator
      * @param {MarsGlobe} globe - Reference to the Mars globe
      * @param {THREE.Scene} scene - Three.js scene
+     * @param {Object} options - Options for terrain generation
      */
-    constructor(globe, scene) {
+    constructor(globe, scene, options = {}) {
         this.globe = globe;
         this.scene = scene;
         this.features = {
@@ -17,6 +18,15 @@ class Terrain {
             rocks: [],
             mountains: []
         };
+        
+        // Set default options
+        this.options = {
+            seed: 12345, // Default seed for deterministic terrain generation
+            ...options
+        };
+        
+        // Create seeded random generator
+        this.random = new Helpers.SeededRandom(this.options.seed);
         
         // Initialize the terrain
         this.initialize();
@@ -26,7 +36,7 @@ class Terrain {
      * Initialize the terrain
      */
     initialize() {
-        console.log('Initializing terrain');
+        console.log('Initializing terrain with seed:', this.options.seed);
     }
 
     /**
@@ -35,7 +45,7 @@ class Terrain {
      * @param {Object} options - Options for crater generation
      */
     generateCraters(count = 50, options = {}) {
-        console.log(`Generating ${count} craters`);
+        console.log(`Generating ${count} craters with seed ${this.options.seed}`);
         
         const defaultOptions = {
             minSize: 1,
@@ -55,10 +65,10 @@ class Terrain {
         if (opts.distribution === 'clustered') {
             this.generateClusteredFeatures('craters', count, opts);
         } else {
-            // Random distribution
+            // Random distribution using seeded random generator
             for (let i = 0; i < count; i++) {
-                const position = MathUtils.randomSpherePoint(this.globe.radius);
-                const size = opts.minSize + Math.random() * (opts.maxSize - opts.minSize);
+                const position = MathUtils.seededRandomSpherePoint(this.globe.radius, this.random);
+                const size = opts.minSize + this.random.next() * (opts.maxSize - opts.minSize);
                 
                 const crater = this.createCrater(position, size, opts.depth);
                 this.features.craters.push(crater);
@@ -189,42 +199,6 @@ class Terrain {
     }
 
     /**
-     * Generate rocks across the globe surface
-     * @param {number} count - Number of rocks to generate
-     * @param {Object} options - Options for rock generation
-     */
-    generateRocks(count = 200, options = {}) {
-        console.log(`Generating ${count} rocks`);
-        
-        const defaultOptions = {
-            minSize: 0.5,
-            maxSize: 2.5,
-            distribution: 'random' // 'random', 'clustered'
-        };
-        
-        const opts = { ...defaultOptions, ...options };
-        
-        // Clear existing rocks if requested
-        if (options.clear) {
-            this.clearFeatures('rocks');
-        }
-        
-        // Generate rocks based on distribution
-        if (opts.distribution === 'clustered') {
-            this.generateClusteredFeatures('rocks', count, opts);
-        } else {
-            // Random distribution
-            for (let i = 0; i < count; i++) {
-                const position = MathUtils.randomSpherePoint(this.globe.radius);
-                const size = opts.minSize + Math.random() * (opts.maxSize - opts.minSize);
-                
-                const rock = this.createRock(position, size);
-                this.features.rocks.push(rock);
-            }
-        }
-    }
-
-    /**
      * Create a single rock
      * @param {Object} position - {phi, theta} position
      * @param {number} size - Size of the rock
@@ -241,21 +215,23 @@ class Terrain {
         // Use a sphere as the base shape for all rocks to ensure solidity
         const rockGeometry = new THREE.SphereGeometry(size * 0.8, 16, 16);
         
-        // Create rock material with slight color variation
-        const hue = 0.05 + Math.random() * 0.05; // Reddish-brown
-        const saturation = 0.6 + Math.random() * 0.2;
-        const lightness = 0.2 + Math.random() * 0.2;
+        // Create rock material with slight color variation based on position for consistency
+        // Using deterministic approach based on position instead of random
+        const positionHash = (position.phi * 1000 + position.theta * 100);
+        const hue = 0.05 + ((positionHash % 100) / 2000); // Reddish-brown variation
+        const saturation = 0.6 + ((positionHash % 50) / 250);
+        const lightness = 0.2 + ((positionHash % 30) / 150);
         
         const rockMaterial = new THREE.MeshStandardMaterial({
             color: new THREE.Color().setHSL(hue, saturation, lightness),
-            roughness: 0.9 + Math.random() * 0.1,
+            roughness: 0.9 + (positionHash % 10) / 100,
             metalness: 0.1,
             flatShading: true // Keep flat shading for rugged appearance
         });
         
-        // Noise function for consistent displacement
+        // Deterministic noise function based on position
         const noise = (x, y, z, scale = 1) => {
-            // Simple coherent noise function
+            // Simple coherent noise function with fixed parameters
             return Math.sin(x * 7.5 * scale) * Math.cos(y * 9.5 * scale) * Math.sin(z * 5.5 * scale);
         };
         
@@ -271,9 +247,6 @@ class Terrain {
             const nx = vertex.x;
             const ny = vertex.y;
             const nz = vertex.z;
-            
-            // Get current length (distance from center)
-            const length = vertex.length();
             
             // Generate coherent noise based on vertex position
             const noiseValue = noise(nx, ny, nz, 0.7) * 0.3 + 0.7;
@@ -334,10 +307,10 @@ class Terrain {
         const normal = new THREE.Vector3(cartesian.x, cartesian.y, cartesian.z).normalize();
         rockGroup.lookAt(rockGroup.position.clone().add(normal));
         
-        // Add random rotation for variety
-        rockGroup.rotation.x += Math.random() * Math.PI / 6;
-        rockGroup.rotation.y += Math.random() * Math.PI / 6;
-        rockGroup.rotation.z += Math.random() * Math.PI / 6;
+        // Add deterministic rotation based on position instead of random
+        rockGroup.rotation.x += (positionHash % 100) / 100 * Math.PI / 6;
+        rockGroup.rotation.y += (positionHash % 200) / 200 * Math.PI / 6;
+        rockGroup.rotation.z += (positionHash % 300) / 300 * Math.PI / 6;
         
         // Add to scene
         this.scene.add(rockGroup);
@@ -359,49 +332,102 @@ class Terrain {
     }
 
     /**
+     * Generate rocks across the globe surface
+     * @param {number} count - Number of rocks to generate
+     * @param {Object} options - Options for rock generation
+     */
+    generateRocks(count = 200, options = {}) {
+        console.log(`Generating ${count} rocks with seed ${this.options.seed}`);
+        
+        const defaultOptions = {
+            minSize: 0.5,
+            maxSize: 2.5,
+            distribution: 'random' // 'random', 'clustered'
+        };
+        
+        const opts = { ...defaultOptions, ...options };
+        
+        // Clear existing rocks if requested
+        if (options.clear) {
+            this.clearFeatures('rocks');
+        }
+        
+        // Generate rocks based on distribution
+        if (opts.distribution === 'clustered') {
+            this.generateClusteredFeatures('rocks', count, opts);
+        } else {
+            // Random distribution using seeded random generator
+            for (let i = 0; i < count; i++) {
+                const position = MathUtils.seededRandomSpherePoint(this.globe.radius, this.random);
+                const size = opts.minSize + this.random.next() * (opts.maxSize - opts.minSize);
+                
+                const rock = this.createRock(position, size);
+                this.features.rocks.push(rock);
+            }
+        }
+    }
+
+    /**
      * Generate clustered features (craters or rocks)
      * @param {string} featureType - Type of feature ('craters' or 'rocks')
      * @param {number} count - Number of features to generate
-     * @param {Object} options - Generation options
+     * @param {Object} options - Options for feature generation
      */
     generateClusteredFeatures(featureType, count, options) {
-        // Generate cluster centers
-        const clusterCount = Math.floor(count / 10) + 1; // ~10 features per cluster
-        const clusters = [];
+        console.log(`Generating clustered ${featureType} with seed ${this.options.seed}`);
         
+        // Determine how many cluster centers to create
+        const clusterCount = Math.max(3, Math.ceil(count / 20)); // Roughly 20 features per cluster
+        
+        // Generate cluster centers
+        const clusters = [];
         for (let i = 0; i < clusterCount; i++) {
-            clusters.push(MathUtils.randomSpherePoint(this.globe.radius));
+            clusters.push({
+                center: MathUtils.seededRandomSpherePoint(this.globe.radius, this.random),
+                radius: 0.1 + this.random.next() * 0.2 // Between 0.1 and 0.3 radians
+            });
         }
         
-        // Generate features around cluster centers
-        for (let i = 0; i < count; i++) {
-            // Select a random cluster
-            const cluster = clusters[Math.floor(Math.random() * clusters.length)];
+        // Distribute features among clusters
+        let featuresLeft = count;
+        for (let c = 0; c < clusters.length; c++) {
+            const cluster = clusters[c];
             
-            // Generate a position near the cluster center
-            const deviation = 0.2 + Math.random() * 0.3; // 0.2-0.5 radians from center
-            const randAngle = Math.random() * Math.PI * 2;
-            
-            // Move from cluster center
-            const newPosition = MathUtils.moveOnSphere(
-                cluster.phi,
-                cluster.theta,
-                randAngle,
-                deviation * this.globe.radius,
-                this.globe.radius
-            );
-            
-            // Create the feature
-            const size = options.minSize + Math.random() * (options.maxSize - options.minSize);
-            let feature;
-            
-            if (featureType === 'craters') {
-                feature = this.createCrater(newPosition, size, options.depth);
-                this.features.craters.push(feature);
-            } else { // rocks
-                feature = this.createRock(newPosition, size);
-                this.features.rocks.push(feature);
+            // Determine how many features to place in this cluster
+            let clusterFeatureCount;
+            if (c === clusters.length - 1) {
+                // Last cluster gets all remaining features
+                clusterFeatureCount = featuresLeft;
+            } else {
+                // Random number of features for this cluster
+                const avgPerCluster = Math.floor(featuresLeft / (clusters.length - c));
+                clusterFeatureCount = Math.max(1, Math.floor(avgPerCluster * (0.5 + this.random.next())));
+                clusterFeatureCount = Math.min(featuresLeft - (clusters.length - c - 1), clusterFeatureCount);
             }
+            
+            // Generate features in this cluster
+            for (let i = 0; i < clusterFeatureCount; i++) {
+                // Get a random point within the cluster
+                const position = MathUtils.seededClusterPoint(
+                    this.globe.radius,
+                    cluster.center,
+                    cluster.radius,
+                    this.random
+                );
+                
+                // Generate the feature
+                if (featureType === 'craters') {
+                    const size = options.minSize + this.random.next() * (options.maxSize - options.minSize);
+                    const crater = this.createCrater(position, size, options.depth);
+                    this.features.craters.push(crater);
+                } else if (featureType === 'rocks') {
+                    const size = options.minSize + this.random.next() * (options.maxSize - options.minSize);
+                    const rock = this.createRock(position, size);
+                    this.features.rocks.push(rock);
+                }
+            }
+            
+            featuresLeft -= clusterFeatureCount;
         }
     }
 
@@ -436,6 +462,8 @@ class Terrain {
      * @param {Object} options - Options for terrain generation
      */
     generateAll(options = {}) {
+        console.log('Generating all terrain features with seed:', this.options.seed);
+        
         const defaultOptions = {
             craterCount: 50,
             rockCount: 200,
@@ -445,96 +473,30 @@ class Terrain {
         
         const opts = { ...defaultOptions, ...options };
         
-        console.log('Generating terrain with non-overlapping features');
-        
-        // Tracking placed features to prevent overlap
-        const placedFeatures = [];
-        
-        // Generate craters first (they're larger features)
-        console.log(`Generating ${opts.craterCount} craters`);
-        let successfulCraters = 0;
-        let attempts = 0;
-        const maxAttempts = opts.craterCount * 3; // 3 attempts per crater
-        
-        while (successfulCraters < opts.craterCount && attempts < maxAttempts) {
-            attempts++;
-            
-            // Generate position and size
-            const position = MathUtils.randomSpherePoint(this.globe.radius);
-            const size = opts.craterOptions.minSize || 1 + 
-                         Math.random() * ((opts.craterOptions.maxSize || 6) - (opts.craterOptions.minSize || 1));
-            
-            // Check for overlap with existing features
-            if (!this.wouldOverlap(position, size * 1.5, placedFeatures)) {
-                const crater = this.createCrater(position, size, opts.craterOptions.depth || 0.3);
-                this.features.craters.push(crater);
-                
-                // Add to placed features
-                placedFeatures.push({
-                    position: position,
-                    radius: size * 1.5,
-                    type: 'crater'
-                });
-                
-                successfulCraters++;
-            }
+        // Clear existing features if requested
+        if (options.clear) {
+            this.clearFeatures('all');
         }
         
-        // Now generate rocks
-        console.log(`Generating ${opts.rockCount} rocks`);
-        let successfulRocks = 0;
-        attempts = 0;
-        const rockMaxAttempts = opts.rockCount * 3; // 3 attempts per rock
+        // Generate craters
+        this.generateCraters(opts.craterCount, {
+            ...opts.craterOptions,
+            clear: false // Don't clear again
+        });
         
-        while (successfulRocks < opts.rockCount && attempts < rockMaxAttempts) {
-            attempts++;
-            
-            // Generate position and size
-            const position = MathUtils.randomSpherePoint(this.globe.radius);
-            const size = opts.rockOptions.minSize || 0.5 + 
-                         Math.random() * ((opts.rockOptions.maxSize || 2.5) - (opts.rockOptions.minSize || 0.5));
-            
-            // Check for overlap with existing features
-            if (!this.wouldOverlap(position, size * 1.5, placedFeatures)) {
-                const rock = this.createRock(position, size);
-                this.features.rocks.push(rock);
-                
-                // Add to placed features
-                placedFeatures.push({
-                    position: position,
-                    radius: size * 1.5,
-                    type: 'rock'
-                });
-                
-                successfulRocks++;
-            }
-        }
-        
-        console.log(`Successfully placed ${successfulCraters} craters and ${successfulRocks} rocks`);
-    }
+        // Generate rocks
+        this.generateRocks(opts.rockCount, {
+            ...opts.rockOptions,
+            clear: false // Don't clear again
+        });
 
-    /**
-     * Check if a new feature would overlap with existing features
-     * @param {Object} position - Position of the new feature {phi, theta}
-     * @param {number} radius - Radius of the new feature plus buffer
-     * @param {Array} existingFeatures - List of existing features
-     * @returns {boolean} - True if the feature would overlap
-     */
-    wouldOverlap(position, radius, existingFeatures) {
-        for (const feature of existingFeatures) {
-            const distance = MathUtils.sphereDistance(
-                position.phi, position.theta,
-                feature.position.phi, feature.position.theta,
-                this.globe.radius
-            );
-            
-            // If distance is less than combined radii, they overlap
-            if (distance < radius + feature.radius) {
-                return true;
-            }
-        }
+        // Log that terrain generation is complete
+        console.log(`Terrain generation complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks`);
         
-        return false;
+        return {
+            craters: this.features.craters.length,
+            rocks: this.features.rocks.length
+        };
     }
 
     /**

@@ -157,8 +157,9 @@ class Game {
         // Create environment (sky, sun, Earth)
         this.environment = new Environment(this.scene);
         
-        // Create terrain
-        this.terrain = new Terrain(this.globe, this.scene);
+        // Create terrain with a fixed seed from config for consistent generation across all clients
+        const terrainSeed = CONFIG.world.terrainSeed || 42424242; // Use config seed or default
+        this.terrain = new Terrain(this.globe, this.scene, { seed: terrainSeed });
         
         // Configure terrain - increased rock count and more detailed craters
         this.terrain.generateAll({
@@ -176,6 +177,8 @@ class Game {
                 distribution: 'clustered' // Clustered distribution for more realism
             }
         });
+        
+        console.log('Created terrain with fixed seed from config:', terrainSeed);
         
         this.updateLoadingProgress(0.7, 'World created');
         

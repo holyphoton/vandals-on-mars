@@ -5,7 +5,8 @@ const DEFAULT_CONFIG = {
     world: {
         radius: 100,
         dayNightCycle: 600,
-        maxBillboards: 500
+        maxBillboards: 500,
+        terrainSeed: 42424242 // Fixed seed for deterministic terrain generation
     },
     player: {
         runSpeed: 5,

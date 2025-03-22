@@ -367,6 +367,60 @@ const Helpers = {
     }
 };
 
+/**
+ * Seeded random number generator based on the xorshift algorithm
+ * This ensures that the same seed will produce the same sequence of random numbers
+ * for all players, allowing for consistent world generation
+ */
+Helpers.SeededRandom = class {
+    /**
+     * Create a new seeded random number generator
+     * @param {number} seed - The seed to use for random number generation
+     */
+    constructor(seed) {
+        // Use seed or default to 1
+        this.seed = seed || 1;
+        // Initialize state with the seed
+        this._state = this.seed;
+    }
+
+    /**
+     * Get the next random number between 0 and 1
+     * @returns {number} - Random number between 0 and 1
+     */
+    next() {
+        // XORShift algorithm - simple but effective for non-cryptographic purposes
+        let x = this._state;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        this._state = x;
+        
+        // Convert to a number between 0 and 1 (inclusive of 0, exclusive of 1)
+        return (x >>> 0) / 4294967296;
+    }
+    
+    /**
+     * Get a random number between min and max (inclusive)
+     * @param {number} min - Minimum value
+     * @param {number} max - Maximum value
+     * @returns {number} - Random number between min and max
+     */
+    nextRange(min, max) {
+        return min + this.next() * (max - min);
+    }
+    
+    /**
+     * Get a random integer between min and max (inclusive)
+     * @param {number} min - Minimum value
+     * @param {number} max - Maximum value
+     * @returns {number} - Random integer between min and max
+     */
+    nextInt(min, max) {
+        return Math.floor(this.nextRange(min, max + 1));
+    }
+};
+
 // Export as a module if in a module context
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Helpers;
