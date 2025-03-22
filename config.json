@@ -1,0 +1,32 @@
+{
+  "world": {
+    "radius": 100,
+    "dayNightCycle": 600,
+    "maxBillboards": 500,
+    "terrainSeed": 42424242
+  },
+  "player": {
+    "runSpeed": 5,
+    "startAmmo": 200,
+    "ammoCap": 500,
+    "ammoRegen": 10,
+    "ammoPerDamage": 20,
+    "billboardSlots": 1,
+    "shootRange": 50
+  },
+  "billboard": {
+    "startSize": 5,
+    "maxSize": 50,
+    "growthPerDamage": 0.5,
+    "decayRate": 0.1,
+    "decayInterval": 86400
+  },
+  "powerUps": {
+    "spawnCycle": 300,
+    "spawnCount": [5, 10]
+  },
+  "economy": {
+    "mcPerDamage": 5,
+    "mcDailyBonus": 100
+  }
+} 
