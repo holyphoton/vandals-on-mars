@@ -138,7 +138,6 @@ class PlayerMovement {
         }
         
         // Cap deltaTime to prevent extreme values that cause movement spikes
-        // This is especially important in the first few frames when deltaTime can be very large
         deltaTime = Math.min(deltaTime, 0.1);
         
         // Read movement flags from controls
@@ -147,116 +146,100 @@ class PlayerMovement {
         this.moveLeft = this.controls.moveLeft;
         this.moveRight = this.controls.moveRight;
         
-        // First movement handling - wait for stabilization on random spawn location
-        if (this.isFirstMovement) {
-            this.initialFrameCount++;
-            
-            // Wait for 30 frames to establish a stable reference position
-            if (this.initialFrameCount >= 30 && !this.stableReferenceEstablished) {
-                console.log('Stable reference position established after 30 frames');
-                this.stableReferenceEstablished = true;
-                this.lastValidPosition = this.camera.camera.position.clone();
-                
-                // Mark ready to perform the initial position adjustment
-                if (this.needsInitialMovement && !this.hasPerformedInitialJump) {
-                    console.log('Ready to perform initial position teleport');
-                    this.performInitialPositionJump();
-                }
-            }
-            
-            // Apply reduced movement speed during initialization
-            if (this.initialFrameCount <= 30) {
-                // First 30 frames - almost no movement allowed while establishing reference
-                deltaTime *= 0.1;
-            } else if (this.initialFrameCount <= 60) {
-                // Next 30 frames - gradual increase in movement allowed
-                deltaTime *= 0.3;
-            } else {
-                // After frame 60, normal movement
-                this.isFirstMovement = false;
-                console.log('First movement period complete - switching to normal movement');
-            }
-        }
+        // Handle first movement and auto-movement (initialization phase)
+        this.handleInitialMovement(deltaTime);
         
-        // Handle automatic movement after the initial jump
-        if (this.stableReferenceEstablished && 
-            this.hasPerformedInitialJump && 
-            this.needsInitialMovement && 
-            !this.initialMovementComplete) {
-            
-            // Automatically move forward for a few steps
-            this.initialMovementSteps++;
-            this.moveForward = true;
-            
-            console.log(`Auto-movement step ${this.initialMovementSteps}/5`);
-            
-            // After 5 steps, return control to the player
-            if (this.initialMovementSteps >= 5) {
-                this.initialMovementComplete = true;
-                this.needsInitialMovement = false;
-                this.moveForward = false;
-                console.log('Auto-movement complete - returning control to player');
-            }
-        }
+        // Get current player position and orientation
+        const cameraPosition = this.camera.camera.position.clone();
         
-        // Calculate current position
-        const currentPosition = this.camera.camera.position.clone();
-        
-        // Check for jump input from controls
-        if (this.controls.jump && this.canJump && !this.isJumping) {
-            console.log("Jump triggered!");
-            this.isJumping = true;
-            this.jumpHeight = 0.1; // Start jump
-            this.canJump = false;
-            this.velocity.y = this.jumpForce; // Set initial velocity
-        }
-        
-        // Handle jumping and gravity
-        this.updateJumping(deltaTime);
-        
-        // Skip movement if camera is not properly set up
+        // Skip if camera is not in first person mode
         if (!this.camera.isFirstPerson) {
             return;
         }
         
-        // Get camera position
-        const cameraPosition = this.camera.camera.position.clone();
+        // ===== STEP 1: Handle Jumping / Vertical Movement (completely independent) =====
+        this.handleVerticalMovement(deltaTime, cameraPosition);
         
+        // ===== STEP 2: Handle Horizontal Movement (completely independent) =====
+        this.handleHorizontalMovement(deltaTime, cameraPosition);
+        
+        // Final step - update the camera's spherical coordinates for proper orientation
+        this.updateCameraSphericalCoordinates();
+    }
+    
+    /**
+     * Handle vertical movement (jumping, falling) physics
+     * @param {number} deltaTime - Time in seconds since last frame
+     * @param {THREE.Vector3} cameraPosition - Current camera position 
+     */
+    handleVerticalMovement(deltaTime, cameraPosition) {
+        // Check for jump input (space bar)
+        if (this.controls.jump && this.canJump && !this.isJumping) {
+            // Start jump
+            this.isJumping = true;
+            this.canJump = false;
+            this.jumpHeight = 0.1; // Small initial height
+            this.velocity.y = this.jumpForce;
+            console.log("Jump initiated, velocity:", this.velocity.y);
+        }
+        
+        // Update jump physics if player is in the air
+        const isInAir = this.isJumping || !this.canJump || this.jumpHeight > 0;
+        
+        if (isInAir) {
+            // Apply velocity to jump height
+            this.jumpHeight += this.velocity.y * deltaTime;
+            
+            // Apply gravity (always pulling down)
+            this.velocity.y -= this.gravity * deltaTime;
+            
+            // Debug output with jump state
+            console.log(`Jump State: height=${this.jumpHeight.toFixed(2)}, velocity=${this.velocity.y.toFixed(2)}`);
+            
+            // Check if we've landed
+            if (this.jumpHeight <= 0) {
+                // Reset jump state
+                this.jumpHeight = 0;
+                this.isJumping = false;
+                this.canJump = true;
+                this.velocity.y = 0;
+                console.log("Landed on ground");
+            }
+        }
+        
+        // Always update the player's height from the planet surface regardless of movement state
+        this.updatePlayerHeight();
+    }
+    
+    /**
+     * Update the player's height from the planet surface
+     */
+    updatePlayerHeight() {
+        if (!this.camera || !this.camera.camera) return;
+        
+        const position = this.camera.camera.position;
+        const direction = position.clone().normalize();
+        const totalHeight = this.globe.radius + this.playerHeight + this.jumpHeight;
+        
+        // Set new position with correct distance from center
+        this.camera.camera.position.copy(direction.multiplyScalar(totalHeight));
+    }
+    
+    /**
+     * Handle horizontal movement on planet surface
+     * @param {number} deltaTime - Time in seconds since last frame 
+     * @param {THREE.Vector3} cameraPosition - Current camera position
+     */
+    handleHorizontalMovement(deltaTime, cameraPosition) {
         // Calculate local up vector (from planet center to player)
         const up = cameraPosition.clone().normalize();
         
         // Calculate movement direction in the tangent plane
-        let moveDirection = new THREE.Vector3(0, 0, 0);
+        const moveDirection = this.calculateMoveDirection(cameraPosition);
         
-        // Get camera's forward direction in the tangent plane
-        const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.camera.quaternion);
-        const forward = cameraDirection.clone();
-        
-        // Project forward onto tangent plane by removing any component in the up direction
-        const upComponent = up.clone().multiplyScalar(forward.dot(up));
-        forward.sub(upComponent).normalize();
-        
-        // Calculate right vector as cross product of forward and up
-        // This ensures right is perpendicular to both forward and up vectors
-        const right = new THREE.Vector3().crossVectors(forward, up).normalize();
-        
-        // Add movement components based on input - corrected for proper WASD relative movement
-        if (this.moveForward) {
-            moveDirection.add(forward);
-        }
-        if (this.moveBackward) {
-            moveDirection.sub(forward);
-        }
-        if (this.moveRight) {
-            moveDirection.add(right);
-        }
-        if (this.moveLeft) {
-            moveDirection.sub(right);
-        }
-        
-        // Apply movement if there is any
+        // Only apply horizontal movement if there is any input
         if (moveDirection.lengthSq() > 0) {
-            // Normalize and scale by speed and delta time
+            // Scale movement by speed and delta time
             moveDirection.normalize().multiplyScalar(this.playerSpeed * deltaTime);
             
             // Calculate new position
@@ -268,8 +251,6 @@ class PlayerMovement {
                 
                 if (collision) {
                     console.log(`Collision detected with ${collision.type}`);
-                    
-                    // Don't allow movement - return to last valid position or slide along obstacle
                     this.handleCollision(collision, moveDirection, cameraPosition);
                     return;
                 }
@@ -278,12 +259,97 @@ class PlayerMovement {
             // Apply the movement if no collision
             this.camera.camera.position.copy(newPosition);
             
-            // Maintain constant distance from planet center (accounting for jump height)
-            const targetDistance = this.globe.radius + this.playerHeight + this.jumpHeight;
-            this.camera.camera.position.normalize().multiplyScalar(targetDistance);
+            // Maintain correct height from planet surface (with jump height)
+            this.updatePlayerHeight();
             
-            // Update the camera's spherical coordinates based on new position
-            this.updateCameraSphericalCoordinates();
+            // Store last valid position for collision recovery
+            this.lastValidPosition = this.camera.camera.position.clone();
+        }
+    }
+    
+    /**
+     * Calculate movement direction based on input and camera orientation
+     * @param {THREE.Vector3} cameraPosition - Current camera position
+     * @returns {THREE.Vector3} Move direction vector
+     */
+    calculateMoveDirection(cameraPosition) {
+        // Calculate local up vector (from planet center to player)
+        const up = cameraPosition.clone().normalize();
+        
+        // Get camera's forward direction
+        const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.camera.quaternion);
+        const forward = cameraDirection.clone();
+        
+        // Project forward onto tangent plane
+        const upComponent = up.clone().multiplyScalar(forward.dot(up));
+        forward.sub(upComponent).normalize();
+        
+        // Calculate right vector (perpendicular to forward and up)
+        const right = new THREE.Vector3().crossVectors(forward, up).normalize();
+        
+        // Initialize move direction
+        const moveDirection = new THREE.Vector3(0, 0, 0);
+        
+        // Add components based on input
+        if (this.moveForward) moveDirection.add(forward);
+        if (this.moveBackward) moveDirection.sub(forward);
+        if (this.moveRight) moveDirection.add(right);
+        if (this.moveLeft) moveDirection.sub(right);
+        
+        return moveDirection;
+    }
+    
+    /**
+     * Handle initialization-phase movement
+     * @param {number} deltaTime - Time in seconds since last frame
+     */
+    handleInitialMovement(deltaTime) {
+        if (this.isFirstMovement) {
+            this.initialFrameCount++;
+            
+            // Wait for 30 frames to establish stability
+            if (this.initialFrameCount >= 30 && !this.stableReferenceEstablished) {
+                console.log('Stable reference position established after 30 frames');
+                this.stableReferenceEstablished = true;
+                this.lastValidPosition = this.camera.camera.position.clone();
+                
+                // Perform initial position adjustment if needed
+                if (this.needsInitialMovement && !this.hasPerformedInitialJump) {
+                    console.log('Ready to perform initial position teleport');
+                    this.performInitialPositionJump();
+                }
+            }
+            
+            // Gradual increase in movement allowed
+            if (this.initialFrameCount <= 30) {
+                deltaTime *= 0.1; // Almost no movement at first
+            } else if (this.initialFrameCount <= 60) {
+                deltaTime *= 0.3; // Gradual increase
+            } else {
+                this.isFirstMovement = false;
+                console.log('First movement period complete - switching to normal movement');
+            }
+        }
+        
+        // Handle automatic movement after the initial jump
+        if (this.stableReferenceEstablished && 
+            this.hasPerformedInitialJump && 
+            this.needsInitialMovement && 
+            !this.initialMovementComplete) {
+            
+            // Automatically move forward
+            this.initialMovementSteps++;
+            this.moveForward = true;
+            
+            console.log(`Auto-movement step ${this.initialMovementSteps}/5`);
+            
+            // After 5 steps, return control to player
+            if (this.initialMovementSteps >= 5) {
+                this.initialMovementComplete = true;
+                this.needsInitialMovement = false;
+                this.moveForward = false;
+                console.log('Auto-movement complete - returning control to player');
+            }
         }
     }
     
@@ -294,42 +360,32 @@ class PlayerMovement {
      * @param {THREE.Vector3} currentPosition - Current position
      */
     handleCollision(collision, moveDirection, currentPosition) {
-        if (!collision) return;
+        if (!collision || !this.lastValidPosition) return;
         
-        if (this.lastValidPosition) {
-            // Option 1: Return to last valid position (simple but can feel "sticky")
-            //this.camera.camera.position.copy(this.lastValidPosition);
+        // Option 2: Slide along the obstacle (more natural)
+        // Get direction to obstacle center
+        const obstaclePosition = collision.feature.position;
+        const obstacleDirection = obstaclePosition.clone().sub(currentPosition).normalize();
+        
+        // Calculate slide direction (perpendicular to obstacle direction)
+        const slideDirection = new THREE.Vector3();
+        slideDirection.crossVectors(obstacleDirection, new THREE.Vector3(0, 1, 0)).normalize();
+        
+        // Adjust slide direction to be tangent to planet surface
+        const up = currentPosition.clone().normalize();
+        const upComponent = up.clone().multiplyScalar(slideDirection.dot(up));
+        slideDirection.sub(upComponent).normalize();
+        
+        // Scale slide movement
+        const slideDistance = moveDirection.length() * 0.5; // Reduce speed when sliding
+        slideDirection.multiplyScalar(slideDistance);
+        
+        // Apply slide movement (if it has a reasonable component in our desired direction)
+        if (slideDirection.dot(moveDirection) > 0) {
+            this.camera.camera.position.add(slideDirection);
             
-            // Option 2: Slide along the obstacle (more natural)
-            
-            // Get direction to obstacle center
-            const obstaclePosition = collision.feature.position;
-            const obstacleDirection = obstaclePosition.clone().sub(currentPosition).normalize();
-            
-            // Calculate slide direction (perpendicular to obstacle direction)
-            const slideDirection = new THREE.Vector3();
-            slideDirection.crossVectors(obstacleDirection, new THREE.Vector3(0, 1, 0)).normalize();
-            
-            // Adjust slide direction to be tangent to planet surface
-            const up = currentPosition.clone().normalize();
-            const upComponent = up.clone().multiplyScalar(slideDirection.dot(up));
-            slideDirection.sub(upComponent).normalize();
-            
-            // Scale slide movement
-            const slideDistance = moveDirection.length() * 0.5; // Reduce speed when sliding
-            slideDirection.multiplyScalar(slideDistance);
-            
-            // Apply slide movement (if it has a reasonable component in our desired direction)
-            if (slideDirection.dot(moveDirection) > 0) {
-                this.camera.camera.position.add(slideDirection);
-                
-                // Maintain constant distance from planet center
-                const targetDistance = this.globe.radius + this.playerHeight + this.jumpHeight;
-                this.camera.camera.position.normalize().multiplyScalar(targetDistance);
-                
-                // Update the camera's spherical coordinates
-                this.updateCameraSphericalCoordinates();
-            }
+            // Maintain correct height from planet center (plus jump height)
+            this.updatePlayerHeight();
         }
     }
     
@@ -349,62 +405,7 @@ class PlayerMovement {
     }
     
     /**
-     * Handle jumping and gravity
-     * @param {number} deltaTime - Time since last frame in seconds
-     */
-    updateJumping(deltaTime) {
-        if (this.isJumping) {
-            // Apply an arc-like jump
-            this.jumpHeight += this.velocity.y * deltaTime;
-            
-            // Apply gravity
-            this.velocity.y -= this.gravity * deltaTime;
-            
-            // Check if we've landed
-            if (this.jumpHeight <= 0) {
-                this.jumpHeight = 0;
-                this.isJumping = false;
-                this.canJump = true;
-                this.velocity.y = 0;
-                console.log("Jump complete - landed");
-            }
-            
-            // Update camera position to account for jump height
-            if (this.camera && this.camera.camera) {
-                const position = this.camera.camera.position;
-                const direction = position.clone().normalize();
-                const targetDistance = this.globe.radius + this.playerHeight + this.jumpHeight;
-                
-                // Set new position with correct distance from center
-                this.camera.camera.position.copy(direction.multiplyScalar(targetDistance));
-                
-                // Update camera orientation
-                if (typeof this.camera.updateCameraPositionAndOrientation === 'function') {
-                    this.camera.updateCameraPositionAndOrientation();
-                }
-            }
-        } else if (!this.canJump) {
-            // If we're falling (not jumping but not on ground)
-            this.jumpHeight += this.velocity.y * deltaTime;
-            this.velocity.y -= this.gravity * deltaTime;
-            
-            if (this.jumpHeight <= 0) {
-                this.jumpHeight = 0;
-                this.canJump = true;
-                this.velocity.y = 0;
-            }
-        }
-        
-        // If we're starting a jump, set initial velocity
-        if (this.isJumping && this.velocity.y === 0) {
-            this.velocity.y = this.jumpForce;
-        }
-    }
-    
-    /**
      * Perform an initial position jump to prevent spawn issues
-     * This teleports the player forward from their initial spawn position
-     * to avoid any problematic areas near the spawn point
      */
     performInitialPositionJump() {
         if (!this.stableReferenceEstablished || this.hasPerformedInitialJump) {
