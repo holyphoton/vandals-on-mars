@@ -147,3 +147,35 @@ cd code
 npx http-server
 ```
 Then open a browser to http://localhost:8080 
+
+## Server Restart Procedures
+
+After making code changes, both the HTTP server and WebSocket server should be restarted to ensure all clients receive the updated code and synchronize properly. Follow these standard procedures:
+
+### Restarting the HTTP Server
+```
+cd /Users/jugalmistry/Data/Projects/vandals-on-mars/vandals-on-mars && pkill -f "http-server" || true && npx http-server code -c-1 -p 8081 &
+```
+
+This command:
+1. Changes to the project root directory
+2. Kills any existing HTTP server processes
+3. Starts a new HTTP server with caching disabled (-c-1) on port 8081
+4. Runs the server in the background (&)
+
+### Restarting the WebSocket Server
+```
+cd /Users/jugalmistry/Data/Projects/vandals-on-mars/vandals-on-mars && pkill -f "node server.js" || true && node server.js &
+```
+
+This command:
+1. Changes to the project root directory
+2. Kills any existing WebSocket server processes
+3. Starts a new WebSocket server
+4. Runs the server in the background (&)
+
+### Important Notes
+- Always restart both servers after code changes to ensure synchronization
+- The WebSocket server must be running for multiplayer functionality
+- The `-c-1` flag for HTTP server disables caching, ensuring clients get the latest code
+- After restarting servers, refresh the browser to load updated code 
