@@ -16,7 +16,8 @@ class Terrain {
         this.features = {
             craters: [],
             rocks: [],
-            mountains: []
+            mountains: [],
+            towers: [] // Add new feature type for tracking towers
         };
         
         // Set default options
@@ -37,6 +38,7 @@ class Terrain {
      */
     initialize() {
         console.log('Initializing terrain with seed:', this.options.seed);
+        // Future expansion: add more terrain types initialization here
     }
 
     /**
@@ -432,10 +434,153 @@ class Terrain {
     }
 
     /**
+     * Create watch towers at the north and south poles to prevent players from reaching problematic areas
+     */
+    createPoleTowers() {
+        console.log('Creating watch towers at the north and south poles');
+        
+        // Tower dimensions
+        const towerHeight = 25; // Make it quite tall
+        const towerRadius = 6;  // Make it wide enough that players can't easily get past
+        
+        // Create north pole tower (phi = 0)
+        const northPolePosition = { phi: 0, theta: 0 };
+        const northTower = this.createPoleWatchTower(northPolePosition, towerHeight, towerRadius, 0xff4500); // Orange-red
+        this.features.towers.push(northTower);
+        
+        // Create south pole tower (phi = π)
+        const southPolePosition = { phi: Math.PI, theta: 0 };
+        const southTower = this.createPoleWatchTower(southPolePosition, towerHeight, towerRadius, 0x4169e1); // Royal blue
+        this.features.towers.push(southTower);
+    }
+    
+    /**
+     * Create a single watch tower at a pole
+     * @param {Object} position - {phi, theta} position
+     * @param {number} height - Height of the tower
+     * @param {number} radius - Radius of the tower
+     * @param {number} color - Color of the tower
+     * @returns {THREE.Object3D} - The created tower object
+     */
+    createPoleWatchTower(position, height, radius, color) {
+        // Convert spherical coordinates to cartesian with a slight underground offset
+        // Use 98% of the radius to position towers slightly underground for visual anchoring
+        const cartesian = MathUtils.sphericalToCartesian(
+            this.globe.radius * 0.98, // Use 98% of the radius to embed it slightly below surface
+            position.theta,
+            position.phi
+        );
+        
+        // Create a tower group
+        const towerGroup = new THREE.Group();
+        
+        // Create the main tower structure
+        const towerGeometry = new THREE.CylinderGeometry(radius, radius * 1.5, height, 16);
+        const towerMaterial = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const towerMesh = new THREE.Mesh(towerGeometry, towerMaterial);
+        
+        // Important: Adjust the tower position to make it start from the surface
+        // Instead of centering at height/2, move it up so the bottom of the cylinder touches the origin
+        towerMesh.position.y = height / 2;
+        towerGroup.add(towerMesh);
+        
+        // Add a platform at the top
+        const platformGeometry = new THREE.CylinderGeometry(radius * 1.2, radius, 2, 16);
+        const platformMaterial = new THREE.MeshStandardMaterial({
+            color: 0xaaaaaa, // Gray color
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const platformMesh = new THREE.Mesh(platformGeometry, platformMaterial);
+        platformMesh.position.y = height + 1; // Position at the top of the tower
+        towerGroup.add(platformMesh);
+        
+        // Add some details to make it look more like a watch tower
+        // Railing around the top platform
+        const railingRadius = radius * 1.3;
+        const railingGeometry = new THREE.TorusGeometry(railingRadius, 0.15, 8, 24);
+        const railingMaterial = new THREE.MeshStandardMaterial({
+            color: 0x333333, // Dark color
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const railingMesh = new THREE.Mesh(railingGeometry, railingMaterial);
+        railingMesh.position.y = height + 2; // Position at the top of the platform
+        railingMesh.rotation.x = Math.PI / 2; // Rotate to horizontal
+        towerGroup.add(railingMesh);
+        
+        // Position the tower on the surface of the globe (but slightly embedded)
+        // Use the cartesian position we calculated with the slight underground offset
+        towerGroup.position.set(cartesian.x, cartesian.y, cartesian.z);
+        
+        // Calculate the correct orientation for the tower to stand upright
+        // Get the normal vector (direction from center to the point on surface)
+        const normal = new THREE.Vector3(cartesian.x, cartesian.y, cartesian.z).normalize();
+        
+        // We need to rotate the tower so its up vector (Y axis) aligns with the normal vector
+        // First, get the default up vector (0, 1, 0)
+        const defaultUp = new THREE.Vector3(0, 1, 0);
+        
+        // Calculate the rotation axis (perpendicular to both vectors)
+        const rotationAxis = new THREE.Vector3().crossVectors(defaultUp, normal).normalize();
+        
+        // If the vectors are parallel or anti-parallel, we need a different approach
+        if (rotationAxis.lengthSq() < 0.001) {
+            // If normal is (0,1,0) or (0,-1,0), use X axis as rotation axis
+            if (normal.y > 0.99) {
+                // No rotation needed, already aligned
+                towerGroup.quaternion.set(0, 0, 0, 1);
+            } else if (normal.y < -0.99) {
+                // 180 degree rotation around X axis
+                towerGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+            }
+        } else {
+            // Calculate the angle between the vectors
+            const angle = Math.acos(defaultUp.dot(normal));
+            
+            // Create a quaternion for this rotation
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromAxisAngle(rotationAxis, angle);
+            
+            // Apply the rotation to the tower group
+            towerGroup.quaternion.copy(quaternion);
+        }
+        
+        // Add to scene
+        this.scene.add(towerGroup);
+        
+        // Store data for collision detection - use a larger collision radius
+        towerGroup.userData = {
+            type: 'tower',
+            position: {
+                phi: position.phi,
+                theta: position.theta
+            },
+            collider: {
+                radius: radius * 1.8 // Larger collision radius to ensure players can't get too close
+            }
+        };
+        
+        return towerGroup;
+    }
+
+    /**
      * Clear all features of a specific type
-     * @param {string} featureType - Type of feature to clear ('craters', 'rocks', 'mountains')
+     * @param {string} featureType - Type of feature to clear ('craters', 'rocks', 'towers', 'all')
      */
     clearFeatures(featureType) {
+        if (featureType === 'all' || featureType === 'towers') {
+            // Remove towers from scene
+            for (const tower of this.features.towers) {
+                this.scene.remove(tower);
+            }
+            this.features.towers = [];
+        }
+        
         if (!this.features[featureType]) return;
         
         // Remove each feature from the scene
@@ -489,13 +634,17 @@ class Terrain {
             ...opts.rockOptions,
             clear: false // Don't clear again
         });
+        
+        // Create watch towers at the poles
+        this.createPoleTowers();
 
         // Log that terrain generation is complete
-        console.log(`Terrain generation complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks`);
+        console.log(`Terrain generation complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks, ${this.features.towers.length} towers`);
         
         return {
             craters: this.features.craters.length,
-            rocks: this.features.rocks.length
+            rocks: this.features.rocks.length,
+            towers: this.features.towers.length
         };
     }
 
@@ -564,9 +713,51 @@ class Terrain {
             theta: Math.atan2(direction.z, direction.x)
         };
         
+        // Define maximum distance to check for collisions (visible distance)
+        // This prevents phantom collisions with rocks that are far away and not rendered
+        const maxVisibleDistance = Math.PI / 8; // About 22.5 degrees, tighter viewing distance
+        
+        // Special exception for towers - always check them regardless of distance
+        // They are few in number and important for pole navigation
+        for (const tower of this.features.towers) {
+            if (!tower.userData || !tower.userData.collider) continue;
+            
+            // Use the actual world position of the tower
+            const towerPos = tower.position.clone();
+            const towerDirection = towerPos.clone().normalize();
+            const towerSpherical = {
+                phi: Math.acos(towerDirection.y),
+                theta: Math.atan2(towerDirection.z, towerDirection.x)
+            };
+            
+            // Calculate distance on sphere surface
+            const distance = MathUtils.sphereDistance(
+                sphericalPos.phi, sphericalPos.theta,
+                towerSpherical.phi, towerSpherical.theta,
+                this.globe.radius
+            );
+            
+            // Check if distance is less than combined radii
+            // For towers, we use full collision radius to ensure players can't get too close to poles
+            // Increase the effective collision radius by 15% to ensure players don't pass through
+            if (distance < radius + (tower.userData.collider.radius * 1.15)) {
+                return { 
+                    feature: {
+                        position: towerPos,
+                        userData: tower.userData
+                    }, 
+                    type: 'tower',
+                    distance: distance
+                };
+            }
+        }
+        
         // Check collisions with rocks
         for (const rock of this.features.rocks) {
             if (!rock.userData || !rock.userData.collider) continue;
+            
+            // CRITICAL: Check if rock is actually in the scene to avoid phantom collisions
+            if (!rock.parent) continue; // Skip rocks that have been removed from the scene
             
             // Use the actual world position of the rock instead of stored spherical coords
             const rockPos = rock.position.clone();
@@ -576,15 +767,37 @@ class Terrain {
                 theta: Math.atan2(rockDirection.z, rockDirection.x)
             };
             
-            // Calculate distance on sphere surface using the actual positions
+            // First, do a quick angular distance check to filter out far away rocks
+            // Calculate angular distance on sphere
+            const dPhi = Math.abs(rockSpherical.phi - sphericalPos.phi);
+            const dTheta = Math.abs(
+                Math.min(
+                    Math.abs(rockSpherical.theta - sphericalPos.theta),
+                    Math.abs(rockSpherical.theta - sphericalPos.theta + 2 * Math.PI),
+                    Math.abs(rockSpherical.theta - sphericalPos.theta - 2 * Math.PI)
+                )
+            );
+            const angularDistance = Math.sqrt(dPhi*dPhi + dTheta*dTheta);
+            
+            // Skip this rock if it's too far away (not visible to player)
+            if (angularDistance > maxVisibleDistance) {
+                continue;
+            }
+            
+            // Now do the precise distance calculation for nearby rocks
             const distance = MathUtils.sphereDistance(
                 sphericalPos.phi, sphericalPos.theta,
                 rockSpherical.phi, rockSpherical.theta,
                 this.globe.radius
             );
             
-            // Use a slightly smaller collision radius to better match visual size
+            // Match visual size with collision size more accurately
             const collisionRadius = rock.userData.collider.radius * 0.9;
+            
+            // Extra check: verify rock is within reasonable distance from player
+            if (distance > (this.globe.radius * Math.PI / 4)) {
+                continue; // Skip rocks that are too far away (more than 1/4 of the way around the globe)
+            }
             
             // Check if distance is less than combined radii
             if (distance < radius + collisionRadius) {

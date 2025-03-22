@@ -239,7 +239,6 @@ class Game {
             // Update camera position
             this.playerCamera.updateCameraPositionAndOrientation();
             
-            // Log the adjusted position
             console.log('Player position adjusted to avoid obstacles');
         } else {
             console.log('Player spawn location is valid');
@@ -1025,7 +1024,7 @@ class Game {
             return;
         }
         
-        console.log(`Received billboard data for: ${data.id}`);
+        // console.log(`Received billboard data for: ${data.id}`);
         
         // Check if we already have this billboard
         const existingIndex = this.billboards.findIndex(b => b.id === data.id);
@@ -1043,34 +1042,34 @@ class Game {
                 text: originalText,
                 owner: originalOwner
             };
-            console.log(`Updated billboard ${data.id} in data storage (preserved original text and owner)`);
+            // console.log(`Updated billboard ${data.id} in data storage (preserved original text and owner)`);
             
             // Update visual if we have a weapon manager with billboard gun
             if (this.weaponManager && typeof this.weaponManager.updateBillboard === 'function') {
-                console.log(`Updating visual billboard ${data.id}`);
+                // console.log(`Updating visual billboard ${data.id}`);
                 // Make sure we don't pass text updates to updateBillboard
                 const updateData = {...data};
                 // Remove text property to prevent accidental updates
                 delete updateData.text;
                 this.weaponManager.updateBillboard(updateData);
             } else {
-                console.log('WeaponManager or updateBillboard function not available');
+                // console.log('WeaponManager or updateBillboard function not available');
             }
         } else {
             // Add new billboard
             this.billboards.push(data);
-            console.log(`Added new billboard ${data.id} to data storage`);
+            // console.log(`Added new billboard ${data.id} to data storage`);
             
             // Create visual billboard
             if (this.weaponManager) {
                 if (typeof this.weaponManager.createBillboardFromData === 'function') {
-                    console.log(`Creating visual billboard for ${data.id}`);
+                    // console.log(`Creating visual billboard for ${data.id}`);
                     this.weaponManager.createBillboardFromData(data);
                 } else if (typeof this.weaponManager.billboardGun?.createBillboardFromData === 'function') {
-                    console.log(`Creating visual billboard using billboardGun for ${data.id}`);
+                    // console.log(`Creating visual billboard using billboardGun for ${data.id}`);
                     this.weaponManager.billboardGun.createBillboardFromData(data);
                 } else if (typeof this.weaponManager.addBillboard === 'function') {
-                    console.log(`Adding billboard using legacy method for ${data.id}`);
+                    // console.log(`Adding billboard using legacy method for ${data.id}`);
                     this.weaponManager.addBillboard(data);
                 } else {
                     console.log('Cannot create billboard: missing appropriate creation method');
@@ -1096,7 +1095,7 @@ class Game {
         
         // Clear existing billboards first to avoid duplicates
         if (this.weaponManager && typeof this.weaponManager.clearBillboards === 'function') {
-            console.log('Clearing existing billboards before adding new ones');
+            // console.log('Clearing existing billboards before adding new ones');
             this.weaponManager.clearBillboards();
         }
         
@@ -1110,7 +1109,7 @@ class Game {
                 return;
             }
             
-            console.log(`Processing billboard - ID: ${billboardData.id}, Text: "${billboardData.text || 'undefined'}", Owner: ${billboardData.owner || 'unknown'}`);
+            // console.log(`Processing billboard - ID: ${billboardData.id}, Text: "${billboardData.text || 'undefined'}", Owner: ${billboardData.owner || 'unknown'}`);
             
             // Validate position and rotation
             if (!billboardData.position) {
@@ -1120,7 +1119,7 @@ class Game {
             
             // Log quaternion data if available (important for proper orientation)
             if (billboardData.quaternion) {
-                console.log(`Billboard ${billboardData.id} has quaternion data: (${billboardData.quaternion.x.toFixed(3)}, ${billboardData.quaternion.y.toFixed(3)}, ${billboardData.quaternion.z.toFixed(3)}, ${billboardData.quaternion.w.toFixed(3)})`);
+                // console.log(`Billboard ${billboardData.id} has quaternion data: (${billboardData.quaternion.x.toFixed(3)}, ${billboardData.quaternion.y.toFixed(3)}, ${billboardData.quaternion.z.toFixed(3)}, ${billboardData.quaternion.w.toFixed(3)})`);
             } else if (!billboardData.rotation) {
                 console.warn(`Billboard ${billboardData.id} has neither quaternion nor rotation data, adding default rotation`);
                 billboardData.rotation = { x: 0, y: 0, z: 0 };

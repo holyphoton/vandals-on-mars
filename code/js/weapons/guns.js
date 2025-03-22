@@ -1000,7 +1000,7 @@ class ShooterGun extends Gun {
                     
                     // Debug distances occasionally
                     if (Math.random() < 0.005) {
-                        console.log(`Bullet distance to billboard ${j}: ${distance.toFixed(2)} units`);
+                        // console.log(`Bullet distance to billboard ${j}: ${distance.toFixed(2)} units`);
                     }
                     
                     // Increase hit radius significantly for the taller billboard structure
@@ -1030,7 +1030,7 @@ class ShooterGun extends Gun {
             } else {
                 // Debug if no billboards exist
                 if (Math.random() < 0.01) { // Only log occasionally
-                    console.log("No billboards to check collisions against");
+                    // console.log("No billboards to check collisions against");
                 }
             }
             
@@ -1446,7 +1446,7 @@ class WeaponManager {
         if (ammoInfo) {
             ammoDisplay.textContent = `Ammo: ${ammoInfo.ammo}/${ammoInfo.maxAmmo}`;
             billboardCount.textContent = `Billboards: ${ammoInfo.billboards}/${ammoInfo.maxBillboards}`;
-            console.log("Ammo display updated:", ammoInfo);
+            // console.log("Ammo display updated:", ammoInfo);
         }
     }
     

@@ -180,7 +180,7 @@ class PlayerMovement {
             this.canJump = false;
             this.jumpHeight = 0.1; // Small initial height
             this.velocity.y = this.jumpForce;
-            console.log("Jump initiated, velocity:", this.velocity.y);
+            // console.log("Jump initiated, velocity:", this.velocity.y);
         }
         
         // Update jump physics if player is in the air
@@ -193,9 +193,7 @@ class PlayerMovement {
             // Apply gravity (always pulling down)
             this.velocity.y -= this.gravity * deltaTime;
             
-            // Debug output with jump state
-            console.log(`Jump State: height=${this.jumpHeight.toFixed(2)}, velocity=${this.velocity.y.toFixed(2)}`);
-            
+           
             // Check if we've landed
             if (this.jumpHeight <= 0) {
                 // Reset jump state
@@ -203,7 +201,6 @@ class PlayerMovement {
                 this.isJumping = false;
                 this.canJump = true;
                 this.velocity.y = 0;
-                console.log("Landed on ground");
             }
         }
         
@@ -250,7 +247,7 @@ class PlayerMovement {
                 const collision = this.terrain.checkCollision(newPosition, this.playerRadius);
                 
                 if (collision) {
-                    console.log(`Collision detected with ${collision.type}`);
+                    // console.log(`Collision detected with ${collision.type}`);
                     this.handleCollision(collision, moveDirection, cameraPosition);
                     return;
                 }
@@ -482,11 +479,11 @@ class PlayerMovement {
         this.hasPerformedInitialJump = true;
         
         console.log('Initial position jump complete');
-        console.log('New player position:', {
-            x: targetPos.x.toFixed(2),
-            y: targetPos.y.toFixed(2),
-            z: targetPos.z.toFixed(2)
-        });
+        // console.log('New player position:', {
+        //     x: targetPos.x.toFixed(2),
+        //     y: targetPos.y.toFixed(2),
+        //     z: targetPos.z.toFixed(2)
+        // });
     }
 }
 
