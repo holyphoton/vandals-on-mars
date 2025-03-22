@@ -192,11 +192,23 @@ class BillboardGun extends Gun {
         // Create a billboard group that contains sign and legs
         const billboardGroup = new THREE.Group();
         
-        // Get billboard text from game if available
+        // Get billboard text from game if available, with fallbacks
         let billboardText = "Default Turf";
-        if (window.game && typeof window.game.getBillboardText === 'function') {
+        
+        // First try the window.billboardText (set in save function)
+        if (window.billboardText) {
+            billboardText = window.billboardText;
+        }
+        // Next try the game object's method
+        else if (window.game && typeof window.game.getBillboardText === 'function') {
             billboardText = window.game.getBillboardText();
         }
+        // Finally, use username if available
+        else if (window.game && window.game.username) {
+            billboardText = `${window.game.username}'s Turf`;
+        }
+        
+        console.log("Using billboard text:", billboardText);
         
         // Generate unique ID for the billboard
         const billboardId = this.generateUUID();
@@ -217,7 +229,7 @@ class BillboardGun extends Gun {
         const textTexture = this.createTextTexture(billboardText);
         
         // Create the sign part of the billboard (the actual display)
-        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height (doubled from 1.5, 1.0)
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height
         const signMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             side: THREE.DoubleSide,
@@ -226,28 +238,33 @@ class BillboardGun extends Gun {
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
-        // Position the sign halfway up the legs instead of at the top
-        signMesh.position.y = 2.8; // Changed from 2.0 (legs are 4.0 units tall, so halfway is 1.0)
+        // Position the sign halfway up the legs
+        signMesh.position.y = 2.8;
         billboardGroup.add(signMesh);
         
-        // Create legs for the billboard - now twice as tall
+        // Create legs for the billboard
         const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8);
         const legMaterial = new THREE.MeshStandardMaterial({
             color: 0x333333 // Dark gray
         });
         
-        // Left leg - positioned at lower left corner of sign (adjusted for wider sign)
+        // Left leg - positioned at lower left corner of sign
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-1.2, 0, 0); // Wider placement for the doubled width
+        leftLeg.position.set(-1.2, 0, 0);
         billboardGroup.add(leftLeg);
         
-        // Right leg - positioned at lower right corner of sign (adjusted for wider sign)
+        // Right leg - positioned at lower right corner of sign
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(1.2, 0, 0); // Wider placement for the doubled width
+        rightLeg.position.set(1.2, 0, 0);
         billboardGroup.add(rightLeg);
         
-        // Set the billboard position
-        billboardGroup.position.copy(position);
+        // Set position from data
+        const posVector = new THREE.Vector3(
+            position.x || 0,
+            position.y || 0,
+            position.z || 0
+        );
+        billboardGroup.position.copy(posVector);
         
         // Orient the billboard properly on the planet surface
         if (this.globe && this.globe.globe) {
@@ -314,38 +331,42 @@ class BillboardGun extends Gun {
     }
     
     /**
-     * Creates a billboard from server data
-     * @param {Object} data - Billboard data from server
+     * Create a billboard from server data
+     * @param {Object} data - Billboard data received from server
+     * @returns {Object} - The created billboard object
      */
     createBillboardFromData(data) {
-        // Check if we already have this billboard
-        const existingIndex = this.placedBillboards.findIndex(b => b.id === data.id);
-        if (existingIndex !== -1) {
-            // Update existing billboard
-            this.updateBillboard(data);
-            return;
+        // Check if we have valid data
+        if (!data || !data.id) {
+            console.error('Invalid billboard data received:', data);
+            return null;
         }
         
-        // Create a billboard group that contains sign and legs
+        // Extract data with fallbacks for missing properties
+        const id = data.id;
+        const position = data.position || { x: 0, y: 0, z: 0 };
+        const rotation = data.rotation || { x: 0, y: 0, z: 0 };
+        const quaternion = data.quaternion || { x: 0, y: 0, z: 0, w: 1 };
+        const text = data.text || "Mars Billboard";
+        const owner = data.owner || "Anonymous";
+        const timestamp = data.timestamp || Date.now();
+        
+        console.log(`Creating billboard from data - ID: ${id}, Text: "${text}", Owner: ${owner}`);
+        console.log(`Position: (${position.x}, ${position.y}, ${position.z})`);
+        if (data.quaternion) {
+            console.log(`Quaternion: (${quaternion.x}, ${quaternion.y}, ${quaternion.z}, ${quaternion.w})`);
+        } else {
+            console.log(`Rotation: (${rotation.x}, ${rotation.y}, ${rotation.z})`);
+        }
+        
+        // Create a billboard group that contains sign and legs (like in placeBillboard)
         const billboardGroup = new THREE.Group();
         
-        // Create a billboard object for tracking
-        const billboard = {
-            id: data.id,
-            mesh: billboardGroup,
-            position: new THREE.Vector3(data.position.x, data.position.y, data.position.z),
-            width: data.width || 5,
-            height: data.height || 5,
-            health: data.health || 100,
-            text: data.text || "Default Turf",
-            owner: data.owner || "Anonymous"
-        };
-        
         // Create text texture for the billboard
-        const textTexture = this.createTextTexture(billboard.text);
+        const textTexture = this.createTextTexture(text);
         
         // Create the sign part of the billboard (the actual display)
-        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0);
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height
         const signMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             side: THREE.DoubleSide,
@@ -354,70 +375,101 @@ class BillboardGun extends Gun {
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
-        // Position the sign halfway up the legs
-        signMesh.position.y = 2.8;
+        // Position the sign a bit higher above the legs to ensure visibility
+        signMesh.position.y = 2.8; // This is where the sign is positioned relative to the legs
         billboardGroup.add(signMesh);
         
         // Create legs for the billboard
         const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8);
         const legMaterial = new THREE.MeshStandardMaterial({
-            color: 0x333333
+            color: 0x333333 // Dark gray
         });
         
-        // Left leg
+        // Left leg - positioned at lower left corner of sign
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-1.2, 0.5, 0);
+        leftLeg.position.set(-1.2, 0, 0);
         billboardGroup.add(leftLeg);
         
-        // Right leg
+        // Right leg - positioned at lower right corner of sign
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(1.2, 0.5, 0);
+        rightLeg.position.set(1.2, 0, 0);
         billboardGroup.add(rightLeg);
         
-        // Set position from data
-        billboardGroup.position.copy(billboard.position);
+        // Initial position from data
+        const posVector = new THREE.Vector3(
+            position.x || 0,
+            position.y || 0,
+            position.z || 0
+        );
         
-        // If quaternion data is available, use it for orientation
+        // If we have a globe reference, ensure the billboard is properly positioned above the surface
+        if (this.globe && this.globe.globe) {
+            const globeCenter = this.globe.globe.position.clone();
+            const radius = this.globe.radius || 10; // Default radius if not defined
+            
+            // Get direction from center to billboard position
+            const centerToBillboard = posVector.clone().sub(globeCenter);
+            const distance = centerToBillboard.length();
+            centerToBillboard.normalize();
+            
+            // Ensure the billboard is at correct distance from center (radius + offset)
+            // Using a larger offset (2.0) to ensure it's visible above surface
+            const correctPosition = globeCenter.clone().add(
+                centerToBillboard.multiplyScalar(radius + 0.1) // Using 0.1 to match the offset in fire method
+            );
+            
+            console.log(`Billboard ${id} - Adjusting position to ensure above surface`);
+            console.log(`  Original: (${posVector.x.toFixed(2)}, ${posVector.y.toFixed(2)}, ${posVector.z.toFixed(2)})`);
+            console.log(`  Adjusted: (${correctPosition.x.toFixed(2)}, ${correctPosition.y.toFixed(2)}, ${correctPosition.z.toFixed(2)})`);
+            
+            // Update the position
+            posVector.copy(correctPosition);
+        }
+        
+        // Set the final position
+        billboardGroup.position.copy(posVector);
+        
+        // Use quaternion for rotation if available (more accurate) otherwise use Euler rotation
         if (data.quaternion) {
             billboardGroup.quaternion.set(
-                data.quaternion.x,
-                data.quaternion.y,
-                data.quaternion.z,
-                data.quaternion.w
+                quaternion.x,
+                quaternion.y,
+                quaternion.z,
+                quaternion.w
             );
-            console.log(`Set billboard ${data.id} orientation from quaternion data`);
-        }
-        // Otherwise orient the billboard properly on the planet surface
-        else if (this.globe && this.globe.globe) {
-            const globeCenter = this.globe.globe.position.clone();
-            const upVector = billboard.position.clone().sub(globeCenter).normalize();
-            
-            // Use world up as reference
-            const worldUp = new THREE.Vector3(0, 1, 0);
-            const reference = Math.abs(upVector.dot(worldUp)) > 0.9 
-                ? new THREE.Vector3(1, 0, 0) 
-                : worldUp;
-            
-            // Calculate orientation vectors
-            const rightVector = new THREE.Vector3().crossVectors(upVector, reference).normalize();
-            const forwardVector = new THREE.Vector3().crossVectors(rightVector, upVector).normalize();
-            
-            // Create rotation matrix
-            const matrix = new THREE.Matrix4().makeBasis(rightVector, upVector, forwardVector);
-            billboardGroup.quaternion.setFromRotationMatrix(matrix);
+            console.log(`Applied quaternion rotation for better orientation`);
+        } else {
+            billboardGroup.rotation.set(
+                rotation.x || 0,
+                rotation.y || 0,
+                rotation.z || 0
+            );
+            console.log(`Applied Euler rotation as fallback`);
         }
         
-        // Add the billboard to the scene
+        // Add it to the scene
         this.scene.add(billboardGroup);
         
-        // Scale according to health/size
-        const healthScale = 0.5 + (billboard.health / 100) * 0.5;
-        billboardGroup.scale.set(healthScale, healthScale, healthScale);
+        // Store billboard data
+        const billboardObject = {
+            id,
+            mesh: billboardGroup,
+            position: posVector.clone(),
+            rotation: new THREE.Euler(rotation.x || 0, rotation.y || 0, rotation.z || 0),
+            quaternion: new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w),
+            text: text,
+            owner: owner,
+            timestamp: timestamp
+        };
         
-        // Add to tracked billboards
-        this.placedBillboards.push(billboard);
+        // Add to placed billboards array
+        this.placedBillboards.push(billboardObject);
         
-        return billboard;
+        // Log for debugging
+        console.log(`Billboard added - ID: ${id}, Total billboards: ${this.placedBillboards.length}`);
+        console.log(`Text for this billboard: "${text}"`);
+        
+        return billboardObject;
     }
     
     /**
@@ -440,7 +492,7 @@ class BillboardGun extends Gun {
             return null;
         }
         
-        console.log(`Updating billboard ${data.id} with data:`, data);
+        console.log(`Updating billboard ${data.id} with data (preserving original text: "${billboard.text}")`);
         
         // Update properties
         billboard.width = data.width || billboard.width;
@@ -455,8 +507,9 @@ class BillboardGun extends Gun {
             console.log(`Billboard health changed from ${oldHealth} to ${billboard.health}`);
         }
         
-        billboard.text = data.text || billboard.text;
-        billboard.owner = data.owner || billboard.owner;
+        // DO NOT update text or owner - preserve the original values
+        // billboard.text and billboard.owner remain unchanged
+        console.log(`Preserved original billboard text: "${billboard.text}" and owner: "${billboard.owner}"`);
         
         // Update position if provided
         if (data.position) {
@@ -484,20 +537,8 @@ class BillboardGun extends Gun {
         const healthScale = 0.5 + (billboard.health / 100) * 0.5;
         mesh.scale.set(healthScale, healthScale, healthScale);
         
-        console.log(`Billboard ${data.id} scaled to: ${healthScale.toFixed(2)}`);
-        
-        // Update text if changed
-        if (data.text && data.text !== billboard.text) {
-            // Update the texture
-            const signMesh = mesh.children[0];
-            if (signMesh) {
-                const textTexture = this.createTextTexture(data.text);
-                if (signMesh.material) {
-                    signMesh.material.map = textTexture;
-                    signMesh.material.needsUpdate = true;
-                }
-            }
-        }
+        // NEVER update the text after initial creation
+        // The text is preserved from the original creation
         
         return billboard;
     }
@@ -533,91 +574,89 @@ class BillboardGun extends Gun {
     }
     
     /**
-     * Create a texture with the given text
-     * @param {string} text - Text to display on the billboard
-     * @returns {THREE.Texture} - Texture with text
+     * Creates a text texture for the billboard
+     * @param {string} text - The text to display on the billboard
+     * @returns {THREE.Texture} - The texture containing the text
      */
     createTextTexture(text) {
-        // Clear the canvas
-        this.textContext.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
+        console.log(`Creating new text texture with text: "${text}"`);
         
-        // Create a gradient background
-        const gradient = this.textContext.createLinearGradient(0, 0, 0, this.textCanvas.height);
-        gradient.addColorStop(0, '#4a6fa5');
-        gradient.addColorStop(1, '#23395d');
-        this.textContext.fillStyle = gradient;
-        this.textContext.fillRect(0, 0, this.textCanvas.width, this.textCanvas.height);
+        // Create a canvas element for the texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
         
-        // Add a border
-        this.textContext.strokeStyle = '#ffffff';
-        this.textContext.lineWidth = 8; // Doubled from 4
-        this.textContext.strokeRect(8, 8, this.textCanvas.width - 16, this.textCanvas.height - 16); // Doubled padding
+        // Get the 2D context and configure it
+        const context = canvas.getContext('2d');
         
-        // Dynamically calculate font size based on text length
-        const baseFontSize = 48; // Our default size (previously fixed)
-        const maxCharsPerLine = 15; // Approximate threshold for adjusting font size
-        const minFontSize = 24; // Minimum font size to ensure readability
+        // Clean the canvas with a white background
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Estimate total text length (consider all characters)
-        const textLength = text.length;
+        // Border for the sign
+        context.strokeStyle = '#333333';
+        context.lineWidth = 8;
+        context.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
         
-        // Calculate font size based on text length
-        let fontSize = baseFontSize;
-        if (textLength > maxCharsPerLine) {
-            // Gradually reduce font size as text gets longer
-            const reduction = Math.min(0.6, (textLength - maxCharsPerLine) / 40); // Max 60% reduction
-            fontSize = Math.max(minFontSize, Math.floor(baseFontSize * (1 - reduction)));
-        }
+        // Gradient background for text area
+        const gradient = context.createLinearGradient(0, 0, 0, canvas.height - 16);
+        gradient.addColorStop(0, '#efefef');
+        gradient.addColorStop(1, '#dddddd');
+        context.fillStyle = gradient;
+        context.fillRect(8, 8, canvas.width - 16, canvas.height - 16);
         
-        // Set up text with dynamic font size
-        this.textContext.fillStyle = '#ffffff';
-        this.textContext.font = `bold ${fontSize}px Arial`;
-        this.textContext.textAlign = 'center';
-        this.textContext.textBaseline = 'middle';
+        // Configure text style
+        const fontSize = Math.min(32, 500 / (text.length > 20 ? text.length / 2 : 10)); // Adaptive font size
+        context.font = `bold ${fontSize}px Arial, sans-serif`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = '#000000';
         
-        // Handle multiline text
-        const maxWidth = this.textCanvas.width - 40; // Doubled padding (was 20)
-        const lineHeight = fontSize + 4; // Scale line height with font size
-        const words = text.split(' ');
-        let lines = [];
-        let currentLine = words[0];
-        
-        for (let i = 1; i < words.length; i++) {
-            const testLine = currentLine + ' ' + words[i];
-            const metrics = this.textContext.measureText(testLine);
-            const testWidth = metrics.width;
+        // Word wrapping function
+        const wrapText = (context, text, x, y, maxWidth, lineHeight) => {
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
             
-            if (testWidth > maxWidth) {
-                lines.push(currentLine);
-                currentLine = words[i];
-            } else {
-                currentLine = testLine;
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                const testWidth = metrics.width;
+                
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
             }
-        }
-        lines.push(currentLine);
+            lines.push(line);
+            
+            // Calculate the starting y position
+            const totalHeight = lines.length * lineHeight;
+            let startY = y - (totalHeight / 2) + (lineHeight / 2);
+            
+            // Draw each line
+            for (let i = 0; i < lines.length; i++) {
+                context.fillText(lines[i], x, startY);
+                startY += lineHeight;
+            }
+        };
         
-        // Limit to 6 lines max (increased from 4 to accommodate smaller font)
-        if (lines.length > 6) {
-            lines = lines.slice(0, 5);
-            lines.push('...');
-        }
+        // Draw the wrapped text
+        wrapText(
+            context,
+            text,
+            canvas.width / 2,
+            canvas.height / 2,
+            canvas.width - 40,
+            fontSize * 1.2
+        );
         
-        // Calculate vertical center
-        const totalHeight = lines.length * lineHeight;
-        const startY = (this.textCanvas.height - totalHeight) / 2 + lineHeight / 2;
-        
-        // Draw each line centered
-        for (let i = 0; i < lines.length; i++) {
-            this.textContext.fillText(
-                lines[i],
-                this.textCanvas.width / 2,
-                startY + i * lineHeight
-            );
-        }
-        
-        // Create texture from canvas
-        const texture = new THREE.CanvasTexture(this.textCanvas);
+        // Create a texture from the canvas
+        const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
+        texture.generateUniqueID = Math.random(); // Ensure unique texture
         
         return texture;
     }
@@ -737,6 +776,25 @@ class BillboardGun extends Gun {
         }
         
         return false;
+    }
+
+    /**
+     * Clear all billboards from the scene
+     */
+    clearBillboards() {
+        console.log(`Clearing ${this.placedBillboards.length} billboards from scene`);
+        
+        // Remove all billboards from scene
+        this.placedBillboards.forEach(billboard => {
+            if (billboard.mesh) {
+                this.scene.remove(billboard.mesh);
+            }
+        });
+        
+        // Clear tracking array
+        this.placedBillboards = [];
+        
+        console.log('All billboards cleared');
     }
 }
 
@@ -1451,7 +1509,7 @@ class WeaponManager {
             return;
         }
 
-        console.log("Updating weapon visibility - active index:", this.activeWeaponIndex);
+        //console.log("Updating weapon visibility - active index:", this.activeWeaponIndex);
         
         // Make sure both guns are added to the scene if not already
         if (!this.billboardGun.gunModel.parent) {
@@ -1468,12 +1526,12 @@ class WeaponManager {
         this.billboardGun.gunModel.visible = this.isBillboardGunActive();
         this.shooterGun.gunModel.visible = this.isShooterGunActive();
         
-        console.log("Weapon visibility updated:", {
+        /*console.log("Weapon visibility updated:", {
             billboard: this.billboardGun.gunModel.visible,
             shooter: this.shooterGun.gunModel.visible,
             billboardParent: this.billboardGun.gunModel.parent ? "attached" : "detached",
             shooterParent: this.shooterGun.gunModel.parent ? "attached" : "detached"
-        });
+        });*/
 
         // Force gun model position update
         if (this.billboardGun.gunModel) {
@@ -1517,10 +1575,7 @@ class WeaponManager {
      * @param {number} deltaTime - Time since last update in seconds
      */
     update(deltaTime) {
-        // Debug log billboard count occasionally
-        if (Math.random() < 0.01) {
-            console.log(`WeaponManager - Billboards count: ${this.billboardGun.placedBillboards.length}`);
-        }
+       
         
         // Make sure shooterGun always has the latest reference to billboards
         if (this.shooterGun && this.billboardGun) {
@@ -1538,11 +1593,7 @@ class WeaponManager {
         // Update visibility
         this.updateWeaponVisibility();
         
-        // Log billboards count occasionally for debugging
-        if (Math.random() < 0.01) { // About once every 100 frames
-            console.log("Current billboard count:", this.billboardGun.placedBillboards.length);
-            console.log("ShooterGun billboard reference:", this.shooterGun.billboards === this.billboardGun.placedBillboards ? "CORRECT" : "BROKEN");
-        }
+        
     }
     
     /**
@@ -1602,6 +1653,19 @@ class WeaponManager {
             return this.billboardGun.removeBillboard(billboardId);
         } else {
             console.warn('BillboardGun not available or missing removeBillboard method');
+            return false;
+        }
+    }
+    
+    /**
+     * Clear all billboards - delegates to billboardGun
+     */
+    clearBillboards() {
+        if (this.billboardGun && typeof this.billboardGun.clearBillboards === 'function') {
+            this.billboardGun.clearBillboards();
+            return true;
+        } else {
+            console.warn('BillboardGun not available or missing clearBillboards method');
             return false;
         }
     }

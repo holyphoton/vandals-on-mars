@@ -15,7 +15,10 @@ class Game {
         this.gameStarted = false;
         this.isDebug = CONSTANTS.DEBUG_MODE;
         this.username = "Anonymous"; // Default username
-        this.billboardText = null; // Custom billboard text
+        this.billboardText = null; // Custom billboard text will be set once username is confirmed
+        
+        // Make billboard text accessible globally for weapons
+        window.billboardText = null;
         
         // Three.js objects
         this.renderer = null;
@@ -415,13 +418,22 @@ class Game {
         
         console.log('Starting game');
         
-        // Get username from input field
-        if (this.usernameInput && this.usernameInput.value.trim() !== '') {
-            this.username = this.usernameInput.value.trim();
-            console.log(`Username set to: ${this.username}`);
+        // Get username from input or use default
+        const inputUsername = this.usernameInput ? this.usernameInput.value.trim() : "";
+        if (inputUsername) {
+            this.username = inputUsername;
         } else {
-            console.log(`Using default username: ${this.username}`);
+            this.username = "Anonymous_" + Math.floor(Math.random() * 1000); // Add random number to default
         }
+        
+        // Set default billboard text using the username
+        this.billboardText = `${this.username}'s Turf`;
+        
+        // Make billboard text accessible globally for weapons
+        window.billboardText = this.billboardText;
+        
+        console.log(`Starting game with username: ${this.username}`);
+        console.log(`Default billboard text: ${this.billboardText}`);
         
         // Hide start screen
         this.hideStartScreen();
@@ -839,6 +851,9 @@ class Game {
             console.log(`Billboard text reset to default: ${this.billboardText}`);
         }
         
+        // Also update the global window reference to ensure it's available
+        window.billboardText = this.billboardText;
+        
         // Hide popup
         this.hideBillboardPopup();
     }
@@ -943,7 +958,7 @@ class Game {
         try {
             // Check if the message is a Blob (binary data)
             if (message instanceof Blob) {
-                console.log('Received binary data from server, converting to text');
+                //console.log('Received binary data from server, converting to text');
                 
                 // Convert Blob to text
                 const reader = new FileReader();
@@ -1016,17 +1031,28 @@ class Game {
         const existingIndex = this.billboards.findIndex(b => b.id === data.id);
         
         if (existingIndex !== -1) {
-            // Update existing billboard in our array
+            // Save the original text and owner
+            const originalText = this.billboards[existingIndex].text;
+            const originalOwner = this.billboards[existingIndex].owner;
+            
+            // Update existing billboard in our array but preserve text and owner
             this.billboards[existingIndex] = {
                 ...this.billboards[existingIndex],
-                ...data
+                ...data,
+                // Restore original text and owner
+                text: originalText,
+                owner: originalOwner
             };
-            console.log(`Updated billboard ${data.id} in data storage`);
+            console.log(`Updated billboard ${data.id} in data storage (preserved original text and owner)`);
             
             // Update visual if we have a weapon manager with billboard gun
             if (this.weaponManager && typeof this.weaponManager.updateBillboard === 'function') {
                 console.log(`Updating visual billboard ${data.id}`);
-                this.weaponManager.updateBillboard(data);
+                // Make sure we don't pass text updates to updateBillboard
+                const updateData = {...data};
+                // Remove text property to prevent accidental updates
+                delete updateData.text;
+                this.weaponManager.updateBillboard(updateData);
             } else {
                 console.log('WeaponManager or updateBillboard function not available');
             }
@@ -1056,51 +1082,66 @@ class Game {
     }
     
     /**
-     * Process all billboards received from the server
-     * @param {Array} billboards - Array of billboard data
+     * Process all billboards received from server
+     * @param {Array} billboards - Array of billboard data from server
      */
     processAllBillboards(billboards) {
-        console.log(`Received ${billboards.length} billboards from server`);
+        console.log(`Received ${billboards ? billboards.length : 0} billboards from server`);
         
         // Validate billboards array
         if (!Array.isArray(billboards)) {
-            console.error('Invalid billboards data received:', billboards);
+            console.error('Received invalid billboards data (not an array):', billboards);
             return;
         }
         
-        // Log each billboard for debugging
-        billboards.forEach((billboard, index) => {
-            console.log(`Billboard ${index + 1}/${billboards.length}: ID=${billboard.id}, Owner=${billboard.owner}, Text=${billboard.text}`);
-        });
+        // Clear existing billboards first to avoid duplicates
+        if (this.weaponManager && typeof this.weaponManager.clearBillboards === 'function') {
+            console.log('Clearing existing billboards before adding new ones');
+            this.weaponManager.clearBillboards();
+        }
         
-        // Clear existing billboards first
-        this.billboards = [];
+        let successCount = 0;
         
-        // Add all billboards from the server
-        billboards.forEach(data => {
-            this.billboards.push(data);
+        // Process each billboard
+        billboards.forEach(billboardData => {
+            // Skip invalid billboard data
+            if (!billboardData || !billboardData.id) {
+                console.warn('Received invalid billboard data, skipping:', billboardData);
+                return;
+            }
             
-            // Create visual representation
-            if (this.weaponManager) {
-                // Try different possible methods for creating billboards
-                if (typeof this.weaponManager.createBillboardFromData === 'function') {
-                    console.log(`Creating billboard ${data.id} using weaponManager.createBillboardFromData`);
-                    this.weaponManager.createBillboardFromData(data);
-                } else if (typeof this.weaponManager.createBillboard === 'function') {
-                    console.log(`Creating billboard ${data.id} using weaponManager.createBillboard`);
-                    this.weaponManager.createBillboard(data);
-                } else if (typeof this.weaponManager.addBillboard === 'function') {
-                    console.log(`Creating billboard ${data.id} using weaponManager.addBillboard`);
-                    this.weaponManager.addBillboard(data);
-                } else {
-                    console.error('Billboard added to data store, but no creation method found in weaponManager');
+            console.log(`Processing billboard - ID: ${billboardData.id}, Text: "${billboardData.text || 'undefined'}", Owner: ${billboardData.owner || 'unknown'}`);
+            
+            // Validate position and rotation
+            if (!billboardData.position) {
+                console.warn(`Billboard ${billboardData.id} is missing position data, adding default`);
+                billboardData.position = { x: 0, y: 0, z: 0 };
+            }
+            
+            // Log quaternion data if available (important for proper orientation)
+            if (billboardData.quaternion) {
+                console.log(`Billboard ${billboardData.id} has quaternion data: (${billboardData.quaternion.x.toFixed(3)}, ${billboardData.quaternion.y.toFixed(3)}, ${billboardData.quaternion.z.toFixed(3)}, ${billboardData.quaternion.w.toFixed(3)})`);
+            } else if (!billboardData.rotation) {
+                console.warn(`Billboard ${billboardData.id} has neither quaternion nor rotation data, adding default rotation`);
+                billboardData.rotation = { x: 0, y: 0, z: 0 };
+            }
+            
+            // Create billboard from data
+            try {
+                const billboard = this.weaponManager.createBillboardFromData(billboardData);
+                if (billboard) successCount++;
+            } catch (error) {
+                console.error(`Error creating billboard ${billboardData.id}:`, error);
+                // Try to log the full billboard data for debugging
+                try {
+                    console.error('Billboard data that caused error:', JSON.stringify(billboardData));
+                } catch (e) {
+                    console.error('Could not stringify billboard data:', billboardData);
                 }
-            } else {
-                console.error('WeaponManager not available to create billboards');
             }
         });
         
-        console.log(`Successfully processed ${this.billboards.length} billboards from server`);
+        console.log(`Successfully added ${successCount} of ${billboards.length} billboards from server`);
     }
     
     /**
@@ -1245,7 +1286,12 @@ class Game {
      * @returns {Object} - Billboard data ready for sync
      */
     getBillboardDataForSync(billboardObj) {
-        const position = billboardObj.position.clone();
+        if (!billboardObj) {
+            console.error('Cannot sync undefined billboard');
+            return null;
+        }
+        
+        const position = billboardObj.position ? billboardObj.position.clone() : new THREE.Vector3(0, 0, 0);
         
         // Get quaternion rotation for more accurate sync
         let quaternion = { x: 0, y: 0, z: 0, w: 1 }; // Default identity quaternion
@@ -1256,6 +1302,18 @@ class Game {
                 z: billboardObj.mesh.quaternion.z,
                 w: billboardObj.mesh.quaternion.w
             };
+            console.log(`Got quaternion data for sync from mesh for billboard ${billboardObj.id}: (${quaternion.x.toFixed(3)}, ${quaternion.y.toFixed(3)}, ${quaternion.z.toFixed(3)}, ${quaternion.w.toFixed(3)})`);
+        } else if (billboardObj.quaternion) {
+            // Fallback to stored quaternion if mesh is not available
+            quaternion = {
+                x: billboardObj.quaternion.x,
+                y: billboardObj.quaternion.y, 
+                z: billboardObj.quaternion.z,
+                w: billboardObj.quaternion.w
+            };
+            console.log(`Using stored quaternion for billboard ${billboardObj.id}`);
+        } else {
+            console.warn(`No quaternion data available for billboard ${billboardObj.id}, using default`);
         }
         
         return {
