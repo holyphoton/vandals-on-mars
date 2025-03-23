@@ -1,0 +1,22 @@
+{
+  "J1": {
+    "position": {
+      "x": 60.76959991382076,
+      "y": 16.21177021624194,
+      "z": 80.0467003240604
+    },
+    "billboardGunAmmo": 5,
+    "shooterGunAmmo": 100,
+    "lastUpdated": 1742739318736
+  },
+  "M1": {
+    "position": {
+      "x": -82.66787978099416,
+      "y": 56.402341619740106,
+      "z": -18.655763514936368
+    },
+    "billboardGunAmmo": 5,
+    "shooterGunAmmo": 100,
+    "lastUpdated": 1742738641416
+  }
+}

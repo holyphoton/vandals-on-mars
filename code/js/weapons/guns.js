@@ -1,5 +1,7 @@
 // guns.js - Weapon system implementation - 2025-03-20
 
+// Import CONFIG from config.js is not needed - it's already global
+
 /**
  * Base Gun class - Abstract parent for all weapon types
  */
@@ -1355,11 +1357,29 @@ class WeaponManager {
     initializeWeapons() {
         console.log('Initializing weapons');
         
+        // Get gun configuration values from CONFIG
+        const gunConfig = CONFIG.player.gun || {};
+        const startingAmmoBillboard = gunConfig.startingAmmoBillboard || 3;
+        const maxAmmoBillboard = gunConfig.maxAmmoBillboard || 5;
+        const startingAmmoShooting = gunConfig.startingAmmoShooting || 200;
+        const maxAmmoShooting = gunConfig.maxAmmoShooting || 500;
+        
+        console.log('Gun configuration:', {
+            startingAmmoBillboard,
+            maxAmmoBillboard,
+            startingAmmoShooting,
+            maxAmmoShooting
+        });
+        
         // Create billboard gun
         this.billboardGun = new BillboardGun(
             this.playerCamera,
             this.scene,
-            this.globe
+            this.globe,
+            {
+                ammo: startingAmmoBillboard,
+                maxAmmo: maxAmmoBillboard
+            }
         );
         this.weapons.push(this.billboardGun);
         
@@ -1369,8 +1389,8 @@ class WeaponManager {
             this.playerCamera,
             this.billboardGun ? this.billboardGun.placedBillboards : [],
             {
-                ammo: 100,
-                maxAmmo: 200,
+                ammo: startingAmmoShooting,
+                maxAmmo: maxAmmoShooting,
                 fireRate: 0.1 // 10 shots per second
             }
         );

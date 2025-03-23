@@ -16,7 +16,13 @@ const DEFAULT_CONFIG = {
         ammoRegen: 10,
         ammoPerDamage: 20,
         billboardSlots: 1,
-        shootRange: 50
+        shootRange: 50,
+        gun: {
+            startingAmmoShooting: 200,
+            maxAmmoShooting: 500,
+            startingAmmoBillboard: 3,
+            maxAmmoBillboard: 5
+        }
     },
     billboard: {
         startSize: 5,
@@ -100,6 +106,11 @@ const CONSTANTS = {
     // Debug
     DEBUG_MODE: false
 };
+
+// Make CONFIG and CONSTANTS available globally
+window.CONFIG = CONFIG;
+window.CONSTANTS = CONSTANTS;
+window.loadConfig = loadConfig;
 
 // Export configuration as a module if in a module context
 if (typeof module !== 'undefined' && module.exports) {

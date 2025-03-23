@@ -12,7 +12,13 @@
     "ammoRegen": 10,
     "ammoPerDamage": 20,
     "billboardSlots": 1,
-    "shootRange": 50
+    "shootRange": 50,
+    "gun": {
+      "startingAmmoShooting": 200,
+      "maxAmmoShooting": 500,
+      "startingAmmoBillboard": 3,
+      "maxAmmoBillboard": 5
+    }
   },
   "billboard": {
     "startSize": 5,
