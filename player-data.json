@@ -59,12 +59,24 @@
     "username": "J1",
     "billboardText": "wazza",
     "position": {
-      "x": 40.08339644842421,
-      "y": 18.19530326796485,
-      "z": 91.79048026971665
+      "x": -0.2244280781119669,
+      "y": -101.79942595644845,
+      "z": 0.25788946338478436
     },
-    "shootingAmmo": 159,
+    "shootingAmmo": 156,
     "billboardAmmo": 0,
-    "lastUpdate": 1742742055079
+    "lastUpdate": 1742742789616
+  },
+  "player_1742742643398_0g51k9cuj": {
+    "username": "M1",
+    "billboardText": "yoyoma",
+    "position": {
+      "x": 81.40284984336562,
+      "y": 22.974050150959755,
+      "z": 59.143876045841125
+    },
+    "shootingAmmo": 180,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742742790597
   }
 }

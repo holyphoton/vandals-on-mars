@@ -20,6 +20,9 @@ const playerData = {};
 // Player data file path
 const PLAYER_DATA_FILE = path.join(__dirname, 'player-data.json');
 
+// Billboard data file path
+const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
+
 // Generate and store terrain data
 let terrainData = null;
 
@@ -56,6 +59,44 @@ function savePlayerData() {
   }
 }
 
+// Load saved billboard data from file
+function loadBillboardData() {
+  try {
+    if (fs.existsSync(BILLBOARD_DATA_FILE)) {
+      const data = fs.readFileSync(BILLBOARD_DATA_FILE, 'utf8');
+      const parsedData = JSON.parse(data);
+      
+      // Clear existing billboards and load from file
+      billboards.length = 0;
+      
+      // Copy all billboards from file
+      parsedData.forEach(billboard => {
+        billboards.push(billboard);
+      });
+      
+      console.log(`Loaded ${billboards.length} billboards from file`);
+    } else {
+      console.log('No billboard data file found, starting with empty billboards');
+    }
+  } catch (error) {
+    console.error('Error loading billboard data:', error);
+  }
+}
+
+// Save billboard data to file
+function saveBillboardData() {
+  try {
+    fs.writeFileSync(
+      BILLBOARD_DATA_FILE,
+      JSON.stringify(billboards, null, 2),
+      'utf8'
+    );
+    console.log('Billboard data saved to file');
+  } catch (error) {
+    console.error('Error saving billboard data:', error);
+  }
+}
+
 // Try to load saved terrain data or generate new
 function initializeTerrainData() {
   const terrainFilePath = path.join(__dirname, 'terrain-data.json');
@@ -79,6 +120,7 @@ function initializeTerrainData() {
 // Initialize terrain data and player data at server startup
 initializeTerrainData();
 loadPlayerData();
+loadBillboardData(); // Load billboard data on startup
 
 // Log server startup
 console.log('WebSocket server running on port 8090');
@@ -101,6 +143,7 @@ server.on('connection', (socket) => {
           const originalText = billboards[existingIndex].text;
           const originalOwner = billboards[existingIndex].owner;
           
+          // Store the updated data but preserve text and owner
           billboards[existingIndex] = {
             ...billboards[existingIndex],
             ...data,
@@ -109,11 +152,27 @@ server.on('connection', (socket) => {
             owner: originalOwner
           };
           
+          // Log health update if it changed
+          if (data.health !== undefined && billboards[existingIndex].health !== data.health) {
+            console.log(`Billboard ${data.id} health updated to: ${data.health}`);
+          }
+          
           console.log(`Updated billboard ${data.id} in server storage (preserved text and owner)`);
+          
+          // Save billboard data when health changes
+          if (data.health !== undefined) {
+            // Save periodically to avoid too frequent writes
+            if (Math.random() < 0.3) { // 30% chance to save on update
+              saveBillboardData();
+            }
+          }
         } else {
           // Add new billboard
           billboards.push(data);
           console.log(`Added new billboard ${data.id} to server storage`);
+          
+          // Save billboard data when a new billboard is added
+          saveBillboardData();
         }
         
         // Broadcast the billboard update to all other clients with consistent naming
@@ -134,6 +193,9 @@ server.on('connection', (socket) => {
         if (index !== -1) {
           billboards.splice(index, 1);
           console.log(`Removed billboard ${data.id} from server storage`);
+          
+          // Save billboard data when a billboard is removed
+          saveBillboardData();
           
           // Broadcast removal to all other clients with the expected "billboard_removed" type
           const removalData = {

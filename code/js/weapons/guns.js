@@ -352,9 +352,11 @@ class BillboardGun extends Gun {
         const text = data.text || "Mars Billboard";
         const owner = data.owner || "Anonymous";
         const timestamp = data.timestamp || Date.now();
+        const health = data.health !== undefined ? data.health : 100; // Get health with fallback
         
         console.log(`Creating billboard from data - ID: ${id}, Text: "${text}", Owner: ${owner}`);
         console.log(`Position: (${position.x}, ${position.y}, ${position.z})`);
+        console.log(`Health: ${health}`); // Log health value
         if (data.quaternion) {
             console.log(`Quaternion: (${quaternion.x}, ${quaternion.y}, ${quaternion.z}, ${quaternion.w})`);
         } else {
@@ -449,6 +451,11 @@ class BillboardGun extends Gun {
             console.log(`Applied Euler rotation as fallback`);
         }
         
+        // Apply health-based scaling
+        const healthScale = 0.5 + (health / 100) * 0.5;
+        billboardGroup.scale.set(healthScale, healthScale, healthScale);
+        console.log(`Applied health-based scaling: ${healthScale.toFixed(2)} based on health: ${health}`);
+        
         // Add it to the scene
         this.scene.add(billboardGroup);
         
@@ -461,7 +468,10 @@ class BillboardGun extends Gun {
             quaternion: new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w),
             text: text,
             owner: owner,
-            timestamp: timestamp
+            timestamp: timestamp,
+            health: health, // Store the health value
+            width: data.width || 5,
+            height: data.height || 5
         };
         
         // Add to placed billboards array
@@ -502,7 +512,7 @@ class BillboardGun extends Gun {
         
         // Important: Update health value which affects scaling
         const oldHealth = billboard.health;
-        billboard.health = data.health || billboard.health;
+        billboard.health = data.health !== undefined ? data.health : billboard.health;
         
         // Log health change
         if (oldHealth !== billboard.health) {
@@ -538,6 +548,7 @@ class BillboardGun extends Gun {
         // Scale according to health/size
         const healthScale = 0.5 + (billboard.health / 100) * 0.5;
         mesh.scale.set(healthScale, healthScale, healthScale);
+        console.log(`Applied scaling ${healthScale.toFixed(2)} based on health ${billboard.health}`);
         
         // NEVER update the text after initial creation
         // The text is preserved from the original creation
