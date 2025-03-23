@@ -6,7 +6,8 @@ const DEFAULT_CONFIG = {
         radius: 100,
         dayNightCycle: 600,
         maxBillboards: 500,
-        terrainSeed: 42424242 // Fixed seed for deterministic terrain generation
+        terrainSeed: 42424242, // Fixed seed for deterministic terrain generation
+        useServerTerrain: true // Use server-provided terrain data for consistency
     },
     player: {
         runSpeed: 5,
@@ -31,7 +32,12 @@ const DEFAULT_CONFIG = {
     economy: {
         mcPerDamage: 5,
         mcDailyBonus: 100
-    }
+    },
+    server: {
+        url: 'ws://localhost:8090',
+        reconnectInterval: 5000
+    },
+    isMultiplayer: true // Whether to connect to multiplayer server
 };
 
 // Game configuration object

@@ -23,11 +23,15 @@ class Terrain {
         // Set default options
         this.options = {
             seed: 12345, // Default seed for deterministic terrain generation
+            useServerTerrain: true, // Whether to use server-provided terrain data
             ...options
         };
         
         // Create seeded random generator
         this.random = new Helpers.SeededRandom(this.options.seed);
+        
+        // Store terrain data from server (if available)
+        this.serverTerrainData = null;
         
         // Initialize the terrain
         this.initialize();
@@ -192,6 +196,7 @@ class Terrain {
                 theta: position.theta
             },
             size: size,
+            depth: depth,
             collider: {
                 radius: size * 1.2 // Collision radius
             }
@@ -560,6 +565,9 @@ class Terrain {
                 phi: position.phi,
                 theta: position.theta
             },
+            height: height,
+            radius: radius,
+            color: color,
             collider: {
                 radius: radius * 1.8 // Larger collision radius to ensure players can't get too close
             }
@@ -623,23 +631,136 @@ class Terrain {
             this.clearFeatures('all');
         }
         
-        // Generate craters
-        this.generateCraters(opts.craterCount, {
-            ...opts.craterOptions,
-            clear: false // Don't clear again
-        });
+        if (this.options.useServerTerrain && this.serverTerrainData) {
+            // Use terrain data provided by server
+            console.log('Using server-provided terrain data');
+            return this.loadTerrainFromData(this.serverTerrainData);
+        } else {
+            // Generate terrain locally
+            console.log('Generating terrain locally');
+            
+            // Generate craters
+            this.generateCraters(opts.craterCount, {
+                ...opts.craterOptions,
+                clear: false // Don't clear again
+            });
+            
+            // Generate rocks
+            this.generateRocks(opts.rockCount, {
+                ...opts.rockOptions,
+                clear: false // Don't clear again
+            });
+            
+            // Create watch towers at the poles
+            this.createPoleTowers();
+    
+            // Log that terrain generation is complete
+            console.log(`Terrain generation complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks, ${this.features.towers.length} towers`);
+            
+            // Generate and return the terrain data for potential server storage
+            const terrainData = this.exportTerrainData();
+            
+            return {
+                craters: this.features.craters.length,
+                rocks: this.features.rocks.length,
+                towers: this.features.towers.length,
+                terrainData: terrainData
+            };
+        }
+    }
+    
+    /**
+     * Set terrain data received from server
+     * @param {Object} terrainData - Terrain data from server
+     */
+    setServerTerrainData(terrainData) {
+        this.serverTerrainData = terrainData;
+        console.log('Server terrain data received:', 
+            terrainData.craters.length + ' craters, ' + 
+            terrainData.rocks.length + ' rocks, ' + 
+            terrainData.towers.length + ' towers'
+        );
+    }
+    
+    /**
+     * Export terrain data for server storage
+     * @returns {Object} Terrain data for server
+     */
+    exportTerrainData() {
+        const terrainData = {
+            seed: this.options.seed,
+            craters: this.features.craters.map(crater => ({
+                position: crater.userData.position,
+                size: crater.userData.size,
+                depth: crater.userData.depth || 0.3
+            })),
+            rocks: this.features.rocks.map(rock => ({
+                position: rock.userData.position,
+                size: rock.userData.size
+            })),
+            towers: this.features.towers.map(tower => ({
+                position: tower.userData.position,
+                height: tower.userData.height,
+                radius: tower.userData.radius,
+                color: tower.userData.color
+            }))
+        };
         
-        // Generate rocks
-        this.generateRocks(opts.rockCount, {
-            ...opts.rockOptions,
-            clear: false // Don't clear again
-        });
+        console.log('Exported terrain data:', terrainData);
+        return terrainData;
+    }
+    
+    /**
+     * Load terrain from server-provided data
+     * @param {Object} terrainData - Terrain data from server
+     * @returns {Object} Counts of created features
+     */
+    loadTerrainFromData(terrainData) {
+        console.log('Loading terrain from server data');
         
-        // Create watch towers at the poles
-        this.createPoleTowers();
-
-        // Log that terrain generation is complete
-        console.log(`Terrain generation complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks, ${this.features.towers.length} towers`);
+        // Clear existing features
+        this.clearFeatures('all');
+        
+        // Load craters
+        if (terrainData.craters && Array.isArray(terrainData.craters)) {
+            terrainData.craters.forEach(craterData => {
+                const crater = this.createCrater(
+                    craterData.position,
+                    craterData.size,
+                    craterData.depth || 0.3
+                );
+                this.features.craters.push(crater);
+            });
+        }
+        
+        // Load rocks
+        if (terrainData.rocks && Array.isArray(terrainData.rocks)) {
+            terrainData.rocks.forEach(rockData => {
+                const rock = this.createRock(
+                    rockData.position,
+                    rockData.size
+                );
+                this.features.rocks.push(rock);
+            });
+        }
+        
+        // Load towers
+        if (terrainData.towers && Array.isArray(terrainData.towers)) {
+            terrainData.towers.forEach(towerData => {
+                const tower = this.createPoleWatchTower(
+                    towerData.position,
+                    towerData.height,
+                    towerData.radius,
+                    towerData.color
+                );
+                this.features.towers.push(tower);
+            });
+        } else {
+            // If no towers in data, create default ones
+            this.createPoleTowers();
+        }
+        
+        console.log(`Terrain loading complete: ${this.features.craters.length} craters, ${this.features.rocks.length} rocks, ${this.features.towers.length} towers`);
         
         return {
             craters: this.features.craters.length,

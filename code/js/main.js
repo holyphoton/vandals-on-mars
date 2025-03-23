@@ -162,26 +162,35 @@ class Game {
         
         // Create terrain with a fixed seed from config for consistent generation across all clients
         const terrainSeed = CONFIG.world.terrainSeed || 42424242; // Use config seed or default
-        this.terrain = new Terrain(this.globe, this.scene, { seed: terrainSeed });
-        
-        // Configure terrain - increased rock count and more detailed craters
-        this.terrain.generateAll({
-            craterCount: 70, // More craters
-            rockCount: 250, // More rocks
-            craterOptions: {
-                minSize: 1.5,
-                maxSize: 7,
-                depth: 0.5, // Deeper craters
-                distribution: 'clustered' // Clustered distribution for more realism
-            },
-            rockOptions: {
-                minSize: 0.6,
-                maxSize: 3.0, // Slightly larger rocks
-                distribution: 'clustered' // Clustered distribution for more realism
-            }
+        this.terrain = new Terrain(this.globe, this.scene, { 
+            seed: terrainSeed,
+            useServerTerrain: CONFIG.world.useServerTerrain !== undefined ? CONFIG.world.useServerTerrain : true 
         });
         
-        console.log('Created terrain with fixed seed from config:', terrainSeed);
+        // If we're in development mode or we're not using server terrain, generate terrain locally
+        if (!CONFIG.world.useServerTerrain || !CONFIG.isMultiplayer) {
+            // Configure terrain - increased rock count and more detailed craters
+            this.terrain.generateAll({
+                craterCount: 70, // More craters
+                rockCount: 250, // More rocks
+                craterOptions: {
+                    minSize: 1.5,
+                    maxSize: 7,
+                    depth: 0.5, // Deeper craters
+                    distribution: 'clustered' // Clustered distribution for more realism
+                },
+                rockOptions: {
+                    minSize: 0.6,
+                    maxSize: 3.0, // Slightly larger rocks
+                    distribution: 'clustered' // Clustered distribution for more realism
+                }
+            });
+            
+            console.log('Created local terrain with fixed seed from config:', terrainSeed);
+        } else {
+            console.log('Waiting for server terrain data...');
+            // We'll wait for server to send terrain data before generating
+        }
         
         this.updateLoadingProgress(0.7, 'World created');
         
@@ -874,53 +883,69 @@ class Game {
     }
 
     /**
-     * Connect to the WebSocket server
+     * Connect to the WebSocket server for multiplayer
      */
     connectToServer() {
-        // Force direct connection to port 8090 with timestamp to prevent caching
-        const wsUrl = `ws://${window.location.hostname}:8090?t=${Date.now()}`;
-        console.log(`Connecting to WebSocket server at ${wsUrl}`);
-        this.socket = new WebSocket(wsUrl);
+        if (this.connectedToServer) {
+            console.log('Already connected to server, skipping connection');
+            return;
+        }
         
-        // Connection opened
-        this.socket.addEventListener('open', (event) => {
-            console.log('Connected to the server');
-            this.connectedToServer = true;
+        const serverUrl = CONFIG.server.url || 'ws://localhost:8090';
+        console.log('Connecting to server:', serverUrl);
+        
+        try {
+            this.socket = new WebSocket(serverUrl);
             
-            // Send initial player data
-            this.sendPlayerData();
-            
-            // Only request billboards if we're fully initialized and weapon manager exists
-            // This ensures we can properly create the billboards when data arrives
-            if (this.weaponManager) {
-                console.log('Weapon manager initialized, requesting billboards from server');
+            this.socket.onopen = () => {
+                console.log('Connected to server:', serverUrl);
+                this.connectedToServer = true;
+                
+                // Send initial player data
+                this.sendPlayerData();
+                
+                // Request terrain data
+                this.requestTerrainData();
+                
+                // Request all existing billboards
                 this.requestAllBillboards();
-            } else {
-                console.warn('Delaying billboard request: weapon manager not yet initialized');
-                // Set a flag to request billboards once weapon manager is ready
-                this.pendingBillboardRequest = true;
-            }
-        });
-        
-        // Listen for messages
-        this.socket.addEventListener('message', (event) => {
-            this.handleServerMessage(event.data);
-        });
-        
-        // Connection closed
-        this.socket.addEventListener('close', (event) => {
-            console.log('Disconnected from the server');
-            this.connectedToServer = false;
-        });
-        
-        // Connection error
-        this.socket.addEventListener('error', (event) => {
-            console.error('WebSocket error:', event);
-            this.showErrorMessage('Failed to connect to the server. Playing in offline mode.');
-            this.connectedToServer = false;
-        });
+            };
+            
+            // Pass the entire event to handleServerMessage
+            this.socket.onmessage = (event) => {
+                this.handleServerMessage(event);
+            };
+            
+            this.socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                this.showErrorMessage('Failed to connect to game server. Try again later.');
+            };
+            
+            this.socket.onclose = () => {
+                console.log('Disconnected from server');
+                this.connectedToServer = false;
+            };
+        } catch (error) {
+            console.error('WebSocket connection error:', error);
+            this.showErrorMessage('Failed to connect to game server. Try again later.');
+        }
     }
-    
+
+    /**
+     * Request terrain data from the server
+     */
+    requestTerrainData() {
+        if (!this.connectedToServer) return;
+        
+        console.log('Requesting terrain data from server');
+        
+        const message = {
+            type: 'request_terrain_data'
+        };
+        
+        this.socket.send(JSON.stringify(message));
+    }
+
     /**
      * Send player data to the server
      */
@@ -951,65 +976,56 @@ class Game {
     
     /**
      * Handle messages from the server
-     * @param {string|Blob} message - Message data
+     * @param {MessageEvent} event - Message event from WebSocket
      */
-    handleServerMessage(message) {
+    handleServerMessage(event) {
         try {
-            // Check if the message is a Blob (binary data)
-            if (message instanceof Blob) {
-                //console.log('Received binary data from server, converting to text');
-                
-                // Convert Blob to text
+            // Check if the data is a Blob (binary data)
+            if (event.data instanceof Blob) {
+                // Handle binary data by reading it as text first
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = () => {
                     try {
-                        // Parse the text data as JSON
-                        const jsonData = JSON.parse(event.target.result);
+                        const jsonData = JSON.parse(reader.result);
                         this.processServerMessage(jsonData);
-                    } catch (error) {
-                        console.error('Failed to parse binary message as JSON:', error);
+                    } catch (parseError) {
+                        console.error('Error parsing blob data:', parseError);
                     }
                 };
-                reader.readAsText(message);
-                return;
+                reader.readAsText(event.data);
+            } else {
+                // Handle string data directly
+                const data = JSON.parse(event.data);
+                this.processServerMessage(data);
             }
-            
-            // Handle string data
-            const data = JSON.parse(message);
-            this.processServerMessage(data);
         } catch (error) {
-            console.error('Failed to parse message:', error, typeof message, message);
+            console.error('Error handling server message:', error, event);
         }
     }
     
     /**
-     * Process parsed server message data
-     * @param {Object} data - Parsed message data
+     * Process a server message
+     * @param {Object} data - The parsed message data
      */
     processServerMessage(data) {
         switch (data.type) {
             case 'billboard_data':
                 this.processBillboardData(data);
                 break;
-                
-            case 'billboard_list':
+            case 'all_billboards':
                 this.processAllBillboards(data.billboards);
                 break;
-                
-            case 'billboard_remove':
+            case 'billboard_removed':
                 this.processBillboardRemoval(data);
                 break;
-                
-            case 'player_join':
-                console.log(`Player joined: ${data.username}`);
-                break;
-                
             case 'admin_command':
                 this.processAdminCommand(data);
                 break;
-                
+            case 'terrain_data':
+                this.processTerrainData(data);
+                break;
             default:
-                console.log('Unknown message type:', data.type);
+                console.warn('Unknown message type:', data.type);
         }
     }
     
@@ -1388,6 +1404,78 @@ class Game {
         };
         
         this.socket.send(JSON.stringify(adminCommand));
+    }
+
+    /**
+     * Process terrain data from server
+     * @param {Object} data - The terrain data
+     */
+    processTerrainData(data) {
+        console.log('Received terrain data from server');
+        
+        if (!data.terrainData) {
+            console.error('Invalid terrain data received from server');
+            return;
+        }
+        
+        // Check if server has empty terrain data (first player needs to generate it)
+        const emptyServerData = data.terrainData.craters.length === 0 &&
+                               data.terrainData.rocks.length === 0;
+        
+        if (emptyServerData) {
+            console.log('Server has empty terrain data - generating and sending terrain data as first player');
+            
+            // Generate terrain locally
+            const result = this.terrain.generateAll({
+                craterCount: 70,
+                rockCount: 250,
+                craterOptions: {
+                    minSize: 1.5,
+                    maxSize: 7,
+                    depth: 0.5,
+                    distribution: 'clustered'
+                },
+                rockOptions: {
+                    minSize: 0.6,
+                    maxSize: 3.0,
+                    distribution: 'clustered'
+                }
+            });
+            
+            // Send generated terrain data to server for future clients
+            this.sendTerrainData(result.terrainData);
+        } else {
+            // Use terrain data provided by server
+            console.log('Using terrain data from server');
+            
+            // Set the terrain data in the terrain system
+            this.terrain.setServerTerrainData(data.terrainData);
+            
+            // Generate terrain from the server data
+            this.terrain.generateAll();
+        }
+        
+        // Make sure player spawn is valid with the new terrain
+        this.validatePlayerSpawnLocation();
+        
+        console.log('Server terrain data processed successfully');
+    }
+
+    /**
+     * Send generated terrain data to the server
+     * @param {Object} terrainData - The generated terrain data
+     */
+    sendTerrainData(terrainData) {
+        if (!this.connectedToServer) return;
+        
+        console.log('Sending terrain data to server for future clients');
+        
+        const message = {
+            type: 'terrain_data_update',
+            terrainData: terrainData
+        };
+        
+        this.socket.send(JSON.stringify(message));
     }
 }
 
