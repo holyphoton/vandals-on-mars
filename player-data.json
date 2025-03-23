@@ -18,5 +18,53 @@
     "billboardGunAmmo": 5,
     "shooterGunAmmo": 100,
     "lastUpdated": 1742738641416
+  },
+  "player_1742740463184_v7zzijdzs": {
+    "username": "J1",
+    "billboardText": "yoyoma",
+    "position": {
+      "x": 53.60277239106237,
+      "y": 83.40258519111597,
+      "z": -23.10825773247741
+    },
+    "shootingAmmo": 197,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742741036337
+  },
+  "player_1742741605351_ss0tij5wu": {
+    "username": "J1",
+    "billboardText": "yoyoma",
+    "position": {
+      "x": 103.19527952375046,
+      "y": -2.9808818295940056,
+      "z": -12.3115051394087
+    },
+    "shootingAmmo": 177,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742741859326
+  },
+  "player_1742741875601_1r4s5x4ax": {
+    "username": "ABC",
+    "billboardText": "yoyoma",
+    "position": {
+      "x": 40.23718727122068,
+      "y": 15.829919759060898,
+      "z": 92.16085069552263
+    },
+    "shootingAmmo": 167,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742742045520
+  },
+  "player_1742740562992_cxg9gff0k": {
+    "username": "J1",
+    "billboardText": "wazza",
+    "position": {
+      "x": 40.08339644842421,
+      "y": 18.19530326796485,
+      "z": 91.79048026971665
+    },
+    "shootingAmmo": 159,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742742055079
   }
 }

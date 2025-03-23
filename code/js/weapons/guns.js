@@ -1569,7 +1569,12 @@ class WeaponManager {
     fire() {
         const activeWeapon = this.getActiveWeapon();
         if (activeWeapon) {
-            activeWeapon.fire();
+            const success = activeWeapon.fire();
+            
+            // If firing was successful, save ammo data
+            if (success && window.game && window.game.persistence) {
+                window.game.persistence.saveAmmoData();
+            }
         }
     }
     

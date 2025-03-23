@@ -34,5 +34,8 @@
   "economy": {
     "mcPerDamage": 5,
     "mcDailyBonus": 100
+  },
+  "persistence": {
+    "autoSaveDelay": 15
   }
 } 

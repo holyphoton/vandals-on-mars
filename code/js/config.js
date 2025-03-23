@@ -39,6 +39,9 @@ const DEFAULT_CONFIG = {
         mcPerDamage: 5,
         mcDailyBonus: 100
     },
+    persistence: {
+        autoSaveDelay: 15 // Auto-save player data every 15 seconds
+    },
     server: {
         url: 'ws://localhost:8090',
         reconnectInterval: 5000

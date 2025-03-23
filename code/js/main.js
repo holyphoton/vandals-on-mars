@@ -39,6 +39,9 @@ class Game {
         this.connectedToServer = false;
         this.billboards = []; // Global billboard data store
         
+        // Player persistence system
+        this.persistence = null;
+        
         // UI elements
         this.loadingScreen = document.getElementById('loading-screen');
         this.loadingBar = document.getElementById('loading-bar');
@@ -88,6 +91,26 @@ class Game {
         // Setup event listeners
         this.setupEventListeners();
         
+        // Connect to the server
+        if (CONFIG.isMultiplayer) {
+            try {
+                // Connect to server and wait for connection to be established
+                this.updateLoadingProgress(0.8, 'Connecting to server...');
+                await this.connectToServer();
+                this.updateLoadingProgress(0.85, 'Server connected');
+                
+                // Initialize player persistence after connecting to server
+                // This needs to happen before showing the start screen
+                this.updateLoadingProgress(0.9, 'Loading player data...');
+                await this.initializePersistence();
+                this.updateLoadingProgress(0.95, 'Player data loaded');
+            } catch (error) {
+                console.error('Error during server connection or persistence initialization:', error);
+                // Continue without multiplayer features
+                this.updateLoadingProgress(0.9, 'Continuing in offline mode...');
+            }
+        }
+        
         // Hide loading screen and show start screen
         this.hideLoadingScreen();
         this.showStartScreen();
@@ -96,6 +119,64 @@ class Game {
         this.isInitialized = true;
         
         console.log('Game initialized');
+    }
+
+    /**
+     * Initialize the player persistence system
+     */
+    async initializePersistence() {
+        // Create persistence manager
+        this.persistence = new PlayerPersistence(this);
+        
+        // Make sure socket is connected before continuing
+        if (this.socket && this.socket.readyState !== WebSocket.OPEN) {
+            console.log('Waiting for socket connection before initializing persistence...');
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject('Socket connection timeout');
+                    }, 5000);
+                    
+                    const checkSocketReady = () => {
+                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                            clearTimeout(timeout);
+                            console.log('Socket connection ready, proceeding with persistence initialization');
+                            resolve();
+                        } else {
+                            setTimeout(checkSocketReady, 100);
+                        }
+                    };
+                    
+                    checkSocketReady();
+                });
+            } catch (error) {
+                console.warn('Socket connection timed out while initializing persistence:', error);
+                // Continue without socket - persistence will handle the retry logic
+            }
+        }
+        
+        // Initialize persistence (generate/load player ID)
+        try {
+            const playerId = await this.persistence.initialize();
+            console.log('Player persistence initialized successfully, player ID:', playerId);
+            
+            // Log the player data that was loaded, if any
+            if (this.username) {
+                console.log('Player data loaded from persistence:', {
+                    username: this.username,
+                    billboardText: this.billboardText,
+                    hasAmmoData: !!this.persistence.savedAmmoData,
+                    hasPositionData: !!this.persistence.savedPosition
+                });
+            } else {
+                console.log('No existing player data found, will create new data on game start');
+            }
+            
+            return playerId;
+        } catch (error) {
+            console.warn('Failed to initialize player persistence:', error);
+            return null;
+        }
     }
 
     /**
@@ -227,10 +308,16 @@ class Game {
     }
     
     /**
-     * Validate player spawn location to ensure they don't spawn inside obstacles
+     * Make sure player spawn location is valid (not inside an obstacle)
      */
     validatePlayerSpawnLocation() {
         if (!this.playerCamera || !this.terrain) return;
+        
+        // Don't override position if persistence has already set one
+        if (this.persistence && this.persistence.savedPosition) {
+            console.log('Using saved position from persistence');
+            return;
+        }
         
         // Get player's current position
         const playerPos = this.playerCamera.camera.position.clone();
@@ -355,6 +442,17 @@ class Game {
     showStartScreen() {
         if (this.startScreen) {
             this.startScreen.style.display = 'flex';
+            
+            // If we have a username from persistence, prefill the input field
+            if (this.persistence && this.persistence.isInitialized) {
+                // Get username directly from the game instance, not from persistence.game
+                if (this.username && this.username !== '' && this.username.indexOf('Anonymous_') !== 0) {
+                    console.log('Prefilling username input with:', this.username);
+                    if (this.usernameInput) {
+                        this.usernameInput.value = this.username;
+                    }
+                }
+            }
         }
     }
 
@@ -413,7 +511,7 @@ class Game {
     /**
      * Start the game
      */
-    startGame() {
+    async startGame() {
         if (!this.isInitialized) {
             console.error('Game not initialized');
             return;
@@ -426,22 +524,41 @@ class Game {
         
         console.log('Starting game');
         
+        // Mark the game as started immediately so position can be applied
+        this.gameStarted = true;
+        
+        // Only get username from input if we don't already have a username from persistence
         // Get username from input or use default
         const inputUsername = this.usernameInput ? this.usernameInput.value.trim() : "";
-        if (inputUsername) {
-            this.username = inputUsername;
+        
+        // If we don't have a username yet or it's the anonymous default
+        if (!this.username || this.username.indexOf('Anonymous_') === 0 || this.username === '') {
+            if (inputUsername) {
+                this.username = inputUsername;
+            } else {
+                this.username = "Anonymous_" + Math.floor(Math.random() * 1000); // Add random number to default
+            }
+            
+            // Set default billboard text only if we're creating a new username
+            this.billboardText = `${this.username}'s Turf`;
+            
+            // Make billboard text accessible globally for weapons
+            window.billboardText = this.billboardText;
         } else {
-            this.username = "Anonymous_" + Math.floor(Math.random() * 1000); // Add random number to default
+            // If username is already loaded from persistence but user entered a new name
+            if (inputUsername && inputUsername !== this.username) {
+                this.username = inputUsername;
+                
+                // Update billboard text for the new username if needed
+                if (!this.billboardText || this.billboardText.indexOf("'s Turf") > 0) {
+                    this.billboardText = `${this.username}'s Turf`;
+                    window.billboardText = this.billboardText;
+                }
+            }
         }
         
-        // Set default billboard text using the username
-        this.billboardText = `${this.username}'s Turf`;
-        
-        // Make billboard text accessible globally for weapons
-        window.billboardText = this.billboardText;
-        
         console.log(`Starting game with username: ${this.username}`);
-        console.log(`Default billboard text: ${this.billboardText}`);
+        console.log(`Billboard text: ${this.billboardText}`);
         
         // Hide start screen
         this.hideStartScreen();
@@ -473,8 +590,30 @@ class Game {
             }
         }
         
-        // Connect to the WebSocket server
-        this.connectToServer();
+        // Check socket connection status based on both connectedToServer flag and actual socket state
+        const socketConnected = this.connectedToServer && 
+                                this.socket && 
+                                this.socket.readyState === WebSocket.OPEN;
+        
+        if (!socketConnected && CONFIG.isMultiplayer) {
+            console.log('Socket not connected, attempting to connect...');
+            try {
+                await this.connectToServer();
+                console.log('Successfully connected to server');
+                
+                // If persistence needs initialization, do it now
+                if (!this.persistence || !this.persistence.isInitialized) {
+                    console.log('Initializing persistence after connection');
+                    await this.initializePersistence();
+                }
+            } catch (error) {
+                console.warn('Failed to connect to server:', error);
+                // Continue in offline mode
+            }
+        } else if (socketConnected) {
+            console.log('Already connected to server, sending updated player info');
+            this.sendPlayerData();
+        }
         
         // Wait for a short time before requesting pointer lock to give the UI time to update
         setTimeout(() => {
@@ -487,9 +626,6 @@ class Game {
             // Start animation loop
             this.isAnimating = true;
             this.animate();
-            
-            // Set game started flag
-            this.gameStarted = true;
             
             // Show game started message
             this.showGameStartedMessage();
@@ -862,6 +998,11 @@ class Game {
         // Also update the global window reference to ensure it's available
         window.billboardText = this.billboardText;
         
+        // Save the billboard text to the server via persistence
+        if (this.persistence) {
+            this.persistence.saveBillboardText(this.billboardText);
+        }
+        
         // Hide popup
         this.hideBillboardPopup();
     }
@@ -884,51 +1025,70 @@ class Game {
 
     /**
      * Connect to the WebSocket server for multiplayer
+     * @returns {Promise} - Resolves when connected to the server
      */
     connectToServer() {
-        if (this.connectedToServer) {
-            console.log('Already connected to server, skipping connection');
-            return;
-        }
-        
-        const serverUrl = CONFIG.server.url || 'ws://localhost:8090';
-        console.log('Connecting to server:', serverUrl);
-        
-        try {
-            this.socket = new WebSocket(serverUrl);
+        return new Promise((resolve, reject) => {
+            if (this.connectedToServer) {
+                console.log('Already connected to server, skipping connection');
+                resolve(true);
+                return;
+            }
             
-            this.socket.onopen = () => {
-                console.log('Connected to server:', serverUrl);
-                this.connectedToServer = true;
+            const serverUrl = CONFIG.server.url || 'ws://localhost:8090';
+            console.log('Connecting to server:', serverUrl);
+            
+            try {
+                this.socket = new WebSocket(serverUrl);
                 
-                // Send initial player data
-                this.sendPlayerData();
+                // Set a connection timeout
+                const connectionTimeout = setTimeout(() => {
+                    console.error('Connection to server timed out');
+                    reject('Connection timeout');
+                }, 5000);
                 
-                // Request terrain data
-                this.requestTerrainData();
+                this.socket.onopen = () => {
+                    console.log('Connected to server:', serverUrl);
+                    this.connectedToServer = true;
+                    
+                    // Clear the timeout since we're connected
+                    clearTimeout(connectionTimeout);
+                    
+                    // Send initial player data
+                    this.sendPlayerData();
+                    
+                    // Request terrain data
+                    this.requestTerrainData();
+                    
+                    // Request all existing billboards
+                    this.requestAllBillboards();
+                    
+                    // Resolve the promise as we're now connected
+                    resolve(true);
+                };
                 
-                // Request all existing billboards
-                this.requestAllBillboards();
-            };
-            
-            // Pass the entire event to handleServerMessage
-            this.socket.onmessage = (event) => {
-                this.handleServerMessage(event);
-            };
-            
-            this.socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.showErrorMessage('Failed to connect to game server. Try again later.');
-            };
-            
-            this.socket.onclose = () => {
-                console.log('Disconnected from server');
-                this.connectedToServer = false;
-            };
-        } catch (error) {
-            console.error('WebSocket connection error:', error);
-            this.showErrorMessage('Failed to connect to game server. Try again later.');
-        }
+                this.socket.onclose = (event) => {
+                    console.log('Disconnected from server:', event.code, event.reason);
+                    this.connectedToServer = false;
+                    
+                    // If not resolved yet, reject the promise
+                    reject('Connection closed');
+                };
+                
+                this.socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    
+                    // If not resolved yet, reject the promise
+                    reject('WebSocket error');
+                };
+                
+                this.socket.onmessage = this.handleServerMessage.bind(this);
+                
+            } catch (error) {
+                console.error('Error connecting to server:', error);
+                reject(error);
+            }
+        });
     }
 
     /**
