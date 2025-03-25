@@ -59,24 +59,144 @@
     "username": "J1",
     "billboardText": "wazza",
     "position": {
-      "x": -0.2244280781119669,
-      "y": -101.79942595644845,
-      "z": 0.25788946338478436
+      "x": -75.48961243048974,
+      "y": -49.79367626668499,
+      "z": -46.74556897656739
     },
-    "shootingAmmo": 156,
+    "shootingAmmo": 151,
     "billboardAmmo": 0,
-    "lastUpdate": 1742742789616
+    "lastUpdate": 1742744009407
   },
   "player_1742742643398_0g51k9cuj": {
     "username": "M1",
     "billboardText": "yoyoma",
     "position": {
-      "x": 81.40284984336562,
-      "y": 22.974050150959755,
-      "z": 59.143876045841125
+      "x": 69.6869683749703,
+      "y": -71.76855555847551,
+      "z": 18.874344273534366
     },
-    "shootingAmmo": 180,
+    "shootingAmmo": 141,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742744188493
+  },
+  "player_1742744198275_yivkoggxi": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": 87.01506727008143,
+      "y": -52.63177580675233,
+      "z": -4.638344899957875
+    },
+    "shootingAmmo": 183,
     "billboardAmmo": 2,
-    "lastUpdate": 1742742790597
+    "lastUpdate": 1742744370633
+  },
+  "player_1742744441822_0dm9urr84": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": -66.807308574439,
+      "y": 76.66371384152121,
+      "z": 4.7642943931960415
+    },
+    "shootingAmmo": 190,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742744610630
+  },
+  "player_1742744888644_0o7g09wsc": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": 18.624342996152883,
+      "y": 88.39132113585848,
+      "z": -46.93983591598063
+    },
+    "shootingAmmo": 163,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742744918786
+  },
+  "player_1742745065430_h64tv5w48": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": -14.37286341015988,
+      "y": -87.73317587777713,
+      "z": 49.59385695619882
+    },
+    "shootingAmmo": 165,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742745293624
+  },
+  "player_1742745332176_2w9qq8ws9": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": -76.42409014446147,
+      "y": -40.84854482294338,
+      "z": 53.42279318267822
+    },
+    "shootingAmmo": 179,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742745990636
+  },
+  "player_1742746099698_k0xeo7059": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": 74.15627856117023,
+      "y": 67.92758041378285,
+      "z": 15.809179899260712
+    },
+    "shootingAmmo": 143,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742746340634
+  },
+  "player_1742746550939_caeswpb0l": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": -44.117440418223254,
+      "y": 16.35780045217359,
+      "z": -90.27354992084551
+    },
+    "shootingAmmo": 71,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742746908631
+  },
+  "player_1742747032275_hgfncq6l7": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": 100.31152936218837,
+      "y": 3.8478859653713107,
+      "z": -16.91244661828453
+    },
+    "shootingAmmo": 160,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742747382636
+  },
+  "player_1742747612742_7ondnx7kr": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": -50.76034024240116,
+      "y": 85.618460659409,
+      "z": -21.356662960043764
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742747689632
+  },
+  "player_1742747931112_qdzr1ufdm": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -96.79950688887152,
+      "y": 13.129631824251797,
+      "z": 28.64800576359399
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742747971594
   }
 }
