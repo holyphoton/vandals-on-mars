@@ -366,5 +366,419 @@
     "player_id": "bot_system",
     "billboard_category": "bot",
     "timestamp": 1742999863800
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_98438_quzzh",
+    "position": {
+      "x": 3.626005323049321,
+      "y": -29.85720384447185,
+      "z": 95.36980373255926
+    },
+    "quaternion": {
+      "x": -0.5621316885100639,
+      "y": 0.4082964805197519,
+      "z": 0.5773161906574108,
+      "w": -0.4289614956762725
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Unauthorized human access prohibited",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000219207
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_19470_brpki",
+    "position": {
+      "x": -93.75251830072568,
+      "y": -29.200465272954613,
+      "z": -18.915552863056053
+    },
+    "quaternion": {
+      "x": -0.4422362317865335,
+      "y": 0.2226444662235728,
+      "z": 0.6711404038351592,
+      "w": 0.5517491416352611
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars: Like Earth but cooler",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000219409
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_85444_gedyf",
+    "position": {
+      "x": 52.70383859381023,
+      "y": -82.46488858669012,
+      "z": -20.538927622015315
+    },
+    "quaternion": {
+      "x": 0.6985741312099147,
+      "y": 0.27510247883695377,
+      "z": -0.6513974409972483,
+      "w": 0.10951795836442912
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars WiFi password: mars123",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000219614
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_90347_fjdvz",
+    "position": {
+      "x": -95.28985633479252,
+      "y": 6.751337971394743,
+      "z": -29.567933902973436
+    },
+    "quaternion": {
+      "x": -0.029568899899620797,
+      "y": -0.18609408829473184,
+      "z": 0.6821795880131217,
+      "w": 0.7064882731926456
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars WiFi password: mars123",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000220017
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_55038_dcspp",
+    "position": {
+      "x": -70.13268611961874,
+      "y": 41.993685445438885,
+      "z": -57.60153401044605
+    },
+    "quaternion": {
+      "x": -0.05777315201357941,
+      "y": -0.46185080309638793,
+      "z": 0.5354379849050881,
+      "w": 0.7047426926945861
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Earth is so last millennium",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000220219
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_50190_gcwjw",
+    "position": {
+      "x": 62.09288038221603,
+      "y": -76.4372142968487,
+      "z": 17.373153898398517
+    },
+    "quaternion": {
+      "x": -0.6377211839742716,
+      "y": -0.15653190411319773,
+      "z": 0.689563458279727,
+      "w": -0.30546962452992477
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars is mine! No trespassing!",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000220421
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_31476_frtid",
+    "position": {
+      "x": -55.40695533692035,
+      "y": -30.369370786624653,
+      "z": 77.50980981989971
+    },
+    "quaternion": {
+      "x": 0.6744586418760797,
+      "y": -0.5504975982401765,
+      "z": -0.44379318869468615,
+      "w": 0.2123806497745828
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Earth is so last millennium",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000220622
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_45566_cqwvc",
+    "position": {
+      "x": -6.339663125649159,
+      "y": 92.83351602877372,
+      "z": -36.62986449863958
+    },
+    "quaternion": {
+      "x": -0.10999537728015803,
+      "y": -0.690120687392338,
+      "z": 0.1540566026924101,
+      "w": 0.698499117377392
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Elon was here 2024",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000220824
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_89453_euwvj",
+    "position": {
+      "x": -91.94954679505676,
+      "y": 21.412607963125627,
+      "z": -32.96636262011866
+    },
+    "quaternion": {
+      "x": 0.06075132267153443,
+      "y": -0.3327968795255886,
+      "z": 0.6238960145553352,
+      "w": 0.7044922120177477
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Alien parking only, humans towed",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000221025
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_93969_gilnl",
+    "position": {
+      "x": -87.06403542273486,
+      "y": 42.973666512893125,
+      "z": -23.939877241694813
+    },
+    "quaternion": {
+      "x": 0.1914130564375609,
+      "y": -0.5015050256370662,
+      "z": 0.4984904304605712,
+      "w": 0.6807062816114092
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Reserved for my Mars mansion",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000221228
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_83595_tkwal",
+    "position": {
+      "x": -69.17850467280779,
+      "y": -72.04513167385537,
+      "z": -4.881955891971225
+    },
+    "quaternion": {
+      "x": -0.6468542165173047,
+      "y": 0.24123581628137036,
+      "z": 0.6646843468467276,
+      "w": 0.28562146728455845
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000221431
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_13368_gsorn",
+    "position": {
+      "x": 27.04740197265139,
+      "y": 84.98084647517571,
+      "z": -45.24039985336588
+    },
+    "quaternion": {
+      "x": -0.2632928318545507,
+      "y": -0.7030130494392457,
+      "z": 0.07597797258503743,
+      "w": 0.6562597692179609
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000221634
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_49991_yoaul",
+    "position": {
+      "x": 33.331459305762515,
+      "y": -93.35147594967702,
+      "z": 13.210441270645267
+    },
+    "quaternion": {
+      "x": -0.686806331966987,
+      "y": -0.07032466055063472,
+      "z": 0.7036010532385792,
+      "w": -0.16821730698728019
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars WiFi password: mars123",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000221835
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_69168_rdnkq",
+    "position": {
+      "x": -94.11367466943459,
+      "y": 30.70040396743137,
+      "z": -14.145721489282522
+    },
+    "quaternion": {
+      "x": 0.2734725184095376,
+      "y": -0.47779623079552574,
+      "z": 0.5212588242299488,
+      "w": 0.6520834161936225
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Reserved for my Mars mansion",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000222037
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_45874_mrznp",
+    "position": {
+      "x": -66.86466658343512,
+      "y": 61.1019384986516,
+      "z": 42.37534040445046
+    },
+    "quaternion": {
+      "x": 0.43875695463583114,
+      "y": -0.7057034488611817,
+      "z": 0.04452687127379694,
+      "w": 0.5545199137620679
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Alien parking only, humans towed",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000247004
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_50301_kcaut",
+    "position": {
+      "x": -41.586786571409725,
+      "y": -83.11035636375593,
+      "z": -36.92164470542329
+    },
+    "quaternion": {
+      "x": -0.6446444444507888,
+      "y": 0.003831180299395593,
+      "z": 0.7070964022377101,
+      "w": 0.29057450032432974
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000247804
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_26638_rhzph",
+    "position": {
+      "x": -73.0551483562947,
+      "y": -67.78481359684062,
+      "z": -8.256170073426532
+    },
+    "quaternion": {
+      "x": -0.6303808279197073,
+      "y": 0.2417765915561978,
+      "z": 0.6644878326767673,
+      "w": 0.32034358397081175
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars: Like Earth but cooler",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000276206
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_14648_gzxpe",
+    "position": {
+      "x": -73.70753209069757,
+      "y": -62.67458717979013,
+      "z": 25.280344834310934
+    },
+    "quaternion": {
+      "x": 0.6896497087119378,
+      "y": -0.40279496623904054,
+      "z": -0.5811679750059272,
+      "w": -0.15615146260454774
+    },
+    "width": 4,
+    "height": 3,
+    "health": 100,
+    "text": "Mars: Like Earth but cooler",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743000277004
   }
 ]

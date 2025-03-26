@@ -207,12 +207,24 @@
     "username": "J1",
     "billboardText": "J1's Turf",
     "position": {
-      "x": -16.426583094038662,
-      "y": 99.33577582792903,
-      "z": -27.86037215062174
+      "x": -36.74556806176025,
+      "y": 51.686154065543235,
+      "z": -79.63381634539105
     },
     "shootingAmmo": 108,
     "billboardAmmo": 2,
-    "lastUpdate": 1742999951598
+    "lastUpdate": 1743000116603
+  },
+  "player_94774_mlvyf": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 55.72107468339967,
+      "y": -42.46842661293594,
+      "z": 73.85685193093917
+    },
+    "shootingAmmo": 154,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743000399544
   }
 }

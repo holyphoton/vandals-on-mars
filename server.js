@@ -77,10 +77,13 @@ function loadBillboardData() {
       
       // Copy all billboards from file
       parsedData.forEach(billboard => {
-        billboards.push(billboard);
+        // Only add non-bot billboards to the billboards array
+        if (!billboard.id || !billboard.id.startsWith('bot_')) {
+          billboards.push(billboard);
+        }
       });
       
-      console.log(`Loaded ${billboards.length} billboards from file`);
+      console.log(`Loaded ${billboards.length} player billboards from file`);
     } else {
       console.log('No billboard data file found, starting with empty billboards');
     }
@@ -92,12 +95,17 @@ function loadBillboardData() {
 // Save billboard data to file
 function saveBillboardData() {
   try {
+    // Filter out any bot billboards before saving to billboard-data.json
+    const playerBillboards = billboards.filter(billboard => 
+      !billboard.id || !billboard.id.startsWith('bot_')
+    );
+    
     fs.writeFileSync(
       BILLBOARD_DATA_FILE,
-      JSON.stringify(billboards, null, 2),
+      JSON.stringify(playerBillboards, null, 2),
       'utf8'
     );
-    console.log('Billboard data saved to file');
+    console.log('Player billboard data saved to file');
   } catch (error) {
     console.error('Error saving billboard data:', error);
   }
@@ -208,10 +216,11 @@ const httpServer = http.createServer((req, res) => {
           botBillboards.push(billboard);
         });
         
-        // Save to file
+        // Save to bot billboard file
         saveBotBillboardData();
         
-        // Ensure bot billboards are also in the main billboards array for sync
+        // Add bot billboards to the main billboards array for sync
+        // but don't save them to billboard-data.json
         data.forEach(botBillboard => {
           const existingIndex = billboards.findIndex(b => b.id === botBillboard.id);
           if (existingIndex !== -1) {
@@ -221,8 +230,8 @@ const httpServer = http.createServer((req, res) => {
           }
         });
         
-        // Save the main billboard data as well
-        saveBillboardData();
+        // No need to save the main billboard data as we don't want bots there
+        // saveBillboardData();  <-- This line is removed
         
         // Send success response
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -320,9 +329,12 @@ server.on('connection', (socket) => {
           if (data.health !== undefined) {
             // Save periodically to avoid too frequent writes
             if (Math.random() < 0.3) { // 30% chance to save on update
-              saveBillboardData();
+              // Only save to billboard-data.json if it's a player billboard
+              if (!isBotBillboard) {
+                saveBillboardData();
+              }
               
-              // If it's a bot billboard, also save bot data
+              // If it's a bot billboard, only save bot data
               if (isBotBillboard) {
                 saveBotBillboardData();
               }
@@ -339,10 +351,12 @@ server.on('connection', (socket) => {
             console.log(`Added new bot billboard ${data.id} to bot storage`);
           }
           
-          // Save billboard data when a new billboard is added
-          saveBillboardData();
+          // Save billboard data when a new billboard is added - only for player billboards
+          if (!isBotBillboard) {
+            saveBillboardData();
+          }
           
-          // If it's a bot billboard, also save bot data
+          // If it's a bot billboard, only save bot data
           if (isBotBillboard) {
             saveBotBillboardData();
           }
@@ -379,10 +393,12 @@ server.on('connection', (socket) => {
             }
           }
           
-          // Save billboard data when a billboard is removed
-          saveBillboardData();
+          // Save billboard data when a billboard is removed - only for player billboards
+          if (!isBotBillboard) {
+            saveBillboardData();
+          }
           
-          // If it's a bot billboard, also save bot data
+          // If it's a bot billboard, only save bot data
           if (isBotBillboard) {
             saveBotBillboardData();
           }
