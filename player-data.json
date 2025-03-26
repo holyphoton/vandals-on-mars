@@ -49,7 +49,7 @@
   },
   "player_47165_ziumj": {
     "username": "Jugal",
-    "billboardText": "helllllla",
+    "billboardText": "Jugal's Turf",
     "position": {
       "x": 97.93939844972874,
       "y": 25.055322900065068,
@@ -57,7 +57,7 @@
     },
     "shootingAmmo": 174,
     "billboardAmmo": 1,
-    "lastUpdate": 1742994163035
+    "lastUpdate": 1742995887448
   },
   "player_34271_oywkw": {
     "username": "JJJMMM",
@@ -69,6 +69,54 @@
     },
     "shootingAmmo": 196,
     "billboardAmmo": 1,
-    "lastUpdate": 1742994171785
+    "lastUpdate": 1742995071802
+  },
+  "player_74164_znrxs": {
+    "username": "JM0",
+    "billboardText": "JM0's Turf",
+    "position": {
+      "x": 9.593926937130444,
+      "y": 41.7634040007674,
+      "z": 92.34183587190417
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742995178948
+  },
+  "player_76594_regvn": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": 46.938311881028575,
+      "y": -59.42396990997652,
+      "z": 68.03548102201894
+    },
+    "shootingAmmo": 132,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742995565893
+  },
+  "player_40739_piqta": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": 97.4952576206526,
+      "y": -27.52961477427027,
+      "z": -10.00175243959085
+    },
+    "shootingAmmo": 72,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742995867593
+  },
+  "player_45519_pfhne": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 44.73139990077197,
+      "y": -89.90223234020934,
+      "z": 16.731123188962318
+    },
+    "shootingAmmo": 174,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742996054358
   }
 }

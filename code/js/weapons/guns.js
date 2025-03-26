@@ -1401,6 +1401,9 @@ class WeaponManager {
         
         // Update weapon indicators
         this.updateWeaponIndicator();
+        
+        // Flag to indicate when the weapon manager is fully initialized and ready for use
+        this.isInitialized = false;
     }
     
     /**
@@ -1458,6 +1461,10 @@ class WeaponManager {
         this.updateWeaponVisibility();
         
         console.log(`Initialized ${this.weapons.length} weapons`);
+        
+        // Set the initialization flag to true
+        this.isInitialized = true;
+        console.log('WeaponManager is fully initialized and ready for use');
     }
     
     /**
@@ -1744,6 +1751,46 @@ class WeaponManager {
         } else {
             console.warn('BillboardGun not available or missing clearBillboards method');
             return false;
+        }
+    }
+
+    /**
+     * Add a billboard from data (helper method for external systems like bots)
+     * @param {Object} billboardData - Billboard data
+     * @returns {Object|null} The created billboard or null if failed
+     */
+    addBillboard(billboardData) {
+        // Make sure we're initialized first
+        if (!this.isInitialized) {
+            console.warn('WeaponManager not fully initialized, cannot add billboard yet');
+            throw new Error('WeaponManager not initialized');
+        }
+        
+        // Make sure billboardGun is available
+        if (!this.billboardGun) {
+            console.warn('Billboard gun not available, cannot add billboard');
+            throw new Error('Billboard gun not available');
+        }
+        
+        // Check if the billboardData is valid
+        if (!billboardData || !billboardData.id) {
+            console.warn('Invalid billboard data provided to addBillboard', billboardData);
+            throw new Error('Invalid billboard data');
+        }
+        
+        try {
+            // Create the billboard using the billboard gun
+            const billboard = this.billboardGun.createBillboardFromData(billboardData);
+            if (billboard) {
+                console.log(`Billboard successfully added: ${billboardData.id}`);
+                return billboard;
+            } else {
+                console.warn(`Billboard gun failed to create billboard: ${billboardData.id}`);
+                throw new Error('Billboard creation failed');
+            }
+        } catch (error) {
+            console.error(`Error adding billboard ${billboardData?.id}:`, error);
+            throw error;
         }
     }
 }

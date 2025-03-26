@@ -1,0 +1,34 @@
+{
+  "messages": [
+    "Mars is mine! No trespassing!",
+    "I peed here ¯\\_(ツ)_/¯",
+    "First Martian, deal with it!",
+    "Reserved for my Mars mansion",
+    "Elon was here 2024",
+    "Mars: Like Earth but cooler",
+    "Best view in the solar system",
+    "Send pizza to Mars please",
+    "Mars WiFi password: mars123",
+    "Alien parking only, humans towed",
+    "This land costs 5 BTC, DM for details",
+    "Unauthorized human access prohibited",
+    "Earth is so last millennium",
+    "Sorry Earth, we're breaking up",
+    "No humans were involved in creating this billboard"
+  ],
+  "spawnInterval": 3000,
+  "maxBots": 30,
+  "billboardSize": {
+    "width": 4,
+    "height": 3
+  },
+  "health": 100,
+  "colors": [
+    "#FF5733",
+    "#33FF57",
+    "#3357FF",
+    "#FF33F5",
+    "#F5FF33",
+    "#33FFF5"
+  ]
+} 

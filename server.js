@@ -14,6 +14,9 @@ const CONFIG = {
 // Store all billboards to send to new players
 const billboards = [];
 
+// Store bot billboards separately
+const botBillboards = [];
+
 // Store player data for persistence
 const playerData = {};
 
@@ -22,6 +25,9 @@ const PLAYER_DATA_FILE = path.join(__dirname, 'player-data.json');
 
 // Billboard data file path
 const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
+
+// Bot billboard data file path
+const BOT_BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data-bots.json');
 
 // Generate and store terrain data
 let terrainData = null;
@@ -97,6 +103,44 @@ function saveBillboardData() {
   }
 }
 
+// Load saved bot billboard data from file
+function loadBotBillboardData() {
+  try {
+    if (fs.existsSync(BOT_BILLBOARD_DATA_FILE)) {
+      const data = fs.readFileSync(BOT_BILLBOARD_DATA_FILE, 'utf8');
+      const parsedData = JSON.parse(data);
+      
+      // Clear existing bot billboards and load from file
+      botBillboards.length = 0;
+      
+      // Copy all bot billboards from file
+      parsedData.forEach(billboard => {
+        botBillboards.push(billboard);
+      });
+      
+      console.log(`Loaded ${botBillboards.length} bot billboards from file`);
+    } else {
+      console.log('No bot billboard data file found, starting with empty bot billboards');
+    }
+  } catch (error) {
+    console.error('Error loading bot billboard data:', error);
+  }
+}
+
+// Save bot billboard data to file
+function saveBotBillboardData() {
+  try {
+    fs.writeFileSync(
+      BOT_BILLBOARD_DATA_FILE,
+      JSON.stringify(botBillboards, null, 2),
+      'utf8'
+    );
+    console.log('Bot billboard data saved to file');
+  } catch (error) {
+    console.error('Error saving bot billboard data:', error);
+  }
+}
+
 // Try to load saved terrain data or generate new
 function initializeTerrainData() {
   const terrainFilePath = path.join(__dirname, 'terrain-data.json');
@@ -121,11 +165,106 @@ function initializeTerrainData() {
 initializeTerrainData();
 loadPlayerData();
 loadBillboardData(); // Load billboard data on startup
+loadBotBillboardData(); // Load bot billboard data on startup
 
 // Log server startup
 console.log('WebSocket server running on port 8090');
 console.log(`Terrain seed: ${CONFIG.world.terrainSeed}`);
 
+// Create a simple HTTP server for handling bot billboard saving
+const http = require('http');
+const url = require('url');
+
+const httpServer = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight CORS request
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  // Handle save-bot-billboards endpoint
+  if (parsedUrl.pathname === '/save-bot-billboards' && req.method === 'POST') {
+    let body = '';
+    
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        
+        // Update bot billboards
+        botBillboards.length = 0;
+        data.forEach(billboard => {
+          botBillboards.push(billboard);
+        });
+        
+        // Save to file
+        saveBotBillboardData();
+        
+        // Ensure bot billboards are also in the main billboards array for sync
+        data.forEach(botBillboard => {
+          const existingIndex = billboards.findIndex(b => b.id === botBillboard.id);
+          if (existingIndex !== -1) {
+            billboards[existingIndex] = botBillboard;
+          } else {
+            billboards.push(botBillboard);
+          }
+        });
+        
+        // Save the main billboard data as well
+        saveBillboardData();
+        
+        // Send success response
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, count: botBillboards.length }));
+      } catch (error) {
+        console.error('Error saving bot billboards:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    });
+  }
+  // Serve bot-config.json
+  else if (parsedUrl.pathname === '/bot-config.json' && req.method === 'GET') {
+    try {
+      const configFilePath = path.join(__dirname, 'bot-config.json');
+      if (fs.existsSync(configFilePath)) {
+        const data = fs.readFileSync(configFilePath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(data);
+      } else {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Bot configuration not found' }));
+      }
+    } catch (error) {
+      console.error('Error serving bot config:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+  }
+  else {
+    // Handle 404 for other endpoints
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Endpoint not found' }));
+  }
+});
+
+// Start HTTP server for bot billboard handling on port 8091
+httpServer.listen(8091, () => {
+  console.log('HTTP server for bot billboard management running on port 8091');
+});
+
+// WebSocket server
 server.on('connection', (socket) => {
   console.log('Player connected');
 
@@ -136,34 +275,57 @@ server.on('connection', (socket) => {
 
       // Handle different message types
       if (data.type === 'billboard_data') {
+        // Check if this is a bot billboard by the ID prefix
+        const isBotBillboard = data.id && data.id.startsWith('bot_');
+        
         // Store billboard data for future players
         const existingIndex = billboards.findIndex(b => b.id === data.id);
         if (existingIndex !== -1) {
-          // Update existing billboard but preserve original text and owner
-          const originalText = billboards[existingIndex].text;
-          const originalOwner = billboards[existingIndex].owner;
-          
-          // Store the updated data but preserve text and owner
-          billboards[existingIndex] = {
-            ...billboards[existingIndex],
-            ...data,
-            // Keep original text and owner
-            text: originalText,
-            owner: originalOwner
-          };
+          // Update existing billboard but preserve original text and owner if not a bot update
+          if (!isBotBillboard) {
+            const originalText = billboards[existingIndex].text;
+            const originalOwner = billboards[existingIndex].owner;
+            
+            // Store the updated data but preserve text and owner
+            billboards[existingIndex] = {
+              ...billboards[existingIndex],
+              ...data,
+              // Keep original text and owner
+              text: originalText,
+              owner: originalOwner
+            };
+            
+            console.log(`Updated player billboard ${data.id} in server storage (preserved text and owner)`);
+          } else {
+            // For bot billboards, update everything
+            billboards[existingIndex] = {
+              ...data
+            };
+            
+            console.log(`Updated bot billboard ${data.id} in server storage`);
+            
+            // Also update in the bot billboards array
+            const botIndex = botBillboards.findIndex(b => b.id === data.id);
+            if (botIndex !== -1) {
+              botBillboards[botIndex] = { ...data };
+            }
+          }
           
           // Log health update if it changed
           if (data.health !== undefined && billboards[existingIndex].health !== data.health) {
             console.log(`Billboard ${data.id} health updated to: ${data.health}`);
           }
           
-          console.log(`Updated billboard ${data.id} in server storage (preserved text and owner)`);
-          
           // Save billboard data when health changes
           if (data.health !== undefined) {
             // Save periodically to avoid too frequent writes
             if (Math.random() < 0.3) { // 30% chance to save on update
               saveBillboardData();
+              
+              // If it's a bot billboard, also save bot data
+              if (isBotBillboard) {
+                saveBotBillboardData();
+              }
             }
           }
         } else {
@@ -171,8 +333,19 @@ server.on('connection', (socket) => {
           billboards.push(data);
           console.log(`Added new billboard ${data.id} to server storage`);
           
+          // If it's a bot billboard, also add to bot billboards
+          if (isBotBillboard) {
+            botBillboards.push(data);
+            console.log(`Added new bot billboard ${data.id} to bot storage`);
+          }
+          
           // Save billboard data when a new billboard is added
           saveBillboardData();
+          
+          // If it's a bot billboard, also save bot data
+          if (isBotBillboard) {
+            saveBotBillboardData();
+          }
         }
         
         // Broadcast the billboard update to all other clients with consistent naming
@@ -188,14 +361,31 @@ server.on('connection', (socket) => {
         });
       } 
       else if (data.type === 'billboard_remove') {
+        // Check if this is a bot billboard by the ID prefix
+        const isBotBillboard = data.id && data.id.startsWith('bot_');
+        
         // Remove billboard from stored list
         const index = billboards.findIndex(b => b.id === data.id);
         if (index !== -1) {
           billboards.splice(index, 1);
           console.log(`Removed billboard ${data.id} from server storage`);
           
+          // If it's a bot billboard, also remove from bot billboards
+          if (isBotBillboard) {
+            const botIndex = botBillboards.findIndex(b => b.id === data.id);
+            if (botIndex !== -1) {
+              botBillboards.splice(botIndex, 1);
+              console.log(`Removed bot billboard ${data.id} from bot storage`);
+            }
+          }
+          
           // Save billboard data when a billboard is removed
           saveBillboardData();
+          
+          // If it's a bot billboard, also save bot data
+          if (isBotBillboard) {
+            saveBotBillboardData();
+          }
           
           // Broadcast removal to all other clients with the expected "billboard_removed" type
           const removalData = {

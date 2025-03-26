@@ -42,6 +42,7 @@ class Game {
         this.playerControls = null;
         this.playerMovement = null;
         this.weaponManager = null;
+        this.botManager = null; // Bot Manager for automated billboard spawning
         
         // WebSocket connection for multiplayer
         this.socket = null;
@@ -319,6 +320,15 @@ class Game {
         // Set weapon manager reference in player controls
         this.playerControls.setWeaponManager(this.weaponManager);
         
+        // Create bot manager - don't initialize yet, will be done when game starts
+        // BotManager will be initialized with a delay after game start to allow other systems to stabilize
+        if (window.BotManager) {
+            console.log('Setting up bot manager - will be fully initialized when game starts');
+            this.botManager = new BotManager(this);
+        } else {
+            console.warn('BotManager class not found, bot billboards will not be available');
+        }
+        
         this.updateLoadingProgress(0.9, 'Player ready');
     }
     
@@ -527,183 +537,162 @@ class Game {
      * Start the game
      */
     async startGame() {
-        if (!this.isInitialized) {
-            console.error('Game not initialized');
-            return;
-        }
-        
         if (this.gameStarted) {
-            console.warn('Game already started');
+            console.warn('Game already started, ignoring request');
             return;
         }
         
-        console.log('Starting game');
+        console.log('Starting game...');
         
-        // Mark the game as started immediately so position can be applied
-        this.gameStarted = true;
+        // Verify DOM elements to prevent errors
+        this.verifyDomElements();
         
-        // Only get username from input if we don't already have a username from persistence
-        // Get username from input or use default
-        const inputUsername = this.usernameInput ? this.usernameInput.value.trim() : "";
-        
-        // If we don't have a username yet or it's the anonymous default
-        if (!this.username || this.username.indexOf('Anonymous_') === 0 || this.username === '') {
-            if (inputUsername) {
-                this.username = inputUsername;
-            } else {
-                this.username = "Anonymous_" + Math.floor(Math.random() * 1000); // Add random number to default
-            }
-            
-            // Set default billboard text only if we're creating a new username
-            this.billboardText = `${this.username}'s Turf`;
-            
-            // Make billboard text accessible globally for weapons
-            window.billboardText = this.billboardText;
+        // Get username from input
+        if (this.usernameInput && this.usernameInput.value.trim()) {
+            this.username = this.usernameInput.value.trim();
         } else {
-            // If username is already loaded from persistence but user entered a new name
-            if (inputUsername && inputUsername !== this.username) {
-                this.username = inputUsername;
-                
-                // Update billboard text for the new username if needed
-                if (!this.billboardText || this.billboardText.indexOf("'s Turf") > 0) {
-                    this.billboardText = `${this.username}'s Turf`;
-                    window.billboardText = this.billboardText;
-                }
-            }
+            this.username = "Anonymous";
         }
         
-        console.log(`Starting game with username: ${this.username}`);
-        console.log(`Billboard text: ${this.billboardText}`);
+        console.log(`Starting game for user: ${this.username}`);
+        
+        // Set default billboard text based on username
+        this.billboardText = `${this.username}'s Turf`;
+        window.billboardText = this.billboardText;
+        
+        // Save billboard text in persistence if available
+        if (this.persistence) {
+            this.persistence.saveBillboardText(this.billboardText);
+        }
         
         // Hide start screen
         this.hideStartScreen();
         
-        // Show the game UI
+        // Ensure canvas is visible
+        this.ensureCanvasIsVisible();
+        
+        // Lock pointer if not already locked
+        if (this.playerCamera && !this.playerCamera.isLocked) {
+            this.playerCamera.requestPointerLock();
+        }
+        
+        // Start animations if not already running
+        if (!this.isAnimating) {
+            this.animate();
+        }
+        
+        // Connect to server if needed and not already connected
+        if (CONFIG.isMultiplayer && !this.connectedToServer) {
+            try {
+                await this.connectToServer();
+            } catch (error) {
+                console.error('Failed to connect to server:', error);
+                this.showErrorMessage('Could not connect to server. Playing in offline mode.');
+            }
+        }
+        
+        // Set flag to indicate weaponManager is ready
+        if (this.weaponManager) {
+            console.log('WeaponManager is ready for use');
+            this.weaponManager.isInitialized = true;
+        }
+        
+        // Request existing billboards from server
+        if (this.connectedToServer) {
+            if (this.weaponManager) {
+                this.requestAllBillboards();
+            } else {
+                // Set a flag to request billboards once weapon manager is initialized
+                this.pendingBillboardRequest = true;
+            }
+        }
+        
+        // If we have persistence data, apply it
+        if (this.persistence && this.persistence.isInitialized) {
+            console.log('Applying persistence data (position, ammo, etc.)');
+            
+            // Validate position data before applying (wait for globe to be ready)
+            this.validatePlayerSpawnLocation();
+        }
+        
+        // Initialize bot manager with a longer delay
+        // This ensures the weapon manager and billboards are fully loaded first
+        setTimeout(() => {
+            if (this.botManager) {
+                console.log('Initializing bot billboard system...');
+                
+                // If the botManager has an initialize method, call it
+                if (typeof this.botManager.initialize === 'function') {
+                    this.botManager.initialize();
+                }
+                // Otherwise, if it has a spawnInitialBillboards method, call that
+                else if (typeof this.botManager.spawnInitialBillboards === 'function') {
+                    this.botManager.spawnInitialBillboards();
+                }
+                
+                console.log('Bot billboard system initialized');
+            } else {
+                console.warn('BotManager not available, bot billboards will not be spawned');
+            }
+        }, 10000); // 10 second delay to ensure weapon manager is fully initialized
+        
+        // Set game started flag
+        this.gameStarted = true;
+        console.log('Game started successfully');
+        
+        // Show started message
+        this.showGameStartedMessage();
+    }
+    
+    /**
+     * Verify that all necessary DOM elements are available
+     */
+    verifyDomElements() {
+        console.log('Verifying DOM elements');
+        
+        // Check for UI elements
         const gameUI = document.getElementById('game-ui');
         if (gameUI) {
             gameUI.style.display = 'block';
-            console.log('Game UI displayed');
+            console.log('Game UI is displayed');
         } else {
-            console.error('Game UI element not found');
+            console.warn('Game UI element not found');
         }
         
-        // Ensure camera is in first-person mode
-        if (this.playerCamera) {
-            // Make sure first-person mode is enabled
-            this.playerCamera.isFirstPerson = true;
-            
-            // If the toggleControls method exists, use it to ensure first-person mode
-            if (typeof this.playerCamera.toggleControls === 'function') {
-                if (!this.playerCamera.isFirstPerson) {
-                    this.playerCamera.toggleControls();
-                }
-            }
-            
-            // Update camera position and orientation
-            if (typeof this.playerCamera.updateCameraPositionAndOrientation === 'function') {
-                this.playerCamera.updateCameraPositionAndOrientation();
-            }
-        }
-        
-        // Check socket connection status based on both connectedToServer flag and actual socket state
-        const socketConnected = this.connectedToServer && 
-                                this.socket && 
-                                this.socket.readyState === WebSocket.OPEN;
-        
-        if (!socketConnected && CONFIG.isMultiplayer) {
-            console.log('Socket not connected, attempting to connect...');
-            try {
-                await this.connectToServer();
-                console.log('Successfully connected to server');
-                
-                // If persistence needs initialization, do it now
-                if (!this.persistence || !this.persistence.isInitialized) {
-                    console.log('Initializing persistence after connection');
-                    await this.initializePersistence();
-                }
-            } catch (error) {
-                console.warn('Failed to connect to server:', error);
-                // Continue in offline mode
-            }
-        } else if (socketConnected) {
-            console.log('Already connected to server, sending updated player info');
-            this.sendPlayerData();
-        }
-        
-        // Wait for a short time before requesting pointer lock to give the UI time to update
-        setTimeout(() => {
-            // Verify DOM elements
-            this.verifyDomElements();
-            
-            // Ensure canvas is visible
-            this.ensureCanvasIsVisible();
-            
-            // Start animation loop
-            this.isAnimating = true;
-            this.animate();
-            
-            // Show game started message
-            this.showGameStartedMessage();
-            
-            // Request pointer lock for camera
-            this.playerCamera.requestPointerLock();
-            
-            console.log('Game started');
-        }, 100);
-    }
-    
-    /**
-     * Verify all required DOM elements exist
-     */
-    verifyDomElements() {
-        // Check all important DOM elements
-        const elements = {
-            'renderer.domElement': this.renderer ? !!this.renderer.domElement : false,
-            'startScreen': !!this.startScreen,
-            'scene': !!this.scene,
-            'playerCamera': !!this.playerCamera,
-            'playerControls': !!this.playerControls,
-            'body': !!document.body
-        };
-        
-        console.log('DOM element verification:', elements);
-        
-        // Check if there are any missing elements
-        const missingElements = Object.entries(elements)
-            .filter(([_, exists]) => !exists)
-            .map(([name]) => name);
-            
-        if (missingElements.length > 0) {
-            console.error('Missing required DOM elements:', missingElements);
+        // Check for canvas element
+        const canvas = document.querySelector('canvas');
+        if (!canvas) {
+            console.error('Canvas element not found');
+        } else {
+            console.log('Canvas element found and verified');
         }
     }
     
     /**
-     * Ensure the WebGL canvas is visible
+     * Ensure the Three.js canvas is visible
      */
     ensureCanvasIsVisible() {
-        if (this.renderer && this.renderer.domElement) {
-            const canvas = this.renderer.domElement;
-            
-            // Make sure the canvas is in the DOM
-            if (!document.body.contains(canvas)) {
-                console.log('Canvas not in DOM, re-adding it');
-                document.body.appendChild(canvas);
-            }
-            
-            // Make sure it's visible
-            canvas.style.display = 'block';
-            canvas.style.position = 'fixed';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.zIndex = '1'; // Below UI elements
-            
-            console.log('Canvas visibility ensured');
-        } else {
-            console.error('Cannot ensure canvas visibility - renderer not initialized');
+        console.log('Ensuring canvas visibility');
+        
+        // Check for canvas element
+        const canvas = this.renderer ? this.renderer.domElement : document.querySelector('canvas');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
         }
+        
+        // Make sure the canvas is visible
+        canvas.style.display = 'block';
+        
+        // Ensure it has a high z-index but below UI
+        canvas.style.zIndex = '1';
+        
+        // Put canvas at correct position
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        
+        console.log('Canvas visibility ensured');
     }
     
     /**
@@ -876,6 +865,11 @@ class Game {
         // Update weapon manager
         if (this.weaponManager) {
             this.weaponManager.update(deltaTime);
+        }
+        
+        // Update bot manager
+        if (this.botManager) {
+            this.botManager.update(deltaTime);
         }
         
         // Send a position update to the server periodically
@@ -1335,36 +1329,28 @@ class Game {
     }
     
     /**
-     * Process billboard removal from the server
-     * @param {Object} data - Billboard removal data
+     * Process a billboard removal message from the server
+     * @param {Object} data - The removal message data
      */
     processBillboardRemoval(data) {
-        if (!data.id) {
-            console.warn('Missing billboard ID in removal message');
+        console.log('Processing billboard removal:', data.id);
+        
+        // Check for weapon manager
+        if (!this.weaponManager) {
+            console.warn('Cannot process billboard removal - weapon manager not initialized');
             return;
         }
         
-        console.log(`Received request to remove billboard: ${data.id}`);
+        // Remove the billboard in the game
+        this.weaponManager.removeBillboard(data.id);
         
-        // Remove the billboard from our local array
-        const existingIndex = this.billboards.findIndex(b => b.id === data.id);
-        if (existingIndex !== -1) {
-            // Remove from local data store
-            this.billboards.splice(existingIndex, 1);
-            console.log(`Removed billboard ${data.id} from data store`);
-            
-            // Remove visual representation if available
-            if (this.weaponManager) {
-                if (typeof this.weaponManager.removeBillboard === 'function') {
-                    const removed = this.weaponManager.removeBillboard(data.id);
-                    console.log(`Visual billboard removal ${removed ? 'successful' : 'failed'}`);
-                } else {
-                    console.log('WeaponManager does not have removeBillboard method');
-                }
-            }
-        } else {
-            console.log(`Billboard ${data.id} not found in data store`);
+        // Notify bot manager if it's a bot billboard
+        if (this.botManager && data.id && data.id.startsWith('bot_')) {
+            this.botManager.onBillboardRemoved(data.id);
         }
+        
+        // Show debug message
+        console.log(`Billboard ${data.id} removed from game`);
     }
     
     /**
