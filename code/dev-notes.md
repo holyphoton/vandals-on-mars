@@ -179,3 +179,71 @@ This command:
 - The WebSocket server must be running for multiplayer functionality
 - The `-c-1` flag for HTTP server disables caching, ensuring clients get the latest code
 - After restarting servers, refresh the browser to load updated code 
+
+## ID Generation System
+
+### Overview
+The game uses standardized ID formats for both players and billboards:
+- Player IDs: `player_xxxxx_yyyyy` 
+- Billboard IDs: `billboard_xxxxx_yyyyy`
+
+Where:
+- `xxxxx` is a 5-digit random number (between 10000-99999)
+- `yyyyy` is a 5-character random alphabetic string (lowercase)
+
+### Implementation Details
+The ID generation has been centralized in the `Helpers` utility class to ensure consistency across the codebase:
+
+1. **Core Generation Function**:
+   - `Helpers.generateId(prefix)`: Creates IDs in the format `prefix_xxxxx_yyyyy`
+   - Takes a prefix parameter (`player` or `billboard`)
+   - Handles both the numeric and alphabetic component generation
+
+2. **Specialized Helper Methods**:
+   - `Helpers.generatePlayerId()`: Uses the core function with "player" prefix
+   - `Helpers.generateUUID()`: Uses the core function with "billboard" prefix
+
+3. **Fallback Logic**:
+   - All ID generation points include fallback implementations if Helpers is not available
+   - Maintains the same ID format for consistency
+   - Present in `main.js`, `guns.js`, and `persistence.js`
+
+### Implementation Benefits
+- **Consistency**: All IDs follow the same format throughout the application
+- **Maintainability**: Changes to ID format only need to be made in one place
+- **Reduced Redundancy**: No duplicate code for ID generation
+- **Robustness**: Fallback mechanisms ensure proper operation even if helpers are unavailable
+
+### Usage Examples
+To generate a player ID:
+```javascript
+const playerId = Helpers.generatePlayerId();
+```
+
+To generate a billboard ID:
+```javascript
+const billboardId = Helpers.generateUUID();
+```
+
+Fallback pattern example:
+```javascript
+let playerId;
+if (window.Helpers && typeof window.Helpers.generatePlayerId === 'function') {
+    playerId = window.Helpers.generatePlayerId();
+} else {
+    // Fallback implementation
+    const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    let randomAlphabets = '';
+    for (let i = 0; i < 5; i++) {
+        randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+    playerId = `player_${randomNumbers}_${randomAlphabets}`;
+}
+```
+
+### Modified Files
+- `/code/js/utils/helpers.js`: Added centralized ID generation functions
+- `/code/js/utils/persistence.js`: Updated to use centralized player ID generation
+- `/code/js/main.js`: Updated fallback logic in `getBillboardDataForSync()`
+- `/code/js/weapons/guns.js`: Updated `generateUUID()` and fallback logic in `placeBillboard()` 
