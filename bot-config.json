@@ -60,10 +60,11 @@
     ],
     "spawn": {
       "initialCount": 15,
-      "maxCount": 40,
-      "spawnInterval": 600000,
+      "maxCount": 20,
+      "spawnInterval": 10000,
       "spawnChance": 0.3,
-      "minDistance": 20
+      "minDistance": 20,
+      "checkInterval": 10000
     },
     "billboardProperties": {
       "minSize": 4,

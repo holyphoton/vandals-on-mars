@@ -111,12 +111,108 @@
     "username": "Anonymous",
     "billboardText": "Anonymous's Turf",
     "position": {
-      "x": 44.73139990077197,
-      "y": -89.90223234020934,
-      "z": 16.731123188962318
+      "x": 34.15977336854344,
+      "y": -92.95808172507071,
+      "z": 23.561513648423027
     },
-    "shootingAmmo": 174,
+    "shootingAmmo": 150,
     "billboardAmmo": 3,
-    "lastUpdate": 1742996054358
+    "lastUpdate": 1742996474359
+  },
+  "player_87582_usnsg": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 101.73452463193027,
+      "y": 2.768572209750855,
+      "z": -2.379391904367239
+    },
+    "shootingAmmo": 156,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742997454127
+  },
+  "player_85851_zskwk": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 35.21519496159665,
+      "y": 50.250122982584216,
+      "z": 81.22841364973156
+    },
+    "shootingAmmo": 152,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742997539431
+  },
+  "player_13942_thpvs": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -46.02275267034455,
+      "y": -7.649179946017474,
+      "z": -90.4800325088234
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742997757305
+  },
+  "player_60691_jskml": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 94.52311394830902,
+      "y": 21.025395720800656,
+      "z": 31.409451830599163
+    },
+    "shootingAmmo": 106,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742998197436
+  },
+  "player_15865_ddgli": {
+    "username": "123",
+    "billboardText": "123's Turf",
+    "position": {
+      "x": 36.55776692137989,
+      "y": -27.50207935223377,
+      "z": -90.94176878104746
+    },
+    "shootingAmmo": 4,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742998765992
+  },
+  "player_86969_jylpz": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 49.81707014133347,
+      "y": -41.67691777058819,
+      "z": 78.38707832083735
+    },
+    "shootingAmmo": 93,
+    "billboardAmmo": 1,
+    "lastUpdate": 1742998843974
+  },
+  "player_89797_feaac": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 15.381746381908098,
+      "y": 76.77704094505202,
+      "z": -65.05326941795059
+    },
+    "shootingAmmo": 65,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742999703899
+  },
+  "player_77717_ssdgn": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": -16.426583094038662,
+      "y": 99.33577582792903,
+      "z": -27.86037215062174
+    },
+    "shootingAmmo": 108,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742999951598
   }
 }
