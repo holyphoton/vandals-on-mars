@@ -217,14 +217,14 @@
   },
   "player_94774_mlvyf": {
     "username": "Anonymous",
-    "billboardText": "Anonymous's Turf",
+    "billboardText": "Jugal's Turf",
     "position": {
-      "x": 55.72107468339967,
-      "y": -42.46842661293594,
-      "z": 73.85685193093917
+      "x": 61.234987876846006,
+      "y": -79.1437640709635,
+      "z": 18.702429478604827
     },
-    "shootingAmmo": 154,
+    "shootingAmmo": 122,
     "billboardAmmo": 2,
-    "lastUpdate": 1743000399544
+    "lastUpdate": 1743000558204
   }
 }

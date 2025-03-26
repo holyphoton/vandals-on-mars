@@ -247,3 +247,46 @@ if (window.Helpers && typeof window.Helpers.generatePlayerId === 'function') {
 - `/code/js/utils/persistence.js`: Updated to use centralized player ID generation
 - `/code/js/main.js`: Updated fallback logic in `getBillboardDataForSync()`
 - `/code/js/weapons/guns.js`: Updated `generateUUID()` and fallback logic in `placeBillboard()` 
+
+## Billboard Data Storage Separation
+
+### Overview
+The game now maintains separate storage for player-created billboards and bot-generated billboards:
+- Player billboards are stored in `billboard-data.json`
+- Bot billboards are stored in `billboard-data-bots.json` 
+
+### Implementation Details
+The separation was implemented through multiple changes in the server code:
+
+1. **Modified Loading Logic**:
+   - `loadBillboardData()`: Now filters out bot billboards when loading from `billboard-data.json`
+   - `loadBotBillboardData()`: Exclusively loads bot billboards from `billboard-data-bots.json`
+
+2. **Modified Saving Logic**:
+   - `saveBillboardData()`: Now filters out bot billboards before saving to `billboard-data.json`
+   - `saveBotBillboardData()`: Exclusively saves bot billboards to `billboard-data-bots.json`
+
+3. **Bot Billboard API Endpoint**:
+   - Removed the call to `saveBillboardData()` in the `/save-bot-billboards` endpoint
+   - This ensures bot billboards are only saved to their dedicated file
+
+4. **WebSocket Message Handlers**:
+   - Modified billboard update and removal event handlers to save to the appropriate file based on billboard type
+   - Bot billboards (IDs starting with "bot_") are only saved to the bot-specific file
+   - Player billboards are only saved to the main billboard data file
+
+### Implementation Benefits
+- **Clean Data Separation**: Player billboards and bot billboards are now stored in separate files
+- **Improved Performance**: Reduced file sizes make reading and writing faster
+- **Easier Management**: Administrators can more easily view and manage player content separately from bot content
+- **Reduced Redundancy**: Bot billboards are no longer duplicated in both files
+
+### Modified Files
+- `/server.js`: Updated file handling logic to separate billboard types
+
+### How to Identify Billboard Types
+Billboards are differentiated by their ID prefix:
+- Bot billboards always start with "bot_" (e.g., "bot_31707_xhqri")
+- Player billboards start with "billboard_" (e.g., "billboard_54870_gtlzx")
+
+This allows for easy filtering when loading, saving, and processing billboards. 
