@@ -215,6 +215,22 @@ class BillboardGun extends Gun {
         // Generate unique ID for the billboard
         const billboardId = this.generateUUID();
         
+        // Get player_id from localStorage or generate a fallback
+        let playerId = localStorage.getItem('vandalsOnMarsPlayerId');
+        if (!playerId && window.game && window.game.persistence) {
+            playerId = window.game.persistence.playerId;
+        }
+        if (!playerId) {
+            // Fallback if player ID is not available
+            const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+            let randomAlphabets = '';
+            for (let i = 0; i < 5; i++) {
+                randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            }
+            playerId = `player_${randomNumbers}_${randomAlphabets}`;
+        }
+        
         // Create a billboard object for tracking
         const billboard = {
             id: billboardId,
@@ -224,7 +240,9 @@ class BillboardGun extends Gun {
             height: 5, // Initial height
             health: 100,
             text: billboardText,
-            owner: window.game ? window.game.getUsername() : "Anonymous"
+            owner: window.game ? window.game.getUsername() : "Anonymous",
+            player_id: playerId,
+            billboard_category: "player"
         };
         
         // Create text texture for the billboard
@@ -353,10 +371,13 @@ class BillboardGun extends Gun {
         const owner = data.owner || "Anonymous";
         const timestamp = data.timestamp || Date.now();
         const health = data.health !== undefined ? data.health : 100; // Get health with fallback
+        const player_id = data.player_id || "unknown"; // Add player_id with fallback
+        const billboard_category = data.billboard_category || "player"; // Add billboard_category with fallback
         
         console.log(`Creating billboard from data - ID: ${id}, Text: "${text}", Owner: ${owner}`);
         console.log(`Position: (${position.x}, ${position.y}, ${position.z})`);
         console.log(`Health: ${health}`); // Log health value
+        console.log(`Player ID: ${player_id}, Billboard Category: ${billboard_category}`); // Log new fields
         if (data.quaternion) {
             console.log(`Quaternion: (${quaternion.x}, ${quaternion.y}, ${quaternion.z}, ${quaternion.w})`);
         } else {
@@ -471,7 +492,9 @@ class BillboardGun extends Gun {
             timestamp: timestamp,
             health: health, // Store the health value
             width: data.width || 5,
-            height: data.height || 5
+            height: data.height || 5,
+            player_id: player_id,
+            billboard_category: billboard_category
         };
         
         // Add to placed billboards array
@@ -513,6 +536,14 @@ class BillboardGun extends Gun {
         // Important: Update health value which affects scaling
         const oldHealth = billboard.health;
         billboard.health = data.health !== undefined ? data.health : billboard.health;
+        
+        // Update player_id and billboard_category if provided
+        if (data.player_id) {
+            billboard.player_id = data.player_id;
+        }
+        if (data.billboard_category) {
+            billboard.billboard_category = data.billboard_category;
+        }
         
         // Log health change
         if (oldHealth !== billboard.health) {
@@ -580,10 +611,17 @@ class BillboardGun extends Gun {
         }
         
         // Simple implementation if helper not available
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
+        // Generate 5 random digits for xxxxx
+        const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+        
+        // Generate 5 random alphabet characters for yyyyy
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        let randomAlphabets = '';
+        for (let i = 0; i < 5; i++) {
+            randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+        
+        return `billboard_${randomNumbers}_${randomAlphabets}`;
     }
     
     /**

@@ -9,11 +9,17 @@ const Helpers = {
      * @returns {string} - UUID
      */
     generateUUID: function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
+        // Generate 5 random digits for xxxxx
+        const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+        
+        // Generate 5 random alphabet characters for yyyyy
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        let randomAlphabets = '';
+        for (let i = 0; i < 5; i++) {
+            randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+        
+        return `billboard_${randomNumbers}_${randomAlphabets}`;
     },
 
     /**

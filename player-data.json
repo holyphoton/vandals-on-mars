@@ -1,0 +1,50 @@
+{
+  "player_1742992378281_k1aifr9nw": {
+    "username": "Jugal",
+    "billboardText": "Testing Player ID Shorter",
+    "position": {
+      "x": -50.91484092954748,
+      "y": -66.3728593368131,
+      "z": -58.013468406694166
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742993186962
+  },
+  "player_1742987287000_hu0ws9b8h": {
+    "username": "Anonymous 1",
+    "billboardText": "yoyoma",
+    "position": {
+      "x": -51.44124009979832,
+      "y": -65.27581759308755,
+      "z": -58.78865923414876
+    },
+    "shootingAmmo": 163,
+    "billboardAmmo": 0,
+    "lastUpdate": 1742992892373
+  },
+  "player_1742992913979_7f6e8snil": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -44.8964086548347,
+      "y": -77.26052309620157,
+      "z": 48.768474046246226
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1742993108956
+  },
+  "player_32251_pmrli": {
+    "username": "Anonymous Short",
+    "billboardText": "Anonymous Short's Turf",
+    "position": {
+      "x": -22.820913931636994,
+      "y": -97.6318804326901,
+      "z": -17.619926518056907
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742993184641
+  }
+}

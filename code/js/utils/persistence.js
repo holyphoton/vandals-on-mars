@@ -51,7 +51,17 @@ class PlayerPersistence {
      * @returns {string} - A new unique ID
      */
     generatePlayerId() {
-        return 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        // Generate 5 random digits for xxxxx
+        const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+        
+        // Generate 5 random alphabet characters for yyyyy
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        let randomAlphabets = '';
+        for (let i = 0; i < 5; i++) {
+            randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+        
+        return `player_${randomNumbers}_${randomAlphabets}`;
     }
     
     /**

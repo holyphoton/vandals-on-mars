@@ -1506,6 +1506,28 @@ class Game {
             console.warn(`No quaternion data available for billboard ${billboardObj.id}, using default`);
         }
         
+        // Get player_id from the billboard object, or from persistence, or generate fallback
+        let playerId = billboardObj.player_id;
+        if (!playerId && this.persistence) {
+            playerId = this.persistence.playerId;
+        }
+        if (!playerId) {
+            playerId = localStorage.getItem('vandalsOnMarsPlayerId');
+        }
+        if (!playerId) {
+            // Final fallback if player ID is still not available
+            const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+            let randomAlphabets = '';
+            for (let i = 0; i < 5; i++) {
+                randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            }
+            playerId = `player_${randomNumbers}_${randomAlphabets}`;
+        }
+        
+        // Get billboard_category with fallback
+        const billboardCategory = billboardObj.billboard_category || "player";
+        
         return {
             type: 'billboard_data',
             id: billboardObj.id,
@@ -1521,6 +1543,8 @@ class Game {
             health: billboardObj.health || 100,
             text: billboardObj.text || "Default Text",
             owner: billboardObj.owner || this.getUsername(),
+            player_id: playerId,
+            billboard_category: billboardCategory,
             timestamp: Date.now()
         };
     }

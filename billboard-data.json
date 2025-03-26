@@ -1,0 +1,163 @@
+[
+  {
+    "type": "billboard_data",
+    "id": "3d7374d6-8c97-4dfe-b21f-05047ba6c4cd",
+    "position": {
+      "x": -58.7368087627979,
+      "y": -67.16652864764319,
+      "z": -45.372400485183014
+    },
+    "quaternion": {
+      "x": 0.9066853360490433,
+      "y": -0.2869664127579873,
+      "z": -0.11583974916131931,
+      "w": -0.2866236763714553
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Jugal's Turf",
+    "owner": "Jugal",
+    "player_id": "jugal-123",
+    "billboard_category": "player",
+    "timestamp": 1742992382889
+  },
+  {
+    "type": "billboard_data",
+    "id": "aacacd84-2dd4-47b6-891e-36168e933e10",
+    "position": {
+      "x": 66.41905615596635,
+      "y": -55.16135805127109,
+      "z": 50.65316927192275
+    },
+    "quaternion": {
+      "x": -0.4050120647102368,
+      "y": 0.08185789671211391,
+      "z": 0.7819824080096105,
+      "w": -0.4666562179469065
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous 1's Turf",
+    "owner": "Anonymous 1",
+    "player_id": "anon1-456",
+    "billboard_category": "player",
+    "timestamp": 1742992389612
+  },
+  {
+    "type": "billboard_data",
+    "id": "b3987e38-95c8-4160-8c42-aa8cffd23952",
+    "position": {
+      "x": 63.82430624653006,
+      "y": -59.88761869536904,
+      "z": 48.579224563049856
+    },
+    "quaternion": {
+      "x": -0.16008008871890078,
+      "y": 0.2031921986480627,
+      "z": 0.8794960600924098,
+      "w": -0.3994671148996414
+    },
+    "width": 5,
+    "height": 5,
+    "health": 50,
+    "text": "Anonymous 1's Turf",
+    "owner": "Anonymous 1",
+    "player_id": "anon1-456",
+    "billboard_category": "player",
+    "timestamp": 1742992395331
+  },
+  {
+    "type": "billboard_data",
+    "id": "4ac2fd8d-ac84-47d9-ac6e-9afea46b3976",
+    "position": {
+      "x": -62.47324628523281,
+      "y": -63.31340925598951,
+      "z": -45.918576926645095
+    },
+    "quaternion": {
+      "x": 0.8861417865599034,
+      "y": -0.3882509664018966,
+      "z": 0.17607819171290334,
+      "w": -0.18168762094190732
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Hello Hi My Custom Billboard Text",
+    "owner": "Jugal",
+    "player_id": "jugal-123",
+    "billboard_category": "player",
+    "timestamp": 1742992442818
+  },
+  {
+    "type": "billboard_data",
+    "id": "05129c43-e963-4f62-8d50-9ec7a9dc8063",
+    "position": {
+      "x": -50.841705945451466,
+      "y": -57.10433947091987,
+      "z": -64.60824521797655
+    },
+    "quaternion": {
+      "x": -0.10894350072442095,
+      "y": 0.3966571444074387,
+      "z": -0.8794133126941017,
+      "w": -0.23963857973379551
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "yoyoma",
+    "owner": "Anonymous 1",
+    "player_id": "player_1742987287000_hu0ws9b8h",
+    "billboard_category": "player",
+    "timestamp": 1742992892371
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_25459_txhct",
+    "position": {
+      "x": -54.03838339121533,
+      "y": -68.71289248976531,
+      "z": -48.76885815921853
+    },
+    "quaternion": {
+      "x": 0.9092232811057972,
+      "y": -0.3281972731879398,
+      "z": 0.1285856380115109,
+      "w": -0.22150690432666392
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Testing Player ID Shorter",
+    "owner": "Jugal",
+    "player_id": "player_1742992378281_k1aifr9nw",
+    "billboard_category": "player",
+    "timestamp": 1742993150936
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_33629_ummze",
+    "position": {
+      "x": -16.350194248364417,
+      "y": -98.25382198147626,
+      "z": -9.943219502410818
+    },
+    "quaternion": {
+      "x": 0.9352779780306505,
+      "y": -0.060018758092913016,
+      "z": -0.3406368086198313,
+      "w": -0.07496277143475205
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous Short's Turf",
+    "owner": "Anonymous Short",
+    "player_id": "player_32251_pmrli",
+    "billboard_category": "player",
+    "timestamp": 1742993174117
+  }
+]
