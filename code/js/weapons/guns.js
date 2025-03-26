@@ -222,13 +222,18 @@ class BillboardGun extends Gun {
         }
         if (!playerId) {
             // Fallback if player ID is not available
-            const randomNumbers = Math.floor(10000 + Math.random() * 90000);
-            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-            let randomAlphabets = '';
-            for (let i = 0; i < 5; i++) {
-                randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            if (window.Helpers && typeof window.Helpers.generatePlayerId === 'function') {
+                playerId = window.Helpers.generatePlayerId();
+            } else {
+                // Fallback implementation in case Helpers is not available
+                const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+                const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+                let randomAlphabets = '';
+                for (let i = 0; i < 5; i++) {
+                    randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                }
+                playerId = `player_${randomNumbers}_${randomAlphabets}`;
             }
-            playerId = `player_${randomNumbers}_${randomAlphabets}`;
         }
         
         // Create a billboard object for tracking
@@ -606,15 +611,13 @@ class BillboardGun extends Gun {
      */
     generateUUID() {
         // Use helper if available
-        if (window.Helpers && window.Helpers.generateUUID) {
+        if (window.Helpers && typeof window.Helpers.generateUUID === 'function') {
             return window.Helpers.generateUUID();
         }
         
         // Simple implementation if helper not available
-        // Generate 5 random digits for xxxxx
+        // Generate a billboard ID with the required format
         const randomNumbers = Math.floor(10000 + Math.random() * 90000);
-        
-        // Generate 5 random alphabet characters for yyyyy
         const alphabet = 'abcdefghijklmnopqrstuvwxyz';
         let randomAlphabets = '';
         for (let i = 0; i < 5; i++) {

@@ -9,7 +9,18 @@ const Helpers = {
      * @returns {string} - UUID
      */
     generateUUID: function() {
-        // Generate 5 random digits for xxxxx
+        // Now using the centralized ID generation function with billboard prefix
+        return this.generateId("billboard");
+    },
+
+    /**
+     * Generate an ID with specified format: prefix_xxxxx_yyyyy
+     * Where xxxxx is a 5-digit random number and yyyyy is 5 random alphabets
+     * @param {string} prefix - The prefix for the ID (e.g., "player", "billboard")
+     * @returns {string} - Generated ID
+     */
+    generateId: function(prefix) {
+        // Generate 5 random digits for xxxxx (between 10000 and 99999)
         const randomNumbers = Math.floor(10000 + Math.random() * 90000);
         
         // Generate 5 random alphabet characters for yyyyy
@@ -19,7 +30,15 @@ const Helpers = {
             randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
         }
         
-        return `billboard_${randomNumbers}_${randomAlphabets}`;
+        return `${prefix}_${randomNumbers}_${randomAlphabets}`;
+    },
+    
+    /**
+     * Generate a player ID
+     * @returns {string} - A new player ID
+     */
+    generatePlayerId: function() {
+        return this.generateId("player");
     },
 
     /**

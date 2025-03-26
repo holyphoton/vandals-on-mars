@@ -1516,13 +1516,18 @@ class Game {
         }
         if (!playerId) {
             // Final fallback if player ID is still not available
-            const randomNumbers = Math.floor(10000 + Math.random() * 90000);
-            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-            let randomAlphabets = '';
-            for (let i = 0; i < 5; i++) {
-                randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            if (window.Helpers && typeof window.Helpers.generatePlayerId === 'function') {
+                playerId = window.Helpers.generatePlayerId();
+            } else {
+                // Fallback implementation in case Helpers is not available
+                const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+                const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+                let randomAlphabets = '';
+                for (let i = 0; i < 5; i++) {
+                    randomAlphabets += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                }
+                playerId = `player_${randomNumbers}_${randomAlphabets}`;
             }
-            playerId = `player_${randomNumbers}_${randomAlphabets}`;
         }
         
         // Get billboard_category with fallback

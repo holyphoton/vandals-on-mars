@@ -9,7 +9,7 @@
     },
     "shootingAmmo": 200,
     "billboardAmmo": 0,
-    "lastUpdate": 1742993186962
+    "lastUpdate": 1742993246962
   },
   "player_1742987287000_hu0ws9b8h": {
     "username": "Anonymous 1",
@@ -43,8 +43,32 @@
       "y": -97.6318804326901,
       "z": -17.619926518056907
     },
-    "shootingAmmo": 200,
+    "shootingAmmo": 174,
     "billboardAmmo": 2,
-    "lastUpdate": 1742993184641
+    "lastUpdate": 1742993244641
+  },
+  "player_47165_ziumj": {
+    "username": "Jugal",
+    "billboardText": "helllllla",
+    "position": {
+      "x": 97.93939844972874,
+      "y": 25.055322900065068,
+      "z": 11.972678300144123
+    },
+    "shootingAmmo": 174,
+    "billboardAmmo": 1,
+    "lastUpdate": 1742994103036
+  },
+  "player_34271_oywkw": {
+    "username": "JJJMMM",
+    "billboardText": "hihihi",
+    "position": {
+      "x": 98.01949892078729,
+      "y": 25.916258096872486,
+      "z": -9.152343829537326
+    },
+    "shootingAmmo": 196,
+    "billboardAmmo": 2,
+    "lastUpdate": 1742994104975
   }
 }

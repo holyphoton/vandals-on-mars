@@ -51,10 +51,13 @@ class PlayerPersistence {
      * @returns {string} - A new unique ID
      */
     generatePlayerId() {
-        // Generate 5 random digits for xxxxx
-        const randomNumbers = Math.floor(10000 + Math.random() * 90000);
+        // Use the centralized ID generator from Helpers
+        if (window.Helpers && typeof window.Helpers.generatePlayerId === 'function') {
+            return window.Helpers.generatePlayerId();
+        }
         
-        // Generate 5 random alphabet characters for yyyyy
+        // Fallback implementation in case Helpers is not available
+        const randomNumbers = Math.floor(10000 + Math.random() * 90000);
         const alphabet = 'abcdefghijklmnopqrstuvwxyz';
         let randomAlphabets = '';
         for (let i = 0; i < 5; i++) {
