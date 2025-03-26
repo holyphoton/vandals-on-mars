@@ -8,6 +8,15 @@ class Game {
      * Create a new game instance
      */
     constructor() {
+        // Check if another Game instance is already active
+        if (window.gameInstance) {
+            console.warn('A Game instance already exists, returning existing instance');
+            return window.gameInstance;
+        }
+        
+        // Store this instance as the global game instance
+        window.gameInstance = this;
+        
         // Game state
         this.isInitialized = false;
         this.isPaused = false;
@@ -74,6 +83,12 @@ class Game {
      * Initialize the game
      */
     async initialize() {
+        // Prevent duplicate initialization
+        if (this.isInitialized) {
+            console.warn('Game is already initialized, skipping duplicate initialization');
+            return;
+        }
+        
         console.log('Initializing game');
         
         // Show loading screen

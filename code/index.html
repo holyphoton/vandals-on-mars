@@ -264,9 +264,15 @@
                 console.log('Controls availability check - PointerLockControls:', typeof THREE.PointerLockControls === 'function');
                 
                 // Regardless of the outcome, our fallback implementations should be in place
-                // Now initialize the game
-                console.log('Starting game initialization');
-                window.game = new Game();
+                // Now initialize the game if it hasn't been initialized already
+                console.log('Starting game initialization from loadControls');
+                if (!window.game) {
+                    console.log('Creating new Game instance from loadControls');
+                    window.gameInitialized = true;
+                    window.game = new Game();
+                } else {
+                    console.log('Game already exists, skipping initialization from loadControls');
+                }
             }
             
             // Start the loading process
@@ -501,7 +507,10 @@
             console.log('Window fully loaded');
             if (!window.game) {
                 console.log('Game not initialized in window.onload, creating now');
+                window.gameInitialized = true;
                 window.game = new Game();
+            } else {
+                console.log('Game already exists, skipping initialization from window.onload');
             }
         };
     </script>

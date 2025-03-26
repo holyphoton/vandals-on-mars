@@ -158,6 +158,12 @@ class PlayerCamera {
      * Set up all event listeners
      */
     setupEventListeners() {
+        // Prevent adding event listeners multiple times
+        if (this._eventListenersInitialized) {
+            console.warn('Camera event listeners already initialized, skipping');
+            return;
+        }
+        
         // Mouse movement for camera rotation
         document.addEventListener('mousemove', this.onMouseMove.bind(this));
         
@@ -173,6 +179,9 @@ class PlayerCamera {
         
         // Window resize
         window.addEventListener('resize', this.onWindowResize.bind(this));
+        
+        // Mark as initialized
+        this._eventListenersInitialized = true;
     }
     
     /**
