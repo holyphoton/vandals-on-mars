@@ -1254,9 +1254,12 @@ class ShooterGun extends Gun {
             // This is the direction from center to the billboard
             const surfaceNormal = new THREE.Vector3().subVectors(billboard.position, globeCenter).normalize();
             
-            // Calculate the exact surface position where the billboard's legs should be planted
+            // Calculate the surface position where the billboard's legs should be planted
+            // Add a ground sink factor that increases with billboard size
+            // This creates a more grounded look for larger billboards by sinking legs slightly into the ground
+            const groundSinkFactor = -0.2 * (heightScale / 10); // Negative offset that increases with size
             const surfacePosition = globeCenter.clone().add(
-                surfaceNormal.clone().multiplyScalar(globeRadius + 0.1) // Tiny offset to prevent z-fighting
+                surfaceNormal.clone().multiplyScalar(globeRadius + groundSinkFactor) // Negative offset to sink into ground
             );
             
             // 1. Get all child meshes
@@ -1285,13 +1288,13 @@ class ShooterGun extends Gun {
             
             // 4. Position the entire billboard mesh precisely
             
-            // The critical part: calculate how far from the surface the CENTER of the billboard should be
-            // This ensures the LEGS remain exactly at the surface position
+            // Calculate how far from the surface the CENTER of the billboard should be
+            // This ensures the LEGS remain partially sunk into the surface position
             const originalHeight = 4.0; // Original height in the model
             const totalHeight = originalHeight * heightScale; // New scaled height
             const centerOffset = totalHeight / 2; // Distance from base to center
             
-            // Position the billboard with its base exactly at the surface position
+            // Position the billboard with its base slightly sunk into the surface position
             // and its center offset outward along the surface normal
             billboard.mesh.position.copy(surfacePosition);
             billboard.mesh.position.add(surfaceNormal.clone().multiplyScalar(centerOffset));

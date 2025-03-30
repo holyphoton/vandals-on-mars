@@ -44,5 +44,28 @@
     "player_id": "player_16399_voojr",
     "billboard_category": "player",
     "timestamp": 1743314912109
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_27395_uluoo",
+    "position": {
+      "x": 75.29644640267895,
+      "y": 88.81063176167473,
+      "z": 28.198525585936355
+    },
+    "quaternion": {
+      "x": -0.2379865871880621,
+      "y": -0.8235957386839355,
+      "z": -0.26962995975298676,
+      "w": 0.4385796716035122
+    },
+    "width": 50,
+    "height": 50,
+    "health": 100,
+    "text": "Grow 001",
+    "owner": "M1",
+    "player_id": "player_60855_kkskm",
+    "billboard_category": "player",
+    "timestamp": 1743315360338
   }
 ]
