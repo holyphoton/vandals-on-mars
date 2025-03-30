@@ -1163,6 +1163,16 @@ class ShooterGun extends Gun {
         // Create impact particles
         this.createBulletImpactEffect(billboard.mesh.position);
         
+        // === NEW FEATURE: GROW PLAYER'S BILLBOARDS ===
+        // Only grow player billboards if the hit billboard is not owned by the player
+        if (this.weaponManager && this.weaponManager.billboardGun) {
+            // Check if the hit billboard is not owned by the player
+            const playerId = window.game?.persistence?.playerId;
+            if (playerId && billboard.player_id !== playerId) {
+                this.growPlayerBillboards(damageAmount);
+            }
+        }
+        
         // Sync the updated billboard (health/scale) with the server
         if (window.game && typeof window.game.syncBillboardData === 'function') {
             window.game.syncBillboardData(billboard);
@@ -1174,6 +1184,77 @@ class ShooterGun extends Gun {
             console.log("Billboard destroyed due to health reaching zero");
             this.destroyBillboard(billboard);
         }
+    }
+
+    /**
+     * Grows all player-owned billboards based on damage caused to other billboards
+     * @param {number} damageAmount - The amount of damage caused
+     */
+    growPlayerBillboards(damageAmount) {
+        // Get growth per damage value from config
+        const growthPerDamage = CONFIG.billboard?.growthPerDamage || 0.5;
+        const maxSize = CONFIG.billboard?.maxSize || 50;
+        
+        // Calculate growth amount for this damage
+        const growthAmount = growthPerDamage * damageAmount;
+        
+        // Get player ID
+        const playerId = window.game?.persistence?.playerId;
+        if (!playerId) {
+            console.log("Cannot grow billboards: player ID not found");
+            return;
+        }
+        
+        // Find all billboards owned by the player
+        const playerBillboards = [];
+        if (this.weaponManager && this.weaponManager.billboardGun) {
+            this.weaponManager.billboardGun.placedBillboards.forEach(billboard => {
+                if (billboard.player_id === playerId) {
+                    playerBillboards.push(billboard);
+                    console.log(`Found player billboard to grow: ${billboard.id}, owned by player ${playerId}`);
+                }
+            });
+        }
+        
+        console.log(`Growing ${playerBillboards.length} player billboards by ${growthAmount} units`);
+        
+        // Grow each player billboard
+        playerBillboards.forEach(billboard => {
+            if (!billboard || !billboard.mesh) return;
+            
+            // Get current width and height
+            let currentWidth = billboard.width || CONFIG.billboard.startSize;
+            let currentHeight = billboard.height || CONFIG.billboard.startSize;
+            
+            // Calculate new width and height, ensuring they don't exceed max size
+            let newWidth = Math.min(currentWidth + growthAmount, maxSize);
+            let newHeight = Math.min(currentHeight + growthAmount, maxSize);
+            
+            // Update billboard dimensions
+            billboard.width = newWidth;
+            billboard.height = newHeight;
+            
+            console.log(`Billboard ${billboard.id} grown to ${billboard.width}x${billboard.height}`);
+            
+            // Update the mesh scale to reflect new size
+            // We scale based on the ratio of new size to start size
+            const startSize = CONFIG.billboard.startSize;
+            const widthScale = newWidth / startSize;
+            const heightScale = newHeight / startSize;
+            
+            // Scale the sign mesh (first child of the billboard group)
+            const signMesh = billboard.mesh.children[0];
+            if (signMesh) {
+                // Scale just the billboard panel, not the entire structure
+                signMesh.scale.set(widthScale, heightScale, 1);
+            }
+            
+            // Sync the updated billboard with the server
+            if (window.game && typeof window.game.syncBillboardData === 'function') {
+                window.game.syncBillboardData(billboard);
+                console.log(`Synced grown billboard with server. Size: ${billboard.width}x${billboard.height}`);
+            }
+        });
     }
 
     /**

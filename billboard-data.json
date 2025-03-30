@@ -1,48 +1,25 @@
 [
   {
     "type": "billboard_data",
-    "id": "billboard_55024_bgffk",
+    "id": "billboard_83886_zupmm",
     "position": {
-      "x": 35.673737221303746,
-      "y": 91.73842356046038,
-      "z": -18.20593626559579
+      "x": 70.92515481133097,
+      "y": 43.31825909959744,
+      "z": -55.795706318397635
     },
     "quaternion": {
-      "x": 0.19324004597950117,
-      "y": 0.9692650434114701,
-      "z": -0.06651616879719374,
-      "w": -0.13696408119994172
+      "x": -0.452463816636147,
+      "y": -0.8411816546105017,
+      "z": 0.28089423998658525,
+      "w": 0.09374617071725486
     },
-    "width": 5,
-    "height": 5,
-    "health": 60,
-    "text": "Anonymous's Turf",
-    "owner": "Anonymous",
-    "player_id": "player_94774_mlvyf",
-    "billboard_category": "player",
-    "timestamp": 1743000596962
-  },
-  {
-    "type": "billboard_data",
-    "id": "billboard_39755_pqxpr",
-    "position": {
-      "x": 60.11752835047358,
-      "y": -73.196648017811,
-      "z": 32.375044463084336
-    },
-    "quaternion": {
-      "x": 0.8311395268244344,
-      "y": 0.21021402533793282,
-      "z": -0.41812044845551843,
-      "w": 0.3003205638723968
-    },
-    "width": 5,
-    "height": 5,
+    "width": 50,
+    "height": 50,
     "health": 100,
-    "text": "Jugal's Turf",
-    "owner": "Anonymous",
-    "player_id": "player_94774_mlvyf",
+    "text": "Grow",
+    "owner": "M1",
+    "player_id": "player_53236_dggko",
     "billboard_category": "player",
-    "timestamp": 1743000559882
+    "timestamp": 1743314035923
   }
 ]

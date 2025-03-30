@@ -226,5 +226,29 @@
     "shootingAmmo": 122,
     "billboardAmmo": 2,
     "lastUpdate": 1743000558204
+  },
+  "player_61600_ghnmh": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": -47.65459766793843,
+      "y": 60.784179644854554,
+      "z": 66.31412237230444
+    },
+    "shootingAmmo": 94,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743313933809
+  },
+  "player_53236_dggko": {
+    "username": "M1",
+    "billboardText": "Grow",
+    "position": {
+      "x": 67.6877398845308,
+      "y": 39.98673124384274,
+      "z": -64.67357415325667
+    },
+    "shootingAmmo": 188,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743314032955
   }
 }
