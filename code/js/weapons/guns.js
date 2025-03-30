@@ -1046,32 +1046,89 @@ class ShooterGun extends Gun {
                         continue;
                     }
                     
-                    // Get billboard position
-                    const billboardPosition = billboard.mesh.position.clone();
+                    // Get the billboard mesh, its position, and children
+                    const billboardMesh = billboard.mesh;
+                    const billboardPosition = billboardMesh.position.clone();
+                    const signMesh = billboardMesh.children[0]; // The sign part (the actual billboard display)
                     
-                    // Calculate distance between bullet and billboard
-                    const distance = bullet.position.distanceTo(billboardPosition);
+                    // Get the billboard's dimensions
+                    const billboardWidth = billboard.width || 5; // Default width if not set
+                    const billboardHeight = billboard.height || 5; // Default height if not set
                     
-                    // Debug distances occasionally
-                    if (Math.random() < 0.005) {
-                        // console.log(`Bullet distance to billboard ${j}: ${distance.toFixed(2)} units`);
+                    // Calculate scale factors
+                    const startSize = CONFIG.billboard.startSize || 5;
+                    const widthScale = billboardWidth / startSize;
+                    const heightScale = billboardHeight / startSize;
+                    
+                    // We need the billboard's orientation to calculate hit detection
+                    const billboardUp = new THREE.Vector3(0, 1, 0).applyQuaternion(billboardMesh.quaternion);
+                    const billboardRight = new THREE.Vector3(1, 0, 0).applyQuaternion(billboardMesh.quaternion);
+                    const billboardForward = new THREE.Vector3(0, 0, 1).applyQuaternion(billboardMesh.quaternion);
+                    
+                    // Calculate the position of the sign (the actual billboard display)
+                    // The sign is positioned at Y offset from the center
+                    const signY = 2.8 * heightScale; // This matches the Y offset used when positioning the sign
+                    const signPosition = billboardPosition.clone().add(billboardUp.clone().multiplyScalar(signY));
+                    
+                    // Calculate half-dimensions of the sign
+                    const signHalfWidth = 1.5 * widthScale; // Half of the sign width (3.0)
+                    const signHalfHeight = 1.0 * heightScale; // Half of the sign height (2.0)
+                    
+                    // Get bullet-to-sign vector (from sign center to bullet)
+                    const bulletToSign = bullet.position.clone().sub(signPosition);
+                    
+                    // Project this vector onto the billboard's local axes
+                    const localX = bulletToSign.dot(billboardRight);
+                    const localY = bulletToSign.dot(billboardUp);
+                    const localZ = bulletToSign.dot(billboardForward);
+                    
+                    // For debugging
+                    if (Math.random() < 0.002) {
+                        console.log(`Billboard ${billboard.id} dimensions: ${billboardWidth}x${billboardHeight}`);
+                        console.log(`Sign dimensions: ${signHalfWidth * 2}x${signHalfHeight * 2}`);
+                        console.log(`Local position relative to sign: (${localX.toFixed(2)}, ${localY.toFixed(2)}, ${localZ.toFixed(2)})`);
                     }
                     
-                    // Increase hit radius significantly for the taller billboard structure
-                    const hitRadius = 3.0; // Increased from 1.5 to better match the larger structure
+                    // First do a distance check to the sign center (optimization)
+                    const maxDistance = Math.max(signHalfWidth, signHalfHeight) + 1.0; // Add a small margin
                     
-                    // If close enough, consider it a hit
-                    if (distance < hitRadius) {
-                        console.log(`Hit detected! Distance: ${distance.toFixed(2)}, Billboard index: ${j}`);
+                    // Check if bullet is too far from sign center to possibly hit
+                    if (bulletToSign.length() > maxDistance * 2) {
+                        continue; // Skip detailed collision check
+                    }
+                    
+                    // Now check if bullet is within the sign's bounds, allowing for some margin
+                    // Use a thicker Z bounds to ensure hits from both sides
+                    const margin = 0.5; // Additional margin to make hitting easier
+                    const isHit = (
+                        Math.abs(localX) <= signHalfWidth + margin &&
+                        Math.abs(localY) <= signHalfHeight + margin &&
+                        Math.abs(localZ) <= 0.5 + margin // Sign thickness + margin
+                    );
+                    
+                    // Leg hit detection (simpler)
+                    const legHit = !isHit && (
+                        // Left leg
+                        (Math.abs(localX + 1.2 * widthScale) < 0.2 + margin && 
+                         localY < signY && localY > -2.0 * heightScale) ||
+                        // Right leg
+                        (Math.abs(localX - 1.2 * widthScale) < 0.2 + margin && 
+                         localY < signY && localY > -2.0 * heightScale)
+                    );
+                    
+                    // Check for hit on either sign or legs
+                    if (isHit || legHit) {
+                        console.log(`Hit detected on ${isHit ? 'sign' : 'leg'} of billboard ${billboard.id}!`);
+                        console.log(`Local hit position: (${localX.toFixed(2)}, ${localY.toFixed(2)}, ${localZ.toFixed(2)})`);
                         
                         // Store the bullet position before removing it
                         const bulletPosition = bullet.position.clone();
                         
-                        // Remove bullet from scene and array FIRST
+                        // Remove bullet from scene and array
                         this.scene.remove(bullet);
                         this.bullets.splice(i, 1);
                         
-                        // THEN create explosion at the stored bullet position
+                        // Create explosion at the impact point
                         this.createBulletImpactEffect(bulletPosition);
                         
                         // Show hit effect and reduce billboard health

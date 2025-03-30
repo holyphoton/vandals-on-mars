@@ -286,5 +286,29 @@
     "shootingAmmo": 199,
     "billboardAmmo": 3,
     "lastUpdate": 1743315350726
+  },
+  "player_17726_idtyq": {
+    "username": "M1",
+    "billboardText": "Grow",
+    "position": {
+      "x": -39.415733661286865,
+      "y": 61.473012159740406,
+      "z": 70.92748914173481
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743315785879
+  },
+  "player_58902_ekoqi": {
+    "username": "M1",
+    "billboardText": "Grow 1",
+    "position": {
+      "x": -65.85581533775871,
+      "y": -38.40193423312508,
+      "z": 67.46512457080145
+    },
+    "shootingAmmo": 148,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743316056909
   }
 }
