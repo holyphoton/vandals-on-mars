@@ -1230,24 +1230,75 @@ class ShooterGun extends Gun {
             let newWidth = Math.min(currentWidth + growthAmount, maxSize);
             let newHeight = Math.min(currentHeight + growthAmount, maxSize);
             
-            // Update billboard dimensions
+            // Update billboard dimensions in the data object
             billboard.width = newWidth;
             billboard.height = newHeight;
             
             console.log(`Billboard ${billboard.id} grown to ${billboard.width}x${billboard.height}`);
             
-            // Update the mesh scale to reflect new size
-            // We scale based on the ratio of new size to start size
+            // Calculate scale factors based on ratio to starting size
             const startSize = CONFIG.billboard.startSize;
             const widthScale = newWidth / startSize;
             const heightScale = newHeight / startSize;
             
-            // Scale the sign mesh (first child of the billboard group)
-            const signMesh = billboard.mesh.children[0];
+            // Get information about the planet
+            let globeCenter = new THREE.Vector3(0, 0, 0);   // Default center
+            let globeRadius = 100; // Default radius
+            
+            if (this.globe && this.globe.globe) {
+                globeCenter = this.globe.globe.position.clone();
+                globeRadius = this.globe.radius || 100;
+            }
+            
+            // Calculate the original surface normal and position
+            // This is the direction from center to the billboard
+            const surfaceNormal = new THREE.Vector3().subVectors(billboard.position, globeCenter).normalize();
+            
+            // Calculate the exact surface position where the billboard's legs should be planted
+            const surfacePosition = globeCenter.clone().add(
+                surfaceNormal.clone().multiplyScalar(globeRadius + 0.1) // Tiny offset to prevent z-fighting
+            );
+            
+            // 1. Get all child meshes
+            const signMesh = billboard.mesh.children[0]; // Billboard panel
+            const leftLeg = billboard.mesh.children[1];  // Left leg 
+            const rightLeg = billboard.mesh.children[2]; // Right leg
+            
+            // 2. Scale the sign mesh for width and height
             if (signMesh) {
-                // Scale just the billboard panel, not the entire structure
                 signMesh.scale.set(widthScale, heightScale, 1);
             }
+            
+            // 3. Scale the legs for height (maintain their width)
+            if (leftLeg && rightLeg) {
+                // Scale legs for height
+                leftLeg.scale.y = heightScale;
+                rightLeg.scale.y = heightScale;
+                
+                // Adjust leg positions to maintain proportional distance from center
+                leftLeg.position.x = -1.2 * widthScale;
+                rightLeg.position.x = 1.2 * widthScale;
+                
+                // Adjust sign position to sit on top of the taller legs
+                signMesh.position.y = 2.8 * heightScale;
+            }
+            
+            // 4. Position the entire billboard mesh precisely
+            
+            // The critical part: calculate how far from the surface the CENTER of the billboard should be
+            // This ensures the LEGS remain exactly at the surface position
+            const originalHeight = 4.0; // Original height in the model
+            const totalHeight = originalHeight * heightScale; // New scaled height
+            const centerOffset = totalHeight / 2; // Distance from base to center
+            
+            // Position the billboard with its base exactly at the surface position
+            // and its center offset outward along the surface normal
+            billboard.mesh.position.copy(surfacePosition);
+            billboard.mesh.position.add(surfaceNormal.clone().multiplyScalar(centerOffset));
+            
+            // Update the billboard's stored position
+            billboard.position = billboard.mesh.position.clone();
+            billboard.quaternion = billboard.mesh.quaternion.clone();
             
             // Sync the updated billboard with the server
             if (window.game && typeof window.game.syncBillboardData === 'function') {

@@ -241,14 +241,26 @@
   },
   "player_53236_dggko": {
     "username": "M1",
-    "billboardText": "Grow",
+    "billboardText": "M1's Turf",
     "position": {
-      "x": 67.6877398845308,
-      "y": 39.98673124384274,
-      "z": -64.67357415325667
+      "x": 43.20087252610141,
+      "y": 51.83649201381204,
+      "z": -76.2227177991282
     },
-    "shootingAmmo": 188,
-    "billboardAmmo": 2,
-    "lastUpdate": 1743314032955
+    "shootingAmmo": 152,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743314503668
+  },
+  "player_16399_voojr": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": -39.84609386472646,
+      "y": 48.6724672858541,
+      "z": 80.04073795281295
+    },
+    "shootingAmmo": 173,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743314930515
   }
 }
