@@ -181,7 +181,14 @@ function loadPowerupData() {
       const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
       if (data) {
         powerups = JSON.parse(data);
-        console.log(`Loaded ${powerups.length} powerups from ${POWERUP_DATA_FILE}`);
+        
+        // Reset timestamps for all loaded powerups to prevent immediate expiration
+        const now = Date.now();
+        powerups.forEach(powerup => {
+          powerup.createdAt = now;
+        });
+        
+        console.log(`Loaded ${powerups.length} powerups from ${POWERUP_DATA_FILE} (timestamps reset)`);
         
         // Organize powerups by type
         powerupsByType = {};
@@ -196,6 +203,9 @@ function loadPowerupData() {
         for (const type in powerupsByType) {
           console.log(`Loaded ${powerupsByType[type].length} powerups of type ${type}`);
         }
+        
+        // Save with updated timestamps
+        savePowerupData();
       } else {
         powerups = [];
         powerupsByType = {};
@@ -304,7 +314,7 @@ async function loadPowerupConfig() {
             color: "#FF5500",
             size: 1.5,
             text: "Ammo",
-            lifespan: 300000
+            lifespan: null
           },
           {
             type: "billboard_ammo",
@@ -313,7 +323,7 @@ async function loadPowerupConfig() {
             color: "#33CC33",
             size: 1.5,
             text: "Billboard",
-            lifespan: 300000
+            lifespan: null
           }
         ]
       };
@@ -334,7 +344,7 @@ async function loadPowerupConfig() {
           color: "#FF5500",
           size: 1.5,
           text: "Ammo",
-          lifespan: 300000
+          lifespan: null
         },
         {
           type: "billboard_ammo",
@@ -343,7 +353,7 @@ async function loadPowerupConfig() {
           color: "#33CC33",
           size: 1.5,
           text: "Billboard",
-          lifespan: 300000
+          lifespan: null
         }
       ]
     };
@@ -762,7 +772,7 @@ function spawnPowerupOfType(powerupType) {
       text: typeConfig.text || powerupType,
       effectAmount: typeConfig.effectAmount,
       effectDuration: typeConfig.effectDuration,
-      lifespan: typeConfig.lifespan || 300000, // 5 minutes default
+      lifespan: typeConfig.lifespan || null, // 24 hours default
       createdAt: Date.now(),
       isCollected: false
     };
@@ -1266,15 +1276,6 @@ server.on('connection', (socket) => {
           });
         }
       }
-      else if (data.type === 'request_billboards') {
-        // Send all stored billboards to the requesting client
-        const response = {
-          type: 'all_billboards',
-          billboards: billboards
-        };
-        socket.send(JSON.stringify(response));
-        console.log(`Sent ${billboards.length} billboards to requesting client`);
-      }
       // Handle player data persistence
       else if (data.type === 'player_save_data') {
         if (data.playerId) {
@@ -1431,6 +1432,30 @@ server.on('connection', (socket) => {
         } else {
           console.warn(`Powerup ${powerupId} not found for collection by ${playerId}`);
         }
+      }
+      // Handle request_billboards message
+      else if (data.type === 'request_billboards') {
+        // Ensure that bot billboards are included in the billboards array
+        // First, check if we might be missing some bot billboards
+        for (const botBillboard of botBillboards) {
+          const found = billboards.some(b => b.id === botBillboard.id);
+          if (!found) {
+            console.log(`Adding missing bot billboard ${botBillboard.id} to main billboards array`);
+            billboards.push(botBillboard);
+          }
+        }
+        
+        // Send all stored billboards to the requesting client
+        const response = {
+          type: 'all_billboards',
+          billboards: billboards
+        };
+        socket.send(JSON.stringify(response));
+        
+        // Log details about what we're sending for debugging
+        const botCount = billboards.filter(b => b.id && b.id.startsWith('bot_')).length;
+        const playerCount = billboards.length - botCount;
+        console.log(`Sent ${billboards.length} billboards to requesting client (${playerCount} player, ${botCount} bot)`);
       }
 
       // Broadcast the general message to all other clients for other message types
