@@ -17,9 +17,6 @@ const billboards = [];
 // Store bot billboards separately
 const botBillboards = [];
 
-// Store powerups separately
-const powerups = [];
-
 // Store player data for persistence
 const playerData = {};
 
@@ -32,8 +29,12 @@ const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
 // Bot billboard data file path
 const BOT_BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data-bots.json');
 
-// Powerup data file path
+// Bot configuration file path
+const BOT_CONFIG_FILE = path.join(__dirname, 'code', 'bot-config.json');
+
+// Powerup related constants
 const POWERUP_DATA_FILE = path.join(__dirname, 'powerups-data.json');
+const POWERUP_CONFIG_FILE = path.join(__dirname, 'code', 'powerups-config.json');
 
 // Bot configuration
 let botConfig = {
@@ -44,28 +45,20 @@ let botConfig = {
   checkInterval: 3000
 };
 
-// Powerup configuration
-let powerupConfig = {
-  spawnInterval: 5000,
-  maxPowerups: 10,
-  spawnChance: 0.3,
-  minDistance: 20,
-  checkInterval: 5000,
-  types: []
-};
-
 // Bot spawning control variables
 let botSpawningTimer = null;
 let botCheckTimer = null;
 let isSpawningBots = false;
 
-// Powerup spawning control variables
-let powerupSpawningTimer = null;
-let powerupCheckTimer = null;
-let isSpawningPowerups = false;
-
 // Generate and store terrain data
 let terrainData = null;
+
+// Powerup related variables
+let powerupConfig = {};
+let powerups = [];
+let isSpawningPowerups = false;
+let powerupSpawningTimer = null;
+let powerupCheckTimer = null;
 
 // Load saved player data from file
 function loadPlayerData() {
@@ -173,14 +166,43 @@ function loadBotBillboardData() {
 // Save bot billboard data to file
 function saveBotBillboardData() {
   try {
-    fs.writeFileSync(
-      BOT_BILLBOARD_DATA_FILE,
-      JSON.stringify(botBillboards, null, 2),
-      'utf8'
-    );
-    console.log('Bot billboard data saved to file');
+    fs.writeFileSync(BOT_BILLBOARD_DATA_FILE, JSON.stringify(botBillboards, null, 2));
+    console.log(`Saved ${botBillboards.length} bot billboards to ${BOT_BILLBOARD_DATA_FILE}`);
   } catch (error) {
     console.error('Error saving bot billboard data:', error);
+  }
+}
+
+// Load powerups from file
+function loadPowerupData() {
+  try {
+    if (fs.existsSync(POWERUP_DATA_FILE)) {
+      const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
+      if (data) {
+        powerups = JSON.parse(data);
+        console.log(`Loaded ${powerups.length} powerups from ${POWERUP_DATA_FILE}`);
+      } else {
+        powerups = [];
+        console.log('No powerup data found, initializing with empty array');
+      }
+    } else {
+      powerups = [];
+      console.log(`${POWERUP_DATA_FILE} not found, initializing with empty array`);
+      savePowerupData();
+    }
+  } catch (error) {
+    console.error('Error loading powerup data:', error);
+    powerups = [];
+  }
+}
+
+// Save powerups to file
+function savePowerupData() {
+  try {
+    fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify(powerups, null, 2));
+    console.log(`Saved ${powerups.length} powerups to ${POWERUP_DATA_FILE}`);
+  } catch (error) {
+    console.error('Error saving powerup data:', error);
   }
 }
 
@@ -207,9 +229,8 @@ function initializeTerrainData() {
 // Load bot configuration from the bot-config.json file
 async function loadBotConfig() {
   try {
-    const configFilePath = path.join(__dirname, 'code', 'bot-config.json');
-    if (fs.existsSync(configFilePath)) {
-      const data = fs.readFileSync(configFilePath, 'utf8');
+    if (fs.existsSync(BOT_CONFIG_FILE)) {
+      const data = fs.readFileSync(BOT_CONFIG_FILE, 'utf8');
       const parsedConfig = JSON.parse(data);
       
       // Update the bot configuration
@@ -242,69 +263,72 @@ async function loadBotConfig() {
   }
 }
 
-// Load saved powerup data from file
-function loadPowerupData() {
-  try {
-    if (fs.existsSync(POWERUP_DATA_FILE)) {
-      const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
-      const parsedData = JSON.parse(data);
-      
-      // Clear existing powerups and load from file
-      powerups.length = 0;
-      
-      // Copy all powerups from file
-      parsedData.forEach(powerup => {
-        powerups.push(powerup);
-      });
-      
-      console.log(`Loaded ${powerups.length} powerups from file`);
-    } else {
-      console.log('No powerup data file found, starting with empty powerups');
-    }
-  } catch (error) {
-    console.error('Error loading powerup data:', error);
-  }
-}
-
-// Save powerup data to file
-function savePowerupData() {
-  try {
-    fs.writeFileSync(
-      POWERUP_DATA_FILE,
-      JSON.stringify(powerups, null, 2),
-      'utf8'
-    );
-    console.log('Powerup data saved to file');
-  } catch (error) {
-    console.error('Error saving powerup data:', error);
-  }
-}
-
-// Load powerup configuration from the powerups-config.json file
+// Load powerup configuration from file
 async function loadPowerupConfig() {
   try {
-    const configFilePath = path.join(__dirname, 'code', 'powerups-config.json');
-    if (fs.existsSync(configFilePath)) {
-      const data = fs.readFileSync(configFilePath, 'utf8');
-      const parsedConfig = JSON.parse(data);
-      
-      // Update the powerup configuration
-      powerupConfig = parsedConfig;
-      
-      console.log('Powerup configuration loaded successfully:');
-      console.log(`- Maximum powerups: ${powerupConfig.maxPowerups}`);
-      console.log(`- Check interval: ${powerupConfig.checkInterval}ms`);
-      console.log(`- Spawn interval: ${powerupConfig.spawnInterval}ms`);
-      console.log(`- Powerup types: ${powerupConfig.types.length}`);
-      
-      return powerupConfig;
+    if (fs.existsSync(POWERUP_CONFIG_FILE)) {
+      const data = fs.readFileSync(POWERUP_CONFIG_FILE, 'utf8');
+      powerupConfig = JSON.parse(data);
+      console.log('Powerup configuration loaded successfully');
     } else {
-      console.warn('Powerup configuration file not found, using defaults');
-      return powerupConfig;
+      console.log('Powerup configuration file not found, using default values');
+      powerupConfig = {
+        spawnInterval: 3000,
+        maxPowerups: 20,
+        spawnChance: 0.3,
+        minDistance: 20,
+        checkInterval: 3000,
+        types: [
+          {
+            type: "shooting_ammo",
+            weight: 75,
+            effectAmount: 100,
+            color: "#FF5500",
+            size: 1.5,
+            text: "Ammo",
+            lifespan: 300000
+          },
+          {
+            type: "billboard_ammo",
+            weight: 25,
+            effectAmount: 1,
+            color: "#33CC33",
+            size: 1.5,
+            text: "Billboard",
+            lifespan: 300000
+          }
+        ]
+      };
     }
   } catch (error) {
     console.error('Error loading powerup configuration:', error);
-    return powerupConfig;
+    powerupConfig = {
+      spawnInterval: 3000,
+      maxPowerups: 20,
+      spawnChance: 0.3,
+      minDistance: 20,
+      checkInterval: 3000,
+      types: [
+        {
+          type: "shooting_ammo",
+          weight: 75,
+          effectAmount: 100,
+          color: "#FF5500",
+          size: 1.5,
+          text: "Ammo",
+          lifespan: 300000
+        },
+        {
+          type: "billboard_ammo",
+          weight: 25,
+          effectAmount: 1,
+          color: "#33CC33",
+          size: 1.5,
+          text: "Billboard",
+          lifespan: 300000
+        }
+      ]
+    };
   }
 }
 
@@ -525,6 +549,13 @@ function generateBotId() {
   return `bot_${timestamp}_${random}`;
 }
 
+// Generate a unique ID for powerups
+function generatePowerupId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `powerup_${timestamp}_${random}`;
+}
+
 // Spawn a single bot billboard
 function spawnBotBillboard() {
   try {
@@ -613,6 +644,118 @@ function broadcastBillboardData(billboardData) {
   });
 }
 
+// Spawn a single powerup
+function spawnPowerup() {
+  try {
+    // Check if we've reached the maximum before attempting to spawn
+    if (powerups.length >= powerupConfig.maxPowerups) {
+      console.log(`Maximum powerup count (${powerupConfig.maxPowerups}) reached, not spawning a new powerup`);
+      
+      // Stop the spawning process if it's still running
+      if (isSpawningPowerups) {
+        stopSpawningPowerups();
+      }
+      
+      return null;
+    }
+    
+    // Calculate total weight for weighted random selection
+    const types = powerupConfig.types || [];
+    if (types.length === 0) {
+      console.error('No powerup types configured, cannot spawn');
+      return null;
+    }
+    
+    // Calculate total weight
+    const totalWeight = types.reduce((sum, type) => sum + (type.weight || 1), 0);
+    
+    // Select a random powerup type based on weights
+    let randomValue = Math.random() * totalWeight;
+    let selectedType = null;
+    
+    for (const type of types) {
+      randomValue -= (type.weight || 1);
+      if (randomValue <= 0) {
+        selectedType = type;
+        break;
+      }
+    }
+    
+    // Fallback if somehow no type was selected
+    if (!selectedType) {
+      selectedType = types[0];
+    }
+    
+    // Generate a random position on the globe surface
+    const basePosition = getRandomPositionOnGlobe();
+    
+    // Calculate normalized direction from center to position (normal vector)
+    const length = Math.sqrt(
+      basePosition.x * basePosition.x + 
+      basePosition.y * basePosition.y + 
+      basePosition.z * basePosition.z
+    );
+    
+    const normalVector = {
+      x: basePosition.x / length,
+      y: basePosition.y / length,
+      z: basePosition.z / length
+    };
+    
+    // Add elevation - make powerup float 2 units above surface
+    const floatingOffset = 2.0;
+    const position = {
+      x: basePosition.x + normalVector.x * floatingOffset,
+      y: basePosition.y + normalVector.y * floatingOffset,
+      z: basePosition.z + normalVector.z * floatingOffset
+    };
+    
+    // Calculate quaternion for orientation
+    const quaternion = calculateQuaternion(position);
+    
+    // Create the powerup data
+    const powerupData = {
+      id: generatePowerupId(),
+      type: selectedType.type,
+      position: position,
+      quaternion: quaternion,
+      size: selectedType.size || 1.5,
+      color: selectedType.color || "#FFFFFF",
+      text: selectedType.text || selectedType.type,
+      effectAmount: selectedType.effectAmount,
+      effectDuration: selectedType.effectDuration,
+      lifespan: selectedType.lifespan || 300000, // 5 minutes default
+      createdAt: Date.now(),
+      isCollected: false
+    };
+    
+    // Add to powerups array
+    powerups.push(powerupData);
+    
+    console.log(`Powerup spawned: "${powerupData.type}" (${powerups.length}/${powerupConfig.maxPowerups})`);
+    
+    // Save powerups to file
+    savePowerupData();
+    
+    // Broadcast to all connected clients
+    broadcastPowerupData(powerupData);
+    
+    return powerupData;
+  } catch (error) {
+    console.error('Error spawning powerup:', error);
+    return null;
+  }
+}
+
+// Broadcast powerup data to all connected clients
+function broadcastPowerupData(powerupData) {
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(powerupData));
+    }
+  });
+}
+
 // Check if more powerups need to be spawned
 function checkPowerups() {
   // Get the current count of powerups
@@ -635,12 +778,40 @@ function checkPowerups() {
     // Save the updated powerups
     savePowerupData();
     
+    // Broadcast removal to all clients
+    for (const powerup of excess) {
+      broadcastPowerupRemoval(powerup.id);
+    }
+    
     // Stop any active spawning
     if (isSpawningPowerups) {
       stopSpawningPowerups();
     }
     
     return;
+  }
+  
+  // Check for expired powerups
+  const now = Date.now();
+  const expiredPowerups = powerups.filter(powerup => 
+    powerup.lifespan && (now - powerup.createdAt > powerup.lifespan)
+  );
+  
+  if (expiredPowerups.length > 0) {
+    console.log(`Found ${expiredPowerups.length} expired powerups, removing them`);
+    
+    // Remove expired powerups from the array
+    powerups = powerups.filter(powerup => 
+      !(powerup.lifespan && (now - powerup.createdAt > powerup.lifespan))
+    );
+    
+    // Save the updated powerups
+    savePowerupData();
+    
+    // Broadcast removal to all clients
+    for (const powerup of expiredPowerups) {
+      broadcastPowerupRemoval(powerup.id);
+    }
   }
   
   // If we need to spawn more powerups
@@ -662,6 +833,20 @@ function checkPowerups() {
   }
 }
 
+// Broadcast powerup removal to all connected clients
+function broadcastPowerupRemoval(powerupId) {
+  const removalData = {
+    type: 'powerup_removed',
+    id: powerupId
+  };
+  
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(removalData));
+    }
+  });
+}
+
 // Start spawning powerups at the specified interval
 function startSpawningPowerups() {
   if (isSpawningPowerups) return;
@@ -681,8 +866,11 @@ function startSpawningPowerups() {
       return;
     }
     
-    // Otherwise spawn another powerup
-    spawnPowerup();
+    // Apply spawn chance
+    if (Math.random() < (powerupConfig.spawnChance || 1.0)) {
+      // Spawn another powerup
+      spawnPowerup();
+    }
   }, powerupConfig.spawnInterval);
 }
 
@@ -698,110 +886,6 @@ function stopSpawningPowerups() {
   }
   
   isSpawningPowerups = false;
-}
-
-// Generate a unique ID for powerups
-function generatePowerupId() {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
-  return `powerup_${timestamp}_${random}`;
-}
-
-// Select a random powerup type based on weights
-function selectRandomPowerupType() {
-  // If no types defined, return null
-  if (!powerupConfig.types || powerupConfig.types.length === 0) {
-    return null;
-  }
-  
-  // Calculate total weight
-  const totalWeight = powerupConfig.types.reduce((sum, type) => sum + (type.weight || 1), 0);
-  
-  // Generate random value between 0 and totalWeight
-  const random = Math.random() * totalWeight;
-  
-  // Find the selected type
-  let cumulativeWeight = 0;
-  for (const type of powerupConfig.types) {
-    cumulativeWeight += (type.weight || 1);
-    if (random < cumulativeWeight) {
-      return type;
-    }
-  }
-  
-  // Default to first type if something goes wrong
-  return powerupConfig.types[0];
-}
-
-// Spawn a single powerup
-function spawnPowerup() {
-  try {
-    // Check if we've reached the maximum before attempting to spawn
-    if (powerups.length >= powerupConfig.maxPowerups) {
-      console.log(`Maximum powerup count (${powerupConfig.maxPowerups}) reached, not spawning a new powerup`);
-      
-      // Stop the spawning process if it's still running
-      if (isSpawningPowerups) {
-        stopSpawningPowerups();
-      }
-      
-      return null;
-    }
-    
-    // Select a random powerup type based on weights
-    const powerupType = selectRandomPowerupType();
-    if (!powerupType) {
-      console.error('No powerup types defined in configuration');
-      return null;
-    }
-    
-    // Generate a random position
-    const position = getRandomPositionOnGlobe();
-    
-    // Calculate quaternion for orientation
-    const quaternion = calculateQuaternion(position);
-    
-    // Create the powerup data
-    const powerupData = {
-      id: generatePowerupId(),
-      type: powerupType.type,
-      position: position,
-      quaternion: quaternion,
-      size: powerupType.size || 1,
-      color: powerupType.color || '#FFFFFF',
-      text: powerupType.text || '',
-      effectAmount: powerupType.effectAmount || 0,
-      lifespan: powerupType.lifespan || null,
-      createdAt: Date.now(),
-      isCollected: false
-    };
-    
-    // Add to powerups array
-    powerups.push(powerupData);
-    
-    console.log(`Powerup spawned: "${powerupType.type}" (${powerups.length}/${powerupConfig.maxPowerups})`);
-    
-    // Save powerups to file
-    savePowerupData();
-    
-    // Broadcast to all connected clients
-    broadcastPowerupData(powerupData);
-    
-    return powerupData;
-  } catch (error) {
-    console.error('Error spawning powerup:', error);
-    return null;
-  }
-}
-
-// Broadcast powerup data to all connected clients
-function broadcastPowerupData(powerupData) {
-  powerupData.messageType = 'powerup_data'; // Add message type for client identification
-  server.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(powerupData));
-    }
-  });
 }
 
 // Initialize terrain data and player data at server startup
@@ -919,6 +1003,24 @@ const httpServer = http.createServer((req, res) => {
       res.end(JSON.stringify({ success: false, error: error.message }));
     }
   }
+  // Serve powerups-config.json
+  else if (parsedUrl.pathname === '/powerups-config.json' && req.method === 'GET') {
+    try {
+      const configFilePath = path.join(__dirname, 'code', 'powerups-config.json');
+      if (fs.existsSync(configFilePath)) {
+        const data = fs.readFileSync(configFilePath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(data);
+      } else {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Powerup configuration not found' }));
+      }
+    } catch (error) {
+      console.error('Error serving powerup config:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+  }
   else {
     // Handle 404 for other endpoints
     res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -933,21 +1035,7 @@ httpServer.listen(8091, () => {
 
 // WebSocket server
 server.on('connection', (socket) => {
-  console.log('New client connected');
-  
-  // Send all existing billboards to the new client
-  const allBillboardsMessage = JSON.stringify({
-    type: 'all_billboards',
-    billboards: billboards
-  });
-  socket.send(allBillboardsMessage);
-  
-  // Send all existing powerups to the new client
-  const allPowerupsMessage = JSON.stringify({
-    type: 'all_powerups',
-    powerups: powerups
-  });
-  socket.send(allPowerupsMessage);
+  console.log('Player connected');
 
   socket.on('message', (message) => {
     try {
@@ -1215,7 +1303,34 @@ server.on('connection', (socket) => {
         }
       }
       else if (data.type === 'powerup_collected') {
-        handlePowerupCollected(socket, data);
+        // Process powerup collection
+        const powerupId = data.powerupId;
+        const playerId = data.playerId;
+        
+        console.log(`Player ${playerId} collected powerup ${powerupId}`);
+        
+        // Find the powerup in our array
+        const powerupIndex = powerups.findIndex(p => p.id === powerupId);
+        
+        if (powerupIndex !== -1) {
+          // Mark as collected
+          powerups[powerupIndex].isCollected = true;
+          powerups[powerupIndex].collectedBy = playerId;
+          powerups[powerupIndex].collectedAt = Date.now();
+          
+          // Remove from the array
+          const removedPowerup = powerups.splice(powerupIndex, 1)[0];
+          
+          console.log(`Removed powerup ${powerupId} from server (collected by ${playerId})`);
+          
+          // Save updated powerup data
+          savePowerupData();
+          
+          // Broadcast removal to all clients
+          broadcastPowerupRemoval(powerupId);
+        } else {
+          console.warn(`Powerup ${powerupId} not found for collection by ${playerId}`);
+        }
       }
 
       // Broadcast the general message to all other clients for other message types
@@ -1246,53 +1361,3 @@ server.on('connection', (socket) => {
     console.log('Player disconnected');
   });
 });
-
-/**
- * Handle powerup collected message from client
- * @param {WebSocket} socket - Client WebSocket connection
- * @param {Object} data - Powerup collected data
- */
-function handlePowerupCollected(socket, data) {
-  try {
-    // Validate data
-    if (!data.powerupId) {
-      console.warn('Invalid powerup collected data (missing powerupId)');
-      return;
-    }
-    
-    console.log(`Powerup collected by player ${data.playerId}: ${data.powerupId} (${data.powerupType})`);
-    
-    // Find the powerup in our collection
-    const powerupIndex = powerups.findIndex(p => p.id === data.powerupId);
-    
-    if (powerupIndex === -1) {
-      console.warn(`Powerup ${data.powerupId} not found, cannot mark as collected`);
-      return;
-    }
-    
-    // Mark as collected
-    powerups[powerupIndex].isCollected = true;
-    powerups[powerupIndex].collectedBy = data.playerId;
-    powerups[powerupIndex].collectedAt = Date.now();
-    
-    // Save updated powerups data
-    savePowerupData();
-    
-    // Broadcast the collection to all clients
-    server.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({
-          type: 'powerup_collected',
-          powerupId: data.powerupId,
-          powerupType: data.powerupType,
-          playerId: data.playerId
-        }));
-      }
-    });
-    
-    // Schedule a check for new powerups
-    setTimeout(checkPowerups, 1000);
-  } catch (error) {
-    console.error('Error handling powerup collected:', error);
-  }
-}

@@ -1,9 +1,9 @@
 {
-    "spawnInterval": 5000,
-    "maxPowerups": 10,
+    "spawnInterval": 3000,
+    "maxPowerups": 50,
     "spawnChance": 0.3,
     "minDistance": 20,
-    "checkInterval": 5000,
+    "checkInterval": 3000,
     "types": [
         {
             "type": "shooting_ammo",

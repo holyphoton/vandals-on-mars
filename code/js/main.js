@@ -48,20 +48,6 @@ class Game {
         // WebSocket connection for multiplayer
         this.socket = null;
         this.connectedToServer = false;
-        this.playerId = null;
-        this.lastSyncTime = 0;
-        this.syncInterval = 100; // ms
-        
-        // Message handlers registry
-        this.messageHandlers = new Map();
-        
-        // Debugging flags
-        this.debugging = {
-          showColliders: false,
-          wireframe: false
-        };
-        
-        // Game objects
         this.billboards = []; // Global billboard data store
         
         // Player persistence system
@@ -1219,21 +1205,6 @@ class Game {
      * @param {Object} data - The parsed message data
      */
     processServerMessage(data) {
-        // First check for registered message handlers
-        if (data.type && this.messageHandlers && this.messageHandlers.has(data.type)) {
-            const handler = this.messageHandlers.get(data.type);
-            handler(data);
-            return;
-        }
-        
-        // Check for messageType (alternative field used by powerups)
-        if (data.messageType && this.messageHandlers && this.messageHandlers.has(data.messageType)) {
-            const handler = this.messageHandlers.get(data.messageType);
-            handler(data);
-            return;
-        }
-
-        // Process built-in message types
         switch (data.type) {
             case 'billboard_data':
                 this.processBillboardData(data);
@@ -1250,17 +1221,21 @@ class Game {
             case 'terrain_data':
                 this.processTerrainData(data);
                 break;
-            case 'all_powerups':
-                this.processAllPowerups(data);
+            case 'powerup_removed':
+                this.processPowerupRemoval(data);
                 break;
-            case 'powerup_data':
+            // Handle powerup data - forwarded directly to powerupManager
+            case 'shooting_ammo':
+            case 'billboard_ammo':
                 this.processPowerupData(data);
                 break;
-            case 'powerup_collected':
-                this.processPowerupCollected(data);
-                break;
             default:
-                console.warn('Unknown message type:', data.type);
+                // Check if this might be a powerup even without a specific type prefix
+                if (data.id && data.id.startsWith('powerup_') && data.position && data.type) {
+                    this.processPowerupData(data);
+                } else {
+                    console.warn('Unknown message type:', data.type);
+                }
         }
     }
     
@@ -1735,57 +1710,45 @@ class Game {
     }
 
     /**
-     * Process all powerups received from server
-     * @param {Object} data - The all_powerups message data
-     */
-    processAllPowerups(data) {
-        console.log(`Received ${data.powerups ? data.powerups.length : 0} powerups from server`);
-        
-        // Forward to PowerupManager if available
-        if (this.powerupManager) {
-            this.powerupManager.handleAllPowerups(data);
-        } else {
-            console.warn('PowerupManager not available to process powerups from server');
-        }
-    }
-    
-    /**
-     * Process powerup data from server
-     * @param {Object} data - The powerup data
+     * Process powerup data from the server
+     * @param {Object} data - Powerup data
      */
     processPowerupData(data) {
-        // Forward to PowerupManager if available
-        if (this.powerupManager) {
+        // Only process if we have a powerupManager
+        if (!this.powerupManager) {
+            console.warn('Cannot process powerup data - powerup manager not initialized');
+            return;
+        }
+        
+        console.log(`Received powerup data: ${data.type} (${data.id})`);
+        
+        // Forward to powerupManager to handle
+        if (typeof this.powerupManager.handlePowerupData === 'function') {
             this.powerupManager.handlePowerupData(data);
         } else {
-            console.warn('PowerupManager not available to process powerup from server');
-        }
-    }
-    
-    /**
-     * Process powerup collected message from server
-     * @param {Object} data - The powerup_collected message data
-     */
-    processPowerupCollected(data) {
-        // Forward to PowerupManager if available
-        if (this.powerupManager) {
-            this.powerupManager.handlePowerupCollected(data);
-        } else {
-            console.warn('PowerupManager not available to process powerup collected from server');
+            console.warn('PowerupManager is missing handlePowerupData method');
         }
     }
 
     /**
-     * Register a message handler for a specific message type
-     * @param {string} type - The message type to handle
-     * @param {Function} handler - The handler function
+     * Process a powerup removal message from the server
+     * @param {Object} data - The removal message data
      */
-    addMessageHandler(type, handler) {
-        if (!this.messageHandlers) {
-            this.messageHandlers = new Map();
+    processPowerupRemoval(data) {
+        console.log('Processing powerup removal:', data.id);
+        
+        // Check for powerup manager
+        if (!this.powerupManager) {
+            console.warn('Cannot process powerup removal - powerup manager not initialized');
+            return;
         }
-        this.messageHandlers.set(type, handler);
-        console.log(`Registered handler for message type: ${type}`);
+        
+        // Remove the powerup in the game
+        if (typeof this.powerupManager.removePowerupById === 'function') {
+            this.powerupManager.removePowerupById(data.id);
+        } else {
+            console.warn('PowerupManager is missing removePowerupById method');
+        }
     }
 }
 
