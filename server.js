@@ -240,46 +240,99 @@ function getRandomPositionOnGlobe() {
 
 // Calculate quaternion for proper billboard orientation
 function calculateQuaternion(position) {
-  // Normalized position vector (direction from center to position)
+  // Normalized position vector (direction from center to position) - this is the "up" vector
   const length = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
-  const normalizedPos = {
+  const up = {
     x: position.x / length,
     y: position.y / length,
     z: position.z / length
   };
   
-  // This is a simplified quaternion calculation for the billboard to face outward
-  // In a real implementation, you'd use proper quaternion math libraries
-  // Here we're using a simplified approach based on the normalized position
+  // Use a similar approach to what's done in the client-side placeBillboard method
+  // Find a reference vector different from up
+  // Use world up (0,1,0) as the reference unless up is too close to it
+  let reference;
+  const worldUpDot = Math.abs(up.y); // Dot product with (0,1,0)
   
-  // Find perpendicular vectors to create an orientation
-  let tangent = { x: 1, y: 0, z: 0 };
-  if (Math.abs(normalizedPos.x) > 0.9) {
-    tangent = { x: 0, y: 1, z: 0 };
+  if (worldUpDot > 0.9) {
+    // If up is too close to world up, use world right instead
+    reference = { x: 1, y: 0, z: 0 };
+  } else {
+    reference = { x: 0, y: 1, z: 0 };
   }
   
-  // Cross product to get a perpendicular vector
-  const cross = {
-    x: normalizedPos.y * tangent.z - normalizedPos.z * tangent.y,
-    y: normalizedPos.z * tangent.x - normalizedPos.x * tangent.z,
-    z: normalizedPos.x * tangent.y - normalizedPos.y * tangent.x
+  // Calculate right vector (cross product of up and reference)
+  const right = {
+    x: up.y * reference.z - up.z * reference.y,
+    y: up.z * reference.x - up.x * reference.z,
+    z: up.x * reference.y - up.y * reference.x
   };
   
-  // Normalize the cross product
-  const crossLength = Math.sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
-  const normalizedCross = {
-    x: cross.x / crossLength,
-    y: cross.y / crossLength,
-    z: cross.z / crossLength
+  // Normalize right vector
+  const rightLength = Math.sqrt(right.x * right.x + right.y * right.y + right.z * right.z);
+  const rightNorm = {
+    x: right.x / rightLength,
+    y: right.y / rightLength,
+    z: right.z / rightLength
   };
   
-  // Create a simple approximation of the quaternion
-  // In a production environment, use a proper quaternion library
+  // Calculate forward vector (cross product of right and up)
+  const forward = {
+    x: rightNorm.y * up.z - rightNorm.z * up.y,
+    y: rightNorm.z * up.x - rightNorm.x * up.z,
+    z: rightNorm.x * up.y - rightNorm.y * up.x
+  };
+  
+  // Create a rotation matrix from these three orthogonal vectors
+  // This is similar to THREE.Matrix4().makeBasis() on the client
+  // Matrix rows are rightNorm, up, forward (for a right-handed coordinate system)
+  const rotMatrix = [
+    rightNorm.x, up.x, forward.x, 0,
+    rightNorm.y, up.y, forward.y, 0,
+    rightNorm.z, up.z, forward.z, 0,
+    0, 0, 0, 1
+  ];
+  
+  // Convert rotation matrix to quaternion using the same algorithm as THREE.js
+  // Algorithm from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+  const m11 = rotMatrix[0], m12 = rotMatrix[1], m13 = rotMatrix[2];
+  const m21 = rotMatrix[4], m22 = rotMatrix[5], m23 = rotMatrix[6];
+  const m31 = rotMatrix[8], m32 = rotMatrix[9], m33 = rotMatrix[10];
+  
+  const trace = m11 + m22 + m33;
+  let qx, qy, qz, qw;
+  
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1.0);
+    qw = 0.25 / s;
+    qx = (m32 - m23) * s;
+    qy = (m13 - m31) * s;
+    qz = (m21 - m12) * s;
+  } else if (m11 > m22 && m11 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+    qw = (m32 - m23) / s;
+    qx = 0.25 * s;
+    qy = (m12 + m21) / s;
+    qz = (m13 + m31) / s;
+  } else if (m22 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+    qw = (m13 - m31) / s;
+    qx = (m12 + m21) / s;
+    qy = 0.25 * s;
+    qz = (m23 + m32) / s;
+  } else {
+    const s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+    qw = (m21 - m12) / s;
+    qx = (m13 + m31) / s;
+    qy = (m23 + m32) / s;
+    qz = 0.25 * s;
+  }
+  
   return {
-    x: normalizedPos.x,
-    y: normalizedPos.y,
-    z: normalizedPos.z,
-    w: 1
+    x: qx,
+    y: qy,
+    z: qz,
+    w: qw
   };
 }
 
