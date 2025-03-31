@@ -436,3 +436,85 @@ function calculateQuaternion(position) {
 - `server.js`: Added comprehensive bot billboard management
 - `code/js/utils/botManager.js`: Removed client-side spawning, now receiving from server
 - `code/bot-config.json`: Centralized configuration 
+
+## Server-Side Powerup System
+
+### Overview
+Similar to the bot billboard system, the game now includes a server-managed powerup system that automatically spawns powerups across the Mars planet surface. These powerups provide gameplay benefits like ammo replenishment and are now fully managed server-side to ensure consistent behavior across all clients.
+
+### Key Components
+1. **Powerup Configuration**: 
+   - Located in `code/powerups-config.json`
+   - Controls spawn rates, maximum counts, and powerup properties
+   - Each powerup type has its own configuration for independent management
+   - Configuration includes customizable weight, lifespan, visual properties, and effect values
+
+2. **Server Management**:
+   - Powerups are spawned, tracked, and removed by the server
+   - `checkPowerups()` function ensures counts stay within configured limits
+   - Regular checks for expired powerups based on their lifespan
+   - Powerups float 2 units above the planet surface for better visibility
+   - Saved in separate `powerups-data.json` file
+
+3. **Type-specific Configuration**:
+   - Each powerup type maintains independent settings:
+     - Maximum count (`maxPowerups`)
+     - Spawn interval (`spawnInterval`)
+     - Spawn chance (`spawnChance`)
+     - Minimum distance from other powerups (`minDistance`)
+   - Different powerup types can have different spawn rates and densities
+   - Weighted random selection based on `weight` property
+
+### Powerup Data Structure
+The server maintains two data structures for powerups:
+- `powerups`: An array of all active powerups
+- `powerupsByType`: A map organizing powerups by their type for easier type-specific operations
+
+### Implementation Details
+1. **Powerup Spawning**:
+   - `spawnPowerup()`: Selects a random powerup type based on configured weights
+   - `spawnPowerupOfType()`: Spawns a specific type of powerup
+   - Each powerup type has its own spawning timer (`powerupSpawningTimers`)
+   - Powerups are positioned with proper orientation using quaternion calculation
+
+2. **Expiration & Management**:
+   - Powerups expire based on their `lifespan` property
+   - `checkPowerups()` function periodically removes expired powerups
+   - Excess powerups are trimmed if maximum count is exceeded
+   - Type-specific checks ensure each powerup type stays within its limits
+
+3. **Client Synchronization**:
+   - New powerups are broadcast to all clients via WebSocket
+   - Powerup removal events notify all clients when a powerup is collected or expires
+   - New clients receive all existing powerups on connection
+
+4. **Collection Handling**:
+   - Client sends `powerup_collected` event when a player collects a powerup
+   - Server processes the event, removes the powerup, and broadcasts the removal
+   - Both main array and type-specific arrays are updated for consistency
+
+### File Paths
+- Server management code: `server.js`
+- Powerup configuration: `code/powerups-config.json`
+- Powerup data storage: `powerups-data.json`
+- Client-side powerup code: `code/js/powerups/powerupManager.js`
+
+### Modified Files
+- `server.js`: Added comprehensive powerup management system
+- `code/js/powerups/powerupManager.js`: Updated to handle server-spawned powerups
+- `code/js/main.js`: Added powerup message handling
+- `code/powerups-config.json`: Updated for type-specific configuration
+
+### Powerup Types
+Currently, the system supports two types of powerups:
+1. **Shooting Ammo** (`shooting_ammo`):
+   - Replenishes shooting ammunition when collected
+   - Configured with higher spawn rate (60% weight)
+   - 30 maximum instances with 3-second spawn interval
+
+2. **Billboard Ammo** (`billboard_ammo`):
+   - Provides billboard placement capability when collected
+   - Configured with lower spawn rate (40% weight)
+   - 20 maximum instances with 6-second spawn interval
+
+The system is designed to be easily extensible, allowing new powerup types to be added by simply updating the configuration file. 
