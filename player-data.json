@@ -130,5 +130,17 @@
     "shootingAmmo": 200,
     "billboardAmmo": 1,
     "lastUpdate": 1743453262456
+  },
+  "player_71422_bfyfd": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -84.11752626181945,
+      "y": -43.91478071503008,
+      "z": 36.86426196661123
+    },
+    "shootingAmmo": 300,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743453509340
   }
 }

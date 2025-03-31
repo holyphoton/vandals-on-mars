@@ -519,7 +519,9 @@ class PowerupManager {
             this.removePowerup(powerup);
             return true;
         } else {
-            console.warn(`[DEBUG] Powerup ${id} not found in local collection, cannot remove`);
+            // This is often expected behavior when we collect a powerup locally 
+            // and then receive a server message to remove it
+            console.log(`[DEBUG] Powerup ${id} not found in local collection - may have already been collected`);
             return false;
         }
     }

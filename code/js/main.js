@@ -1750,12 +1750,19 @@ class Game {
             return;
         }
         
-        // Remove the powerup in the game
+        // Remove the powerup in the game - note that if this client was the one who collected
+        // the powerup, it will already be removed, which is expected behavior
         if (typeof this.powerupManager.removePowerupById === 'function') {
             console.log(`[DEBUG] Calling powerupManager.removePowerupById for powerup ID ${data.id}`);
             const result = this.powerupManager.removePowerupById(data.id);
-            console.log(`[DEBUG] Receiving removal of powerup ID ${data.id} (processed by Game class)`);
-            console.log(`[DEBUG] Removal result for powerup ${data.id}: ${result ? 'Successfully removed' : 'Not found in collection'}`);
+            
+            // Only log detailed messages for clarity
+            if (result) {
+                console.log(`[DEBUG] Receiving removal of powerup ID ${data.id} (processed by Game class)`);
+                console.log(`[DEBUG] Powerup ${data.id} successfully removed`);
+            } else {
+                console.log(`[DEBUG] Powerup ${data.id} not found for removal - likely already collected by this client`);
+            }
         } else {
             console.warn('[DEBUG] PowerupManager is missing removePowerupById method');
         }
