@@ -1869,22 +1869,18 @@ class WeaponManager {
      * Update the weapon indicator in the UI
      */
     updateWeaponIndicator() {
-        console.log("Updating weapon indicator UI");
-        
         // First, make sure the container is visible
         const weaponContainer = document.getElementById('weapon-indicator-container');
         const gameUI = document.getElementById('game-ui');
         
         if (gameUI) {
             gameUI.style.display = 'block';
-            console.log("Game UI container display set to block");
         } else {
             console.warn("Game UI container not found");
         }
         
         if (weaponContainer) {
             weaponContainer.style.display = 'flex';
-            console.log("Weapon indicator container display set to flex");
         } else {
             console.warn("Weapon indicator container not found");
         }
@@ -1893,13 +1889,6 @@ class WeaponManager {
         const shooterIndicator = document.querySelector('.gun-indicator[data-weapon="shooter"]');
         const ammoDisplay = document.querySelector('.ammo-display');
         const billboardCount = document.querySelector('.billboard-count');
-        
-        console.log("UI Elements found:", {
-            billboardIndicator: !!billboardIndicator,
-            shooterIndicator: !!shooterIndicator,
-            ammoDisplay: !!ammoDisplay,
-            billboardCount: !!billboardCount
-        });
         
         // Skip if elements don't exist yet
         if (!billboardIndicator || !shooterIndicator || !ammoDisplay || !billboardCount) {
@@ -1911,7 +1900,6 @@ class WeaponManager {
         if (this.isBillboardGunActive()) {
             billboardIndicator.classList.add('active');
             shooterIndicator.classList.remove('active');
-            console.log("Billboard gun indicator activated");
             
             // Update crosshair to billboard style
             if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
@@ -1920,7 +1908,6 @@ class WeaponManager {
         } else {
             billboardIndicator.classList.remove('active');
             shooterIndicator.classList.add('active');
-            console.log("Shooter gun indicator activated");
             
             // Update crosshair to shooter style (default)
             if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
@@ -1933,7 +1920,6 @@ class WeaponManager {
         if (ammoInfo) {
             ammoDisplay.textContent = `Ammo: ${ammoInfo.ammo}/${ammoInfo.maxAmmo}`;
             billboardCount.textContent = `Billboards: ${ammoInfo.billboards}/${ammoInfo.maxBillboards}`;
-            // console.log("Ammo display updated:", ammoInfo);
         }
     }
     
@@ -1973,8 +1959,6 @@ class WeaponManager {
         
         // Update indicators
         this.updateWeaponIndicator();
-        
-        console.log(`Switched to weapon: ${this.isBillboardGunActive() ? 'Billboard Gun' : 'Shooter Gun'}`);
         
         // Update crosshair shape based on selected weapon
         if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
