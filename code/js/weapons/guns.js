@@ -464,6 +464,8 @@ class BillboardGun extends Gun {
         const widthScale = width / startSize;
         const heightScale = height / startSize;
         
+        console.log(`Applied scaling factors: width=${widthScale.toFixed(2)}, height=${heightScale.toFixed(2)}`);
+        
         // Create the sign part of the billboard (the actual display)
         const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Base size
         const signMaterial = new THREE.MeshStandardMaterial({
@@ -477,7 +479,7 @@ class BillboardGun extends Gun {
         // Scale the sign based on width and height
         signMesh.scale.set(widthScale, heightScale, 1);
         
-        // Position the sign
+        // Position the sign halfway up the legs (scaled by height)
         signMesh.position.y = 2.8 * heightScale;
         billboardGroup.add(signMesh);
         
@@ -487,16 +489,16 @@ class BillboardGun extends Gun {
             color: 0x333333 // Dark gray
         });
         
-        // Left leg - positioned at lower left corner of sign
+        // Left leg - positioned at lower left corner of sign (scaled by width)
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
         leftLeg.position.set(-1.2 * widthScale, 0, 0);
-        leftLeg.scale.y = heightScale;
+        leftLeg.scale.y = heightScale; // Important: properly scale leg height
         billboardGroup.add(leftLeg);
         
-        // Right leg - positioned at lower right corner of sign
+        // Right leg - positioned at lower right corner of sign (scaled by width)
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
         rightLeg.position.set(1.2 * widthScale, 0, 0);
-        rightLeg.scale.y = heightScale;
+        rightLeg.scale.y = heightScale; // Important: properly scale leg height
         billboardGroup.add(rightLeg);
         
         // Set position from data
@@ -523,6 +525,32 @@ class BillboardGun extends Gun {
             );
         }
         
+        // Apply consistent ground positioning for bot billboards (similar to placeBillboard)
+        if (this.globe && this.globe.globe && billboard_category === "bot") {
+            const globeCenter = this.globe.globe.position.clone();
+            const globeRadius = this.globe.radius || 100;
+            
+            // Calculate ground sink factor for larger billboards (for consistent positioning)
+            const groundSinkFactor = -0.2 * (heightScale / 10);
+            
+            // Calculate the surface normal and position (direction from center to billboard)
+            const surfaceNormal = new THREE.Vector3().subVectors(posVector, globeCenter).normalize();
+            const surfacePosition = globeCenter.clone().add(
+                surfaceNormal.clone().multiplyScalar(globeRadius + groundSinkFactor)
+            );
+            
+            // Calculate the original height and center offset
+            const originalHeight = 4.0; // Original height in the model
+            const totalHeight = originalHeight * heightScale; // New scaled height
+            const centerOffset = totalHeight / 2; // Distance from base to center
+            
+            // Position the billboard with its base at the surface position
+            billboardGroup.position.copy(surfacePosition);
+            billboardGroup.position.add(surfaceNormal.clone().multiplyScalar(centerOffset));
+            
+            console.log(`Repositioned bot billboard on globe surface with height offset: ${centerOffset.toFixed(2)}`);
+        }
+        
         // Add to the scene
         this.scene.add(billboardGroup);
         
@@ -530,7 +558,7 @@ class BillboardGun extends Gun {
         const billboardObject = {
             id: id,
             mesh: billboardGroup,
-            position: posVector.clone(),
+            position: billboardGroup.position.clone(), // Use the final position
             quaternion: billboardGroup.quaternion.clone(),
             width: width,
             height: height,

@@ -418,5 +418,17 @@
     "shootingAmmo": 196,
     "billboardAmmo": 3,
     "lastUpdate": 1743409569770
+  },
+  "player_39222_ztzdt": {
+    "username": "Anonymous",
+    "billboardText": "YOYOMA",
+    "position": {
+      "x": 54.783881767548884,
+      "y": -81.21506196684372,
+      "z": 27.67815037535852
+    },
+    "shootingAmmo": 173,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743410104310
   }
 }
