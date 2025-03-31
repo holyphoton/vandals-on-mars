@@ -430,5 +430,29 @@
     "shootingAmmo": 173,
     "billboardAmmo": 1,
     "lastUpdate": 1743410104310
+  },
+  "player_58554_qevxk": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 91.13509632881537,
+      "y": -30.86077658084959,
+      "z": -33.24525057755511
+    },
+    "shootingAmmo": 194,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743411831056
+  },
+  "player_64577_jkklk": {
+    "username": "Anonymous",
+    "billboardText": "YOYOMA",
+    "position": {
+      "x": 85.8135252969452,
+      "y": -29.929441485107855,
+      "z": -45.86400994788888
+    },
+    "shootingAmmo": 0,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743412132394
   }
 }

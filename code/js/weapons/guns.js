@@ -1271,6 +1271,12 @@ class ShooterGun extends Gun {
         const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
         const startSize = CONFIG.billboard?.startSize || 5;
         
+        // Debug output for CONFIG values
+        console.log("CONFIG values in showHitEffect:");
+        console.log("- CONFIG.billboard.damagePerShot:", CONFIG.billboard?.damagePerShot);
+        console.log("- sizeDamagePerShot used:", sizeDamagePerShot);
+        console.log("- Full CONFIG.billboard:", JSON.stringify(CONFIG.billboard, null, 2));
+        
         // Ensure billboard has width and height properties
         if (typeof billboard.width === 'undefined') billboard.width = startSize;
         if (typeof billboard.height === 'undefined') billboard.height = startSize;
@@ -1300,6 +1306,7 @@ class ShooterGun extends Gun {
         billboard.health = newMaxHealth;
         
         console.log(`Billboard hit! Size reduced to: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)}, Health: ${billboard.health.toFixed(2)}`);
+        console.log(`Damage applied: ${sizeDamagePerShot.toFixed(2)} units`);
         
         // Calculate scale factors based on ratio to starting size
         const widthScale = newWidth / startSize;

@@ -55,17 +55,37 @@ const CONFIG = { ...DEFAULT_CONFIG };
 // Load configuration from JSON file
 async function loadConfig() {
     try {
+        console.log('Attempting to load configuration from /config.json...');
         const response = await fetch('/config.json');
         if (!response.ok) {
+            console.error(`Failed to load config: HTTP ${response.status} ${response.statusText}`);
             throw new Error(`Failed to load config: ${response.statusText}`);
         }
         
+        console.log('Config file response received, parsing JSON...');
         const loadedConfig = await response.json();
         
+        console.log('Raw loaded config:', loadedConfig);
+        
+        // Check if billboard config with damagePerShot exists
+        if (loadedConfig.billboard && loadedConfig.billboard.damagePerShot !== undefined) {
+            console.log(`Found damagePerShot in loaded config: ${loadedConfig.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot not found in loaded config');
+        }
+        
         // Merge loaded config with defaults
+        console.log('Merging loaded config with defaults...');
         mergeConfig(CONFIG, loadedConfig);
         
-        console.log('Configuration loaded successfully:', CONFIG);
+        // Verify damagePerShot was properly merged
+        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+            console.log(`Final CONFIG.billboard.damagePerShot after merge: ${CONFIG.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot missing in final CONFIG after merge');
+        }
+        
+        console.log('Final configuration after merge:', CONFIG);
         return CONFIG;
     } catch (error) {
         console.warn('Error loading configuration, using defaults:', error);
@@ -110,12 +130,56 @@ const CONSTANTS = {
     DEBUG_MODE: false
 };
 
-// Make CONFIG and CONSTANTS available globally
+// Function to manually reload config (accessible from console)
+async function reloadConfig() {
+    console.log('Manually reloading configuration...');
+    
+    try {
+        // Force a cache-busting fetch of the config
+        const cacheBuster = `?bust=${Date.now()}`;
+        const response = await fetch(`/config.json${cacheBuster}`);
+        
+        if (!response.ok) {
+            console.error(`Failed to reload config: HTTP ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to reload config: ${response.statusText}`);
+        }
+        
+        const loadedConfig = await response.json();
+        console.log('Raw reloaded config:', loadedConfig);
+        
+        // Create a fresh CONFIG object based on defaults
+        const freshConfig = { ...DEFAULT_CONFIG };
+        
+        // Merge the loaded config into the fresh CONFIG
+        mergeConfig(freshConfig, loadedConfig);
+        
+        // Replace the global CONFIG with the fresh one
+        Object.keys(CONFIG).forEach(key => delete CONFIG[key]);
+        Object.assign(CONFIG, freshConfig);
+        
+        console.log('Configuration successfully reloaded:', CONFIG);
+        
+        // Specifically check damagePerShot
+        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+            console.log(`Reloaded CONFIG.billboard.damagePerShot: ${CONFIG.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot still missing in reloaded CONFIG');
+        }
+        
+        return CONFIG;
+    } catch (error) {
+        console.error('Error reloading configuration:', error);
+        return CONFIG;
+    }
+}
+
+// Make CONFIG, CONSTANTS, and config functions available globally
 window.CONFIG = CONFIG;
 window.CONSTANTS = CONSTANTS;
 window.loadConfig = loadConfig;
+window.reloadConfig = reloadConfig; // Make reloadConfig globally accessible
 
 // Export configuration as a module if in a module context
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG, CONSTANTS, loadConfig };
+    module.exports = { CONFIG, CONSTANTS, loadConfig, reloadConfig };
 } 
