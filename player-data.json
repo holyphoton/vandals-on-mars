@@ -1,1 +1,38 @@
-{}
+{
+  "player_60147_pioxa": {
+    "username": "J1",
+    "billboardText": "J1's Turf",
+    "position": {
+      "x": -71.40051942079671,
+      "y": -28.952820030700583,
+      "z": -66.5352541041987
+    },
+    "shootingAmmo": 175,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743423960570
+  },
+  "player_40055_egvtm": {
+    "username": "PowerUp",
+    "billboardText": "PowerUp's Turf",
+    "position": {
+      "x": 43.55074255406057,
+      "y": -14.689776840255014,
+      "z": -90.83382233162624
+    },
+    "shootingAmmo": 199,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743424798805
+  },
+  "player_81726_uwyst": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -71.02721621304838,
+      "y": -45.88133217993788,
+      "z": 56.68578229520235
+    },
+    "shootingAmmo": 500,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743425679415
+  }
+}

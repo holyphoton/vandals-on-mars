@@ -1,1 +1,71 @@
-[]
+[
+  {
+    "type": "billboard_data",
+    "id": "billboard_66866_ptnqo",
+    "position": {
+      "x": -81.22106592031871,
+      "y": 59.52733250463422,
+      "z": -16.1107273470182
+    },
+    "quaternion": {
+      "x": -0.27413269647408767,
+      "y": 0.3860781683519949,
+      "z": 0.36468258548593196,
+      "w": 0.8017490408407797
+    },
+    "width": 4.999999999999991,
+    "height": 4.999999999999991,
+    "health": 99.99999999999964,
+    "text": "J1's Turf",
+    "owner": "J1",
+    "player_id": "player_60147_pioxa",
+    "billboard_category": "player",
+    "timestamp": 1743423958930
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_65039_ghhua",
+    "position": {
+      "x": 50.53379298880074,
+      "y": -18.78034313609606,
+      "z": -84.97503119631979
+    },
+    "quaternion": {
+      "x": -0.7370908966388107,
+      "y": -0.47105404048387745,
+      "z": 0.22362359097925055,
+      "w": 0.42988090280163926
+    },
+    "width": 1.5999999999999976,
+    "height": 1.5999999999999976,
+    "health": 10.23999999999997,
+    "text": "PowerUp's Turf",
+    "owner": "PowerUp",
+    "player_id": "player_40055_egvtm",
+    "billboard_category": "player",
+    "timestamp": 1743424817045
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_42158_xuzcz",
+    "position": {
+      "x": -62.9079938268302,
+      "y": -50.721867646619614,
+      "z": 62.207691285903685
+    },
+    "quaternion": {
+      "x": 0.566736196835191,
+      "y": 0.03288173539276984,
+      "z": 0.6538313629251172,
+      "w": 0.5002333690687046
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Turf",
+    "owner": "Anonymous",
+    "player_id": "player_81726_uwyst",
+    "billboard_category": "player",
+    "timestamp": 1743425473149
+  }
+]

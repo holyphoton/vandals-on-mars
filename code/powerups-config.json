@@ -1,0 +1,27 @@
+{
+    "spawnInterval": 5000,
+    "maxPowerups": 10,
+    "spawnChance": 0.3,
+    "minDistance": 20,
+    "checkInterval": 5000,
+    "types": [
+        {
+            "type": "shooting_ammo",
+            "weight": 75,
+            "effectAmount": 100, 
+            "color": "#FF5500",
+            "size": 1.5,
+            "text": "Ammo",
+            "lifespan": 300000
+        },
+        {
+            "type": "billboard_ammo",
+            "weight": 25,
+            "effectAmount": 1, 
+            "color": "#33CC33",
+            "size": 1.5,
+            "text": "Billboard",
+            "lifespan": 300000
+        }
+    ]
+} 

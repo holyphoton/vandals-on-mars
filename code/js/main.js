@@ -43,6 +43,7 @@ class Game {
         this.playerMovement = null;
         this.weaponManager = null;
         this.botManager = null; // Bot Manager for automated billboard spawning
+        this.powerupManager = null; // Powerup Manager for spawning and handling powerups
         
         // WebSocket connection for multiplayer
         this.socket = null;
@@ -327,6 +328,28 @@ class Game {
             this.botManager = new BotManager(this);
         } else {
             console.warn('BotManager class not found, bot billboards will not be available');
+        }
+        
+        // Create powerup manager
+        if (window.PowerupManager) {
+            console.log('Setting up powerup manager');
+            this.powerupManager = new PowerupManager(this, this.scene);
+            
+            // Add console command for spawning shooting ammo powerup (for testing)
+            window.createShootingAmmoPowerup = (distance = 20) => {
+                console.log(`Creating Shooting Ammo powerup ${distance} steps ahead of player...`);
+                return this.powerupManager.createShootingAmmoPowerup(distance);
+            };
+            
+            // Add console command for spawning billboard ammo powerup (for testing)
+            window.createBillboardAmmoPowerup = (distance = 20) => {
+                console.log(`Creating Billboard Ammo powerup ${distance} steps ahead of player...`);
+                return this.powerupManager.createBillboardAmmoPowerup(distance);
+            };
+            
+            console.log('PowerupManager initialized with console commands: createShootingAmmoPowerup() and createBillboardAmmoPowerup()');
+        } else {
+            console.warn('PowerupManager class not found, powerups will not be available');
         }
         
         this.updateLoadingProgress(0.9, 'Player ready');
@@ -870,6 +893,11 @@ class Game {
         // Update bot manager
         if (this.botManager) {
             this.botManager.update(deltaTime);
+        }
+        
+        // Update powerup manager
+        if (this.powerupManager) {
+            this.powerupManager.update(deltaTime);
         }
         
         // Send a position update to the server periodically

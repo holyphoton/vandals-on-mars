@@ -1,1 +1,482 @@
-[]
+[
+  {
+    "id": "bot_1743423880567_2319",
+    "type": "billboard_data",
+    "position": {
+      "x": -49.5091715237873,
+      "y": -86.39121108109278,
+      "z": 9.241243583538013
+    },
+    "quaternion": {
+      "x": -0.6168278470923895,
+      "y": 0.2006604101823719,
+      "z": 0.7426166322247514,
+      "w": 0.16667136640700583
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No Earth rules apply here",
+    "color": "#FF5733",
+    "owner": "MartianMiner",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423880567
+  },
+  {
+    "id": "bot_1743423882568_191",
+    "type": "billboard_data",
+    "position": {
+      "x": 0.8241276882146445,
+      "y": 19.828772631873406,
+      "z": 98.01092076634616
+    },
+    "quaternion": {
+      "x": 0.002661783903673866,
+      "y": 0.774036997403472,
+      "z": 0.6331264105588102,
+      "w": -0.0032541988237674876
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Martian time zone: UTC+42",
+    "color": "#33FF57",
+    "owner": "MartianDreamer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423882568
+  },
+  {
+    "id": "bot_1743423884568_2840",
+    "type": "billboard_data",
+    "position": {
+      "x": 0.001762463570313393,
+      "y": -44.23335118571803,
+      "z": 89.68506363812571
+    },
+    "quaternion": {
+      "x": 0.000008344261038311728,
+      "y": 0.5280466305587881,
+      "z": 0.8492153766029932,
+      "w": -0.000005188505822173019
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Keep Mars weird",
+    "color": "#FF5733",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423884568
+  },
+  {
+    "id": "bot_1743423886569_7986",
+    "type": "billboard_data",
+    "position": {
+      "x": 80.06077275183173,
+      "y": 43.75423829815508,
+      "z": -40.93701622404615
+    },
+    "quaternion": {
+      "x": -0.4523612862138869,
+      "y": -0.44246034746868884,
+      "z": -0.27676357282731884,
+      "w": 0.7231874116774036
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Earth called, they miss you",
+    "color": "#FF5733",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423886569
+  },
+  {
+    "id": "bot_1743423888570_565",
+    "type": "billboard_data",
+    "position": {
+      "x": 6.621937533845824,
+      "y": 60.55099826235407,
+      "z": 79.30779629223244
+    },
+    "quaternion": {
+      "x": 0.018493129522524625,
+      "y": 0.8951888761959284,
+      "z": 0.44373754951400357,
+      "w": -0.03730773709086822
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Send pizza to Mars please",
+    "color": "#FF33F5",
+    "owner": "Curiosity2.0",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423888570
+  },
+  {
+    "id": "bot_1743423890571_6134",
+    "type": "billboard_data",
+    "position": {
+      "x": -56.682838359425745,
+      "y": 44.43208909673739,
+      "z": 69.37467328945633
+    },
+    "quaternion": {
+      "x": -0.17703771200788884,
+      "y": 0.8004345192410184,
+      "z": 0.4964848467408899,
+      "w": 0.28542078741935856
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "This way to the secret Mars base →",
+    "color": "#FF33F5",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423890571
+  },
+  {
+    "id": "bot_1743423892571_4506",
+    "type": "billboard_data",
+    "position": {
+      "x": -81.65196412529238,
+      "y": -51.51698363101085,
+      "z": 26.056806251805448
+    },
+    "quaternion": {
+      "x": -0.5134527091897686,
+      "y": 0.39756321596851457,
+      "z": 0.7028166429309576,
+      "w": 0.29044547018970346
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Earth called, they miss you",
+    "color": "#3357FF",
+    "owner": "OxygenFarmer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423892571
+  },
+  {
+    "id": "bot_1743423894571_3427",
+    "type": "billboard_data",
+    "position": {
+      "x": 50.28173579482423,
+      "y": 12.726739956156162,
+      "z": 85.49723466608654
+    },
+    "quaternion": {
+      "x": 0.17353181132636475,
+      "y": 0.7243878717467307,
+      "z": 0.6373798009640801,
+      "w": -0.19722046305346402
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: 100% authentic red dirt",
+    "color": "#FF5733",
+    "owner": "H2OHunter",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423894571
+  },
+  {
+    "id": "bot_1743423896574_1389",
+    "type": "billboard_data",
+    "position": {
+      "x": -43.76554905371591,
+      "y": -13.1871438643401,
+      "z": 88.94198082305107
+    },
+    "quaternion": {
+      "x": -0.17050904831489452,
+      "y": 0.641689539151173,
+      "z": 0.7327089352290236,
+      "w": 0.14932788092735647
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Trespassers will be spaced",
+    "color": "#3357FF",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423896574
+  },
+  {
+    "id": "bot_1743423898573_8236",
+    "type": "billboard_data",
+    "position": {
+      "x": 77.48697386890301,
+      "y": -58.10758689282335,
+      "z": 24.88528131512533
+    },
+    "quaternion": {
+      "x": 0.5238382983808414,
+      "y": 0.36980387892796046,
+      "z": 0.7184228362277895,
+      "w": -0.2696426462296304
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "First Martian, deal with it!",
+    "color": "#33FFF5",
+    "owner": "SolarHarvester",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423898573
+  },
+  {
+    "id": "bot_1743423900573_2344",
+    "type": "billboard_data",
+    "position": {
+      "x": -46.752349743470695,
+      "y": -88.14549726165106,
+      "z": 6.677507466147984
+    },
+    "quaternion": {
+      "x": -0.6354981714093828,
+      "y": 0.18392007973754343,
+      "z": 0.7327138325728443,
+      "w": 0.15951776691353345
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Martian time zone: UTC+42",
+    "color": "#F5FF33",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423900573
+  },
+  {
+    "id": "bot_1743423904574_9708",
+    "type": "billboard_data",
+    "position": {
+      "x": 36.899729413857784,
+      "y": -81.97050023344529,
+      "z": 43.80921205252184
+    },
+    "quaternion": {
+      "x": 0.327075589440675,
+      "y": 0.28204282591800267,
+      "z": 0.8960323989450725,
+      "w": -0.10295311156522076
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Matt Damon was here (filming)",
+    "color": "#FF33F5",
+    "owner": "DustRunner",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423904574
+  },
+  {
+    "id": "bot_1743423906575_7055",
+    "type": "billboard_data",
+    "position": {
+      "x": 65.33544159585962,
+      "y": -34.83049220012444,
+      "z": 67.2169389705533
+    },
+    "quaternion": {
+      "x": 0.3088178727636221,
+      "y": 0.5289156437997777,
+      "z": 0.7607785370673739,
+      "w": -0.21469927979209533
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Building Mars one billboard at a time",
+    "color": "#FF5733",
+    "owner": "OpportunityMax",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423906575
+  },
+  {
+    "id": "bot_1743423908576_8736",
+    "type": "billboard_data",
+    "position": {
+      "x": -14.059137016842975,
+      "y": 6.632285096804548,
+      "z": 98.78437862707008
+    },
+    "quaternion": {
+      "x": -0.04825643067825999,
+      "y": 0.728355621169924,
+      "z": 0.6815496250561448,
+      "w": 0.051570481810788195
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "I came, I saw, I conquered Mars",
+    "color": "#F5FF33",
+    "owner": "OxygenFarmer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423908576
+  },
+  {
+    "id": "bot_1743423910577_7609",
+    "type": "billboard_data",
+    "position": {
+      "x": -0.7529967852390844,
+      "y": 77.26337018999061,
+      "z": 63.48074214063577
+    },
+    "quaternion": {
+      "x": -0.0019996144441651468,
+      "y": 0.94142746797554,
+      "z": 0.3371633885701733,
+      "w": 0.005583322587546931
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Unauthorized human access prohibited",
+    "color": "#FF33F5",
+    "owner": "MarsTech",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423910577
+  },
+  {
+    "id": "bot_1743423912579_7053",
+    "type": "billboard_data",
+    "position": {
+      "x": -5.365170097598485,
+      "y": -59.52589385572288,
+      "z": -80.17407879421533
+    },
+    "quaternion": {
+      "x": 0.8926026441691284,
+      "y": -0.015026759478716893,
+      "z": -0.02983268175834472,
+      "w": -0.44960507917610815
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Beware of space pirates",
+    "color": "#3357FF",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423912579
+  },
+  {
+    "id": "bot_1743423914580_9348",
+    "type": "billboard_data",
+    "position": {
+      "x": -44.36170319704208,
+      "y": -89.61784163503589,
+      "z": -0.8256816185286372
+    },
+    "quaternion": {
+      "x": 0.6948857641211932,
+      "y": -0.15960070520780256,
+      "z": -0.6820725643191382,
+      "w": -0.1625989136556351
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No humans were involved in creating this billboard",
+    "color": "#33FF57",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423914580
+  },
+  {
+    "id": "bot_1743423916580_3297",
+    "type": "billboard_data",
+    "position": {
+      "x": 39.08183740002953,
+      "y": -73.97901897234233,
+      "z": -54.76965160860041
+    },
+    "quaternion": {
+      "x": 0.8882562541849003,
+      "y": 0.10999595335214554,
+      "z": 0.2844220838175573,
+      "w": -0.34351971615096694
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Martian time zone: UTC+42",
+    "color": "#FF5733",
+    "owner": "MartianDreamer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423916580
+  },
+  {
+    "id": "bot_1743423918582_4577",
+    "type": "billboard_data",
+    "position": {
+      "x": 12.332057167653074,
+      "y": 17.877653648921505,
+      "z": -97.61306196418049
+    },
+    "quaternion": {
+      "x": -0.6395253415621789,
+      "y": -0.04820785184809627,
+      "z": -0.04023765966319242,
+      "w": 0.7662011950296082
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Keep Mars weird",
+    "color": "#33FF57",
+    "owner": "Curiosity2.0",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423918582
+  },
+  {
+    "id": "bot_1743423961585_6310",
+    "type": "billboard_data",
+    "position": {
+      "x": 21.062968855438477,
+      "y": -82.97644652096217,
+      "z": -51.68424001326453
+    },
+    "quaternion": {
+      "x": 0.9386455304630799,
+      "y": 0.056099369175728886,
+      "z": 0.18392063708701703,
+      "w": -0.2863051312381153
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No refunds on Mars property",
+    "color": "#3357FF",
+    "owner": "DustRunner",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743423961585
+  }
+]
