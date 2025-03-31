@@ -1184,25 +1184,23 @@ class Game {
                 reader.onload = () => {
                     try {
                         const jsonData = JSON.parse(reader.result);
-                        console.log(`[DEBUG] Received blob message from server: ${reader.result.substring(0, 200)}${reader.result.length > 200 ? '...' : ''}`);
                         this.processServerMessage(jsonData);
                     } catch (parseError) {
-                        console.error('[DEBUG] Error parsing blob data:', parseError);
+                        console.error('Error parsing blob data:', parseError);
                     }
                 };
                 reader.readAsText(event.data);
             } else {
                 // Handle string data directly
-                console.log(`[DEBUG] Received string message from server: ${event.data.substring(0, 200)}${event.data.length > 200 ? '...' : ''}`);
                 try {
                     const data = JSON.parse(event.data);
                     this.processServerMessage(data);
                 } catch (parseError) {
-                    console.error('[DEBUG] Error parsing string data:', parseError);
+                    console.error('Error parsing string data:', parseError);
                 }
             }
         } catch (error) {
-            console.error('[DEBUG] Error handling server message:', error, event);
+            console.error('Error handling server message:', error, event);
         }
     }
     
@@ -1228,7 +1226,7 @@ class Game {
                 this.processTerrainData(data);
                 break;
             case 'powerup_removed':
-                console.log(`[DEBUG] Received 'powerup_removed' message from server for ID: ${data.id}`);
+                console.log(`Received powerup removal message for ID: ${data.id}`);
                 this.processPowerupRemoval(data);
                 break;
             // Handle powerup data - forwarded directly to powerupManager
@@ -1241,7 +1239,7 @@ class Game {
                 if (data.id && data.id.startsWith('powerup_') && data.position && data.type) {
                     this.processPowerupData(data);
                 } else {
-                    console.log(`[DEBUG] Received unknown message type: ${data.type}`);
+                    console.log('Received unknown message type:', data.type);
                 }
         }
     }
@@ -1742,29 +1740,18 @@ class Game {
      * @param {Object} data - The removal message data
      */
     processPowerupRemoval(data) {
-        console.log(`[DEBUG] Game.processPowerupRemoval called for powerup ID ${data.id}`);
-        
         // Check for powerup manager
         if (!this.powerupManager) {
-            console.warn('[DEBUG] Cannot process powerup removal - powerup manager not initialized');
+            console.warn('Cannot process powerup removal - powerup manager not initialized');
             return;
         }
         
         // Remove the powerup in the game - note that if this client was the one who collected
         // the powerup, it will already be removed, which is expected behavior
         if (typeof this.powerupManager.removePowerupById === 'function') {
-            console.log(`[DEBUG] Calling powerupManager.removePowerupById for powerup ID ${data.id}`);
-            const result = this.powerupManager.removePowerupById(data.id);
-            
-            // Only log detailed messages for clarity
-            if (result) {
-                console.log(`[DEBUG] Receiving removal of powerup ID ${data.id} (processed by Game class)`);
-                console.log(`[DEBUG] Powerup ${data.id} successfully removed`);
-            } else {
-                console.log(`[DEBUG] Powerup ${data.id} not found for removal - likely already collected by this client`);
-            }
+            this.powerupManager.removePowerupById(data.id);
         } else {
-            console.warn('[DEBUG] PowerupManager is missing removePowerupById method');
+            console.warn('PowerupManager is missing removePowerupById method');
         }
     }
 }

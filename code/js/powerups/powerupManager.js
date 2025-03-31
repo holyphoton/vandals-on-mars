@@ -456,18 +456,18 @@ class PowerupManager {
                 
                 // Handle powerup-specific messages
                 if (data.type === 'powerup_removed') {
-                    console.log(`[DEBUG] Receiving removal of powerup ID ${data.id} from direct WebSocket`);
+                    console.log(`Receiving removal of powerup ID ${data.id}`);
                     this.removePowerupById(data.id);
                 }
                 // Handle powerup data messages
                 else if (data.id && data.id.startsWith('powerup_') && data.position && data.type) {
-                    console.log(`[DEBUG] Received powerup data from WebSocket: ${data.type} (${data.id})`);
+                    console.log(`Received powerup data from WebSocket: ${data.type} (${data.id})`);
                     this.handlePowerupData(data);
                 }
             } catch (error) {
                 // Only log if it's a parsing error for valid JSON data
                 if (event.data && typeof event.data === 'string' && event.data.includes('powerup')) {
-                    console.error('[DEBUG] Error parsing powerup WebSocket message:', error);
+                    console.error('Error parsing powerup WebSocket message:', error);
                 }
             }
         };
@@ -475,10 +475,7 @@ class PowerupManager {
         // Add event listener to WebSocket
         socket.addEventListener('message', handleSocketMessage);
         
-        console.log('[DEBUG] Set up server powerup sync successfully - listening for powerup events');
-        
-        // Request initial powerups if needed - but most servers will push them automatically
-        // this.requestAllPowerups();
+        console.log('Set up server powerup sync successfully');
     }
     
     /**
@@ -509,19 +506,19 @@ class PowerupManager {
      * @returns {Boolean} True if powerup was found and removed, false otherwise
      */
     removePowerupById(id) {
-        console.log(`[DEBUG] removePowerupById called for powerup ${id}`);
+        console.log(`Removing powerup by ID: ${id}`);
         
         // Get the powerup from our collection
         const powerup = this.powerups.get(id);
         
         if (powerup) {
-            console.log(`[DEBUG] Found powerup ${id} in local collection, removing from scene and manager`);
+            console.log(`Found powerup ${id}, removing from scene and manager`);
             this.removePowerup(powerup);
             return true;
         } else {
             // This is often expected behavior when we collect a powerup locally 
             // and then receive a server message to remove it
-            console.log(`[DEBUG] Powerup ${id} not found in local collection - may have already been collected`);
+            console.log(`Powerup ${id} not found - may have already been collected`);
             return false;
         }
     }
@@ -586,11 +583,11 @@ class PowerupManager {
      */
     sendPowerupCollectedToServer(powerup) {
         try {
-            console.log(`[DEBUG] Attempting to send collection event for powerup ${powerup.id} to server...`);
+            console.log(`Sending collection event for powerup ${powerup.id} to server...`);
             
             // Ensure we have a connection to the server
             if (!this.game.socket || this.game.socket.readyState !== WebSocket.OPEN) {
-                console.warn(`[DEBUG] WebSocket not available or not open, powerup collection for ${powerup.id} cannot be saved`);
+                console.warn(`WebSocket not available, powerup collection for ${powerup.id} cannot be saved`);
                 return;
             }
             
@@ -602,14 +599,12 @@ class PowerupManager {
                 playerId: this.game.playerId || ''
             };
             
-            console.log(`[DEBUG] Sending collection payload to server:`, JSON.stringify(powerupData));
-            
             // Send to the server
             this.game.socket.send(JSON.stringify(powerupData));
-            console.log(`[DEBUG] Removal data of powerup ID ${powerup.id} sent to the server`);
+            console.log(`Sent powerup ${powerup.id} collection event to server`);
         }
         catch (error) {
-            console.error(`[DEBUG] Error sending powerup ${powerup.id} collection to server:`, error);
+            console.error(`Error sending powerup ${powerup.id} collection to server:`, error);
         }
     }
     
