@@ -26,7 +26,6 @@ class Powerup {
         this.lifespan = params.lifespan || null; // null = permanent
         this.createdAt = Date.now();
         this.mesh = null;
-        this.isCollected = false;
         this.text = params.text || '';
         
         // Effect parameters can be overridden by specific powerup types
@@ -254,14 +253,6 @@ class Powerup {
     }
     
     /**
-     * Check if this powerup has been collected
-     * @returns {Boolean} True if collected
-     */
-    hasBeenCollected() {
-        return this.isCollected;
-    }
-    
-    /**
      * Check if this powerup has expired
      * @returns {Boolean} True if expired
      */
@@ -276,7 +267,6 @@ class Powerup {
      */
     applyEffect(target) {
         console.log(`Base powerup effect applied to ${this.effectTarget}`);
-        this.isCollected = true;
         return true;
     }
     
@@ -335,7 +325,6 @@ class Powerup {
             text: this.text,
             lifespan: this.lifespan,
             createdAt: this.createdAt,
-            isCollected: this.isCollected,
             effectAmount: this.effectAmount,
             effectDuration: this.effectDuration,
             effectTarget: this.effectTarget

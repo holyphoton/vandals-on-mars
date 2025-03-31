@@ -1184,19 +1184,25 @@ class Game {
                 reader.onload = () => {
                     try {
                         const jsonData = JSON.parse(reader.result);
+                        console.log(`[DEBUG] Received blob message from server: ${reader.result.substring(0, 200)}${reader.result.length > 200 ? '...' : ''}`);
                         this.processServerMessage(jsonData);
                     } catch (parseError) {
-                        console.error('Error parsing blob data:', parseError);
+                        console.error('[DEBUG] Error parsing blob data:', parseError);
                     }
                 };
                 reader.readAsText(event.data);
             } else {
                 // Handle string data directly
-                const data = JSON.parse(event.data);
-                this.processServerMessage(data);
+                console.log(`[DEBUG] Received string message from server: ${event.data.substring(0, 200)}${event.data.length > 200 ? '...' : ''}`);
+                try {
+                    const data = JSON.parse(event.data);
+                    this.processServerMessage(data);
+                } catch (parseError) {
+                    console.error('[DEBUG] Error parsing string data:', parseError);
+                }
             }
         } catch (error) {
-            console.error('Error handling server message:', error, event);
+            console.error('[DEBUG] Error handling server message:', error, event);
         }
     }
     
@@ -1222,6 +1228,7 @@ class Game {
                 this.processTerrainData(data);
                 break;
             case 'powerup_removed':
+                console.log(`[DEBUG] Received 'powerup_removed' message from server for ID: ${data.id}`);
                 this.processPowerupRemoval(data);
                 break;
             // Handle powerup data - forwarded directly to powerupManager
@@ -1234,7 +1241,7 @@ class Game {
                 if (data.id && data.id.startsWith('powerup_') && data.position && data.type) {
                     this.processPowerupData(data);
                 } else {
-                    console.warn('Unknown message type:', data.type);
+                    console.log(`[DEBUG] Received unknown message type: ${data.type}`);
                 }
         }
     }
@@ -1735,19 +1742,22 @@ class Game {
      * @param {Object} data - The removal message data
      */
     processPowerupRemoval(data) {
-        console.log('Processing powerup removal:', data.id);
+        console.log(`[DEBUG] Game.processPowerupRemoval called for powerup ID ${data.id}`);
         
         // Check for powerup manager
         if (!this.powerupManager) {
-            console.warn('Cannot process powerup removal - powerup manager not initialized');
+            console.warn('[DEBUG] Cannot process powerup removal - powerup manager not initialized');
             return;
         }
         
         // Remove the powerup in the game
         if (typeof this.powerupManager.removePowerupById === 'function') {
-            this.powerupManager.removePowerupById(data.id);
+            console.log(`[DEBUG] Calling powerupManager.removePowerupById for powerup ID ${data.id}`);
+            const result = this.powerupManager.removePowerupById(data.id);
+            console.log(`[DEBUG] Receiving removal of powerup ID ${data.id} (processed by Game class)`);
+            console.log(`[DEBUG] Removal result for powerup ${data.id}: ${result ? 'Successfully removed' : 'Not found in collection'}`);
         } else {
-            console.warn('PowerupManager is missing removePowerupById method');
+            console.warn('[DEBUG] PowerupManager is missing removePowerupById method');
         }
     }
 }

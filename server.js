@@ -227,10 +227,29 @@ function loadPowerupData() {
 // Save powerups to file
 function savePowerupData() {
   try {
+    console.log(`[DEBUG SERVER] Saving ${powerups.length} powerups to ${POWERUP_DATA_FILE}`);
     fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify(powerups, null, 2));
-    console.log(`Saved ${powerups.length} powerups to ${POWERUP_DATA_FILE}`);
+    
+    // Verify the file was written correctly
+    if (fs.existsSync(POWERUP_DATA_FILE)) {
+      const stats = fs.statSync(POWERUP_DATA_FILE);
+      console.log(`[DEBUG SERVER] Successfully saved powerups-data.json: ${stats.size} bytes`);
+      
+      // Optionally verify contents
+      const savedContent = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
+      const savedPowerups = JSON.parse(savedContent);
+      console.log(`[DEBUG SERVER] Verified saved file contains ${savedPowerups.length} powerups`);
+      
+      // Log IDs of first few powerups for verification
+      if (savedPowerups.length > 0) {
+        const sampleIds = savedPowerups.slice(0, Math.min(3, savedPowerups.length)).map(p => p.id);
+        console.log(`[DEBUG SERVER] Sample powerup IDs in saved file: ${sampleIds.join(', ')}`);
+      }
+    } else {
+      console.error(`[DEBUG SERVER] Failed to save powerup data: File does not exist after save`);
+    }
   } catch (error) {
-    console.error('Error saving powerup data:', error);
+    console.error(`[DEBUG SERVER] Error saving powerup data:`, error);
   }
 }
 
@@ -906,16 +925,22 @@ function checkPowerups() {
 
 // Broadcast powerup removal to all connected clients
 function broadcastPowerupRemoval(powerupId) {
+  console.log(`[DEBUG SERVER] Broadcasting powerup removal for ID: ${powerupId} to all clients`);
+  
   const removalData = {
     type: 'powerup_removed',
     id: powerupId
   };
   
+  let clientCount = 0;
   server.clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(removalData));
+      clientCount++;
     }
   });
+  
+  console.log(`[DEBUG SERVER] Sent powerup_removed message to ${clientCount} connected clients`);
 }
 
 // Start spawning powerups at the specified interval
@@ -1397,7 +1422,7 @@ server.on('connection', (socket) => {
         const powerupId = data.powerupId;
         const playerId = data.playerId;
         
-        console.log(`Player ${playerId} collected powerup ${powerupId}`);
+        console.log(`[DEBUG SERVER] Player ${playerId} collected powerup ${powerupId}`);
         
         // Find the powerup in our array
         const powerupIndex = powerups.findIndex(p => p.id === powerupId);
@@ -1406,6 +1431,8 @@ server.on('connection', (socket) => {
           // Get the powerup data
           const powerup = powerups[powerupIndex];
           
+          console.log(`[DEBUG SERVER] Found powerup ${powerupId} at index ${powerupIndex}, type: ${powerup.type}`);
+          
           // Mark as collected
           powerup.isCollected = true;
           powerup.collectedBy = playerId;
@@ -1413,24 +1440,30 @@ server.on('connection', (socket) => {
           
           // Remove from the main array
           powerups.splice(powerupIndex, 1);
+          console.log(`[DEBUG SERVER] Removed powerup ${powerupId} from main powerups array`);
           
           // Also remove from type-specific array
           if (powerupsByType[powerup.type]) {
             const typeIndex = powerupsByType[powerup.type].findIndex(p => p.id === powerupId);
             if (typeIndex !== -1) {
               powerupsByType[powerup.type].splice(typeIndex, 1);
+              console.log(`[DEBUG SERVER] Removed powerup ${powerupId} from ${powerup.type} type-specific array`);
+            } else {
+              console.warn(`[DEBUG SERVER] Powerup ${powerupId} not found in ${powerup.type} type-specific array`);
             }
           }
           
-          console.log(`Removed powerup ${powerupId} from server (collected by ${playerId})`);
+          console.log(`[DEBUG SERVER] Removed powerup ${powerupId} from server (collected by ${playerId})`);
           
           // Save updated powerup data
+          console.log(`[DEBUG SERVER] Saving updated powerups-data.json (${powerups.length} powerups remaining)`);
           savePowerupData();
           
           // Broadcast removal to all clients
+          console.log(`[DEBUG SERVER] Broadcasting removal of powerup ${powerupId} to all clients`);
           broadcastPowerupRemoval(powerupId);
         } else {
-          console.warn(`Powerup ${powerupId} not found for collection by ${playerId}`);
+          console.warn(`[DEBUG SERVER] Powerup ${powerupId} not found for collection by ${playerId}`);
         }
       }
       // Handle request_billboards message

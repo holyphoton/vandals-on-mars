@@ -65,9 +65,6 @@ class ShootingAmmoPowerup extends Powerup {
         // Force update the UI
         weaponManager.updateWeaponIndicator();
         
-        // Mark as collected
-        this.isCollected = true;
-        
         // Log the effect
         console.log(`Shooting Ammo powerup collected! Added ${ammoAdded} ammo (${currentAmmo} → ${newAmmo})`);
         
