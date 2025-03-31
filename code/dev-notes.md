@@ -290,3 +290,149 @@ Billboards are differentiated by their ID prefix:
 - Player billboards start with "billboard_" (e.g., "billboard_54870_gtlzx")
 
 This allows for easy filtering when loading, saving, and processing billboards. 
+
+## Server-Side Bot Billboard System
+
+### Overview
+The game includes a server-managed bot billboard system that automatically spawns billboards across the Mars planet surface. These billboards contain various humorous messages and are managed entirely server-side to ensure consistent behavior across all clients.
+
+### Key Components
+1. **Bot Configuration**: 
+   - Located in `code/bot-config.json`
+   - Controls spawn rates, maximum counts, and billboard content
+   - Centralized configuration now loaded from a single location
+
+2. **Server Management**:
+   - Bot billboards are spawned, tracked, and removed on the server
+   - `checkBotBillboards()` function ensures counts stay within configured limits
+   - Regular trimming of excess billboards to maintain performance
+   - Saved in separate `billboard-data-bots.json` file to keep player data clean
+
+### Quaternion Calculation for Billboard Orientation
+A critical aspect of billboard placement is ensuring they stand upright relative to the planet's surface. This requires proper quaternion calculation:
+
+```javascript
+function calculateQuaternion(position) {
+  // Normalized position vector (direction from center to position) - this is the "up" vector
+  const length = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
+  const up = {
+    x: position.x / length,
+    y: position.y / length,
+    z: position.z / length
+  };
+  
+  // Find a reference vector different from up
+  // Use world up (0,1,0) as the reference unless up is too close to it
+  let reference;
+  const worldUpDot = Math.abs(up.y); // Dot product with (0,1,0)
+  
+  if (worldUpDot > 0.9) {
+    // If up is too close to world up, use world right instead
+    reference = { x: 1, y: 0, z: 0 };
+  } else {
+    reference = { x: 0, y: 1, z: 0 };
+  }
+  
+  // Calculate right vector (cross product of up and reference)
+  const right = {
+    x: up.y * reference.z - up.z * reference.y,
+    y: up.z * reference.x - up.x * reference.z,
+    z: up.x * reference.y - up.y * reference.x
+  };
+  
+  // Normalize right vector
+  const rightLength = Math.sqrt(right.x * right.x + right.y * right.y + right.z * right.z);
+  const rightNorm = {
+    x: right.x / rightLength,
+    y: right.y / rightLength,
+    z: right.z / rightLength
+  };
+  
+  // Calculate forward vector (cross product of right and up)
+  const forward = {
+    x: rightNorm.y * up.z - rightNorm.z * up.y,
+    y: rightNorm.z * up.x - rightNorm.x * up.z,
+    z: rightNorm.x * up.y - rightNorm.y * up.x
+  };
+  
+  // Create a rotation matrix and convert to quaternion
+  // Matrix rows are rightNorm, up, forward (right-handed system)
+  const rotMatrix = [
+    rightNorm.x, up.x, forward.x, 0,
+    rightNorm.y, up.y, forward.y, 0,
+    rightNorm.z, up.z, forward.z, 0,
+    0, 0, 0, 1
+  ];
+  
+  // Convert rotation matrix to quaternion
+  // Algorithm based on THREE.js implementation
+  const m11 = rotMatrix[0], m12 = rotMatrix[1], m13 = rotMatrix[2];
+  const m21 = rotMatrix[4], m22 = rotMatrix[5], m23 = rotMatrix[6];
+  const m31 = rotMatrix[8], m32 = rotMatrix[9], m33 = rotMatrix[10];
+  
+  const trace = m11 + m22 + m33;
+  let qx, qy, qz, qw;
+  
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1.0);
+    qw = 0.25 / s;
+    qx = (m32 - m23) * s;
+    qy = (m13 - m31) * s;
+    qz = (m21 - m12) * s;
+  } else if (m11 > m22 && m11 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+    qw = (m32 - m23) / s;
+    qx = 0.25 * s;
+    qy = (m12 + m21) / s;
+    qz = (m13 + m31) / s;
+  } else if (m22 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+    qw = (m13 - m31) / s;
+    qx = (m12 + m21) / s;
+    qy = 0.25 * s;
+    qz = (m23 + m32) / s;
+  } else {
+    const s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+    qw = (m21 - m12) / s;
+    qx = (m13 + m31) / s;
+    qy = (m23 + m32) / s;
+    qz = 0.25 * s;
+  }
+  
+  return { x: qx, y: qy, z: qz, w: qw };
+}
+```
+
+#### Implementation Notes
+- The quaternion calculation is critical for proper billboard orientation
+- Order of operations in cross product math must be precise
+- The coordinate system must be properly right-handed
+- Matrix construction must match THREE.js convention for consistency
+- The quaternion represents a rotation that makes the billboard stand perpendicular to the surface
+
+### Bot Billboard Lifecycle
+1. **Spawning**: 
+   - Random position generated using `getRandomPositionOnGlobe()`
+   - Orientation calculated using the quaternion function above
+   - Random content selected from configured messages
+   - Added to server-side arrays and database
+
+2. **Monitoring**:
+   - Regular checks against maximum count (controlled by interval)
+   - Oldest billboards trimmed when maximum is exceeded
+   - New billboards spawned when count is below maximum
+
+3. **Client Synchronization**:
+   - Billboards distributed to clients via WebSocket
+   - New clients receive full billboard data on connection
+   - Real-time updates broadcasted on changes
+
+### File Paths
+- Server management code: `server.js`
+- Bot configuration: `code/bot-config.json`
+- Bot billboard data storage: `billboard-data-bots.json`
+
+### Modified Files
+- `server.js`: Added comprehensive bot billboard management
+- `code/js/utils/botManager.js`: Removed client-side spawning, now receiving from server
+- `code/bot-config.json`: Centralized configuration 
