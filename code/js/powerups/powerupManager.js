@@ -21,6 +21,9 @@ class PowerupManager {
         this.checkInterval = 100; // How often to check for collisions (ms)
         this.lastCheckTime = 0;
         
+        // Initialization state
+        this.isInitialized = false;
+        
         // Register known powerup types
         this.registerPowerupTypes();
     }
@@ -34,9 +37,15 @@ class PowerupManager {
         // Set up event listeners for server-spawned powerups
         if (this.game && this.game.socket) {
             this.setupServerPowerupSync();
+            
+            // Request all existing powerups from server
+            this.requestAllPowerups();
         } else {
             console.log('No WebSocket connection available, powerups will not sync with server');
         }
+        
+        // Mark as initialized
+        this.isInitialized = true;
     }
     
     /**
@@ -627,6 +636,24 @@ class PowerupManager {
         
         // Remove the powerup from the scene - the server will broadcast removal to other clients
         this.removePowerup(powerup);
+    }
+    
+    /**
+     * Request all existing powerups from the server
+     */
+    requestAllPowerups() {
+        if (!this.game || !this.game.socket || this.game.socket.readyState !== WebSocket.OPEN) {
+            console.warn('Cannot request powerups: WebSocket not available');
+            return;
+        }
+        
+        console.log('Requesting all existing powerups from server');
+        
+        const request = {
+            type: 'request_powerups'
+        };
+        
+        this.game.socket.send(JSON.stringify(request));
     }
 }
 

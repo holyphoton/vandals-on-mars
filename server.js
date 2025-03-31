@@ -1490,6 +1490,17 @@ server.on('connection', (socket) => {
         const playerCount = billboards.length - botCount;
         console.log(`Sent ${billboards.length} billboards to requesting client (${playerCount} player, ${botCount} bot)`);
       }
+      // Handle request_powerups message
+      else if (data.type === 'request_powerups') {
+        // Send all stored powerups to the requesting client
+        const response = {
+          type: 'all_powerups',
+          powerups: powerups
+        };
+        socket.send(JSON.stringify(response));
+        
+        console.log(`Sent ${powerups.length} powerups to requesting client`);
+      }
 
       // Broadcast the general message to all other clients for other message types
       // But don't broadcast billboard data or removals that are already handled above

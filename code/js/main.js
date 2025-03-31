@@ -620,6 +620,12 @@ class Game {
             this.weaponManager.isInitialized = true;
         }
         
+        // Initialize powerupManager if needed
+        if (this.powerupManager && !this.powerupManager.isInitialized) {
+            console.log('Initializing PowerupManager');
+            this.powerupManager.initialize();
+        }
+        
         // Request existing billboards from server
         if (this.connectedToServer) {
             if (this.weaponManager) {
@@ -1100,6 +1106,13 @@ class Game {
                     // Request all existing billboards
                     this.requestAllBillboards();
                     
+                    // Request all existing powerups
+                    if (this.powerupManager) {
+                        this.powerupManager.requestAllPowerups();
+                    } else {
+                        console.log('PowerupManager not initialized yet, powerups will be requested when manager is ready');
+                    }
+                    
                     // Resolve the promise as we're now connected
                     resolve(true);
                 };
@@ -1228,6 +1241,9 @@ class Game {
             case 'powerup_removed':
                 console.log(`Received powerup removal message for ID: ${data.id}`);
                 this.processPowerupRemoval(data);
+                break;
+            case 'all_powerups':
+                this.processAllPowerups(data.powerups);
                 break;
             // Handle powerup data - forwarded directly to powerupManager
             case 'shooting_ammo':
@@ -1753,6 +1769,39 @@ class Game {
         } else {
             console.warn('PowerupManager is missing removePowerupById method');
         }
+    }
+
+    /**
+     * Process all powerups received from server
+     * @param {Array} powerups - Array of powerup data from server
+     */
+    processAllPowerups(powerups) {
+        console.log(`Received ${powerups ? powerups.length : 0} powerups from server`);
+        
+        // Validate powerups array
+        if (!Array.isArray(powerups)) {
+            console.error('Received invalid powerups data (not an array):', powerups);
+            return;
+        }
+        
+        // Clear existing powerups first to avoid duplicates
+        if (this.powerupManager && typeof this.powerupManager.clearAllPowerups === 'function') {
+            this.powerupManager.clearAllPowerups();
+        }
+        
+        // Process each powerup
+        for (const powerupData of powerups) {
+            // Skip invalid powerup data
+            if (!powerupData || !powerupData.id) {
+                console.warn('Received invalid powerup data, skipping:', powerupData);
+                continue;
+            }
+            
+            // Process the powerup data
+            this.processPowerupData(powerupData);
+        }
+        
+        console.log(`Successfully processed ${powerups.length} powerups from server`);
     }
 }
 
