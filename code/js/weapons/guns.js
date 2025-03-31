@@ -1795,6 +1795,11 @@ class WeaponManager {
         // Update weapon indicators
         this.updateWeaponIndicator();
         
+        // Set initial crosshair shape to shooter gun (default)
+        if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
+            this.playerCamera.updateCrosshairShape('shooter');
+        }
+        
         // Flag to indicate when the weapon manager is fully initialized and ready for use
         this.isInitialized = false;
     }
@@ -1907,10 +1912,20 @@ class WeaponManager {
             billboardIndicator.classList.add('active');
             shooterIndicator.classList.remove('active');
             console.log("Billboard gun indicator activated");
+            
+            // Update crosshair to billboard style
+            if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
+                this.playerCamera.updateCrosshairShape('billboard');
+            }
         } else {
             billboardIndicator.classList.remove('active');
             shooterIndicator.classList.add('active');
             console.log("Shooter gun indicator activated");
+            
+            // Update crosshair to shooter style (default)
+            if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
+                this.playerCamera.updateCrosshairShape('shooter');
+            }
         }
         
         // Update ammo display
@@ -1960,6 +1975,12 @@ class WeaponManager {
         this.updateWeaponIndicator();
         
         console.log(`Switched to weapon: ${this.isBillboardGunActive() ? 'Billboard Gun' : 'Shooter Gun'}`);
+        
+        // Update crosshair shape based on selected weapon
+        if (this.playerCamera && typeof this.playerCamera.updateCrosshairShape === 'function') {
+            const weaponType = this.isBillboardGunActive() ? 'billboard' : 'shooter';
+            this.playerCamera.updateCrosshairShape(weaponType);
+        }
         
         // Make sure both guns are visible in the scene
         this.updateWeaponVisibility();

@@ -1,1 +1,481 @@
-[]
+[
+  {
+    "id": "bot_1743443696678_8629",
+    "type": "billboard_data",
+    "position": {
+      "x": -29.81024102365615,
+      "y": -57.30204775228143,
+      "z": 76.34019159988262
+    },
+    "quaternion": {
+      "x": -0.1641287607537821,
+      "y": 0.4540679050817912,
+      "z": 0.8715342727941541,
+      "w": 0.08551081108974634
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No humans were involved in creating this billboard",
+    "color": "#F5FF33",
+    "owner": "OpportunityMax",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443696678
+  },
+  {
+    "id": "bot_1743443698679_7962",
+    "type": "billboard_data",
+    "position": {
+      "x": -19.089394604486106,
+      "y": 87.89896220373171,
+      "z": 43.69630942243474
+    },
+    "quaternion": {
+      "x": -0.05029909750142992,
+      "y": 0.9487940913822276,
+      "z": 0.2407803766337345,
+      "w": 0.19820338840905766
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "color": "#FF33F5",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443698679
+  },
+  {
+    "id": "bot_1743443700681_1064",
+    "type": "billboard_data",
+    "position": {
+      "x": 5.036606581481545,
+      "y": 90.6648527393754,
+      "z": 41.88695586803544
+    },
+    "quaternion": {
+      "x": 0.1691708411291638,
+      "y": 0.6942211731035188,
+      "z": 0.13437619884032362,
+      "w": 0.6865720839880188
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "color": "#33FFF5",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443700681
+  },
+  {
+    "id": "bot_1743443702681_7293",
+    "type": "billboard_data",
+    "position": {
+      "x": 18.96752537320134,
+      "y": -62.214371302438295,
+      "z": -75.9579158788556
+    },
+    "quaternion": {
+      "x": 0.8938625789666181,
+      "y": 0.05304933280440443,
+      "z": 0.10991608815518261,
+      "w": -0.43140921614728633
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Matt Damon was here (filming)",
+    "color": "#F5FF33",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443702681
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_1743443704682_4271",
+    "position": {
+      "x": -8.060607537548302,
+      "y": -17.88635597825931,
+      "z": 99.9943894255303
+    },
+    "quaternion": {
+      "x": -0.03082537302036368,
+      "y": 0.6415372094237027,
+      "z": 0.7660374444710739,
+      "w": 0.025815479294988373
+    },
+    "width": 4.8,
+    "height": 4.8,
+    "health": 92.16,
+    "text": "Planted my flag, now it's mine",
+    "owner": "MarsTech",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443724145
+  },
+  {
+    "id": "bot_1743443706682_681",
+    "type": "billboard_data",
+    "position": {
+      "x": 72.06856308012142,
+      "y": 63.94489842446592,
+      "z": 26.780070594591304
+    },
+    "quaternion": {
+      "x": -0.24236522001229244,
+      "y": -0.7433880475555258,
+      "z": -0.3486181406726613,
+      "w": 0.5168159274576518
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars is mine! No trespassing!",
+    "color": "#F5FF33",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443706682
+  },
+  {
+    "id": "bot_1743443708683_5795",
+    "type": "billboard_data",
+    "position": {
+      "x": 16.963682312201136,
+      "y": -51.29004090864274,
+      "z": -84.15203613698523
+    },
+    "quaternion": {
+      "x": 0.8654432251584957,
+      "y": 0.049002874536034524,
+      "z": 0.08636103618226826,
+      "w": -0.4910687464540906
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Elon was here 2024",
+    "color": "#F5FF33",
+    "owner": "MarsColony",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443708683
+  },
+  {
+    "id": "bot_1743443710683_7205",
+    "type": "billboard_data",
+    "position": {
+      "x": -30.275239036242322,
+      "y": 58.70571881724278,
+      "z": -75.08028023022567
+    },
+    "quaternion": {
+      "x": -0.446072149807093,
+      "y": 0.16967680592329662,
+      "z": 0.0865508121294337,
+      "w": 0.8744932107328689
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: 100% authentic red dirt",
+    "color": "#FF33F5",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443710683
+  },
+  {
+    "id": "bot_1743443712684_6259",
+    "type": "billboard_data",
+    "position": {
+      "x": 4.201801121111829,
+      "y": -60.76819675096847,
+      "z": 79.30681642188273
+    },
+    "quaternion": {
+      "x": 0.02372594300506378,
+      "y": 0.4427433211205817,
+      "z": 0.8962578107795562,
+      "w": -0.011720403076479587
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Trespassers will be spaced",
+    "color": "#F5FF33",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443712684
+  },
+  {
+    "id": "bot_1743443714686_7949",
+    "type": "billboard_data",
+    "position": {
+      "x": -57.05616191782214,
+      "y": 9.4729931052686,
+      "z": 81.5773055992584
+    },
+    "quaternion": {
+      "x": -0.2021380289349225,
+      "y": 0.7056584332306804,
+      "z": 0.641697165126948,
+      "w": 0.2222861694680178
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Send pizza to Mars please",
+    "color": "#FF5733",
+    "owner": "Curiosity2.0",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443714686
+  },
+  {
+    "id": "bot_1743443716686_5051",
+    "type": "billboard_data",
+    "position": {
+      "x": -36.65273992622145,
+      "y": -82.62424357572635,
+      "z": -42.77629050583763
+    },
+    "quaternion": {
+      "x": 0.896246578083904,
+      "y": -0.10223955332856548,
+      "z": -0.33145631560059974,
+      "w": -0.2764522668681587
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: 100% authentic red dirt",
+    "color": "#33FFF5",
+    "owner": "OxygenFarmer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443716686
+  },
+  {
+    "id": "bot_1743443718687_4863",
+    "type": "billboard_data",
+    "position": {
+      "x": -68.37370946628873,
+      "y": -2.2782138273555157,
+      "z": 72.93727164883799
+    },
+    "quaternion": {
+      "x": -0.2629634396804311,
+      "y": 0.6500305665055618,
+      "z": 0.6650122544195812,
+      "w": 0.2570392839075007
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Perfect spot for Mars selfies!",
+    "color": "#FF5733",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443718687
+  },
+  {
+    "id": "bot_1743443720688_351",
+    "type": "billboard_data",
+    "position": {
+      "x": 74.30959969930429,
+      "y": 20.17000115739986,
+      "z": 63.80638248513737
+    },
+    "quaternion": {
+      "x": 0.2637447333515908,
+      "y": 0.704370460359527,
+      "z": 0.5740981709100795,
+      "w": -0.32359273842270836
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Warning: Low gravity dance zone",
+    "color": "#F5FF33",
+    "owner": "SolarHarvester",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443720688
+  },
+  {
+    "id": "bot_1743443722689_5504",
+    "type": "billboard_data",
+    "position": {
+      "x": 63.34009434239939,
+      "y": -74.62111702945656,
+      "z": 20.487101844138238
+    },
+    "quaternion": {
+      "x": 0.5497311536194064,
+      "y": 0.288050322077305,
+      "z": 0.7555800711291686,
+      "w": -0.20957439443757916
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Perfect spot for Mars selfies!",
+    "color": "#FF5733",
+    "owner": "SolarHarvester",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443722689
+  },
+  {
+    "id": "bot_1743443724689_3068",
+    "type": "billboard_data",
+    "position": {
+      "x": 46.33964888734644,
+      "y": 55.47542714851125,
+      "z": -69.10219912338299
+    },
+    "quaternion": {
+      "x": -0.4513979919102747,
+      "y": -0.25664518738354003,
+      "z": -0.1373416075223214,
+      "w": 0.8435107489151658
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Best view in the solar system",
+    "color": "#3357FF",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443724689
+  },
+  {
+    "id": "bot_1743443726690_9591",
+    "type": "billboard_data",
+    "position": {
+      "x": 73.1649424711893,
+      "y": -59.67376407516067,
+      "z": -32.95349866538637
+    },
+    "quaternion": {
+      "x": 0.7504110137087321,
+      "y": 0.24374956235513054,
+      "z": 0.48502796917336266,
+      "w": -0.3771171309764103
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Best view in the solar system",
+    "color": "#33FFF5",
+    "owner": "Curiosity2.0",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443726690
+  },
+  {
+    "id": "bot_1743443728692_1329",
+    "type": "billboard_data",
+    "position": {
+      "x": 25.3758750631423,
+      "y": -22.303690584874765,
+      "z": 94.12019098511202
+    },
+    "quaternion": {
+      "x": 0.10267192920027698,
+      "y": 0.6178873636834771,
+      "z": 0.7752270169948072,
+      "w": -0.08183369034761168
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Building Mars one billboard at a time",
+    "color": "#33FFF5",
+    "owner": "OxygenFarmer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443728692
+  },
+  {
+    "id": "bot_1743443730692_347",
+    "type": "billboard_data",
+    "position": {
+      "x": 43.102160609112325,
+      "y": 42.00420300329384,
+      "z": 79.86144677430009
+    },
+    "quaternion": {
+      "x": 0.13189799712640807,
+      "y": 0.8169601045534487,
+      "z": 0.5220937687212642,
+      "w": -0.20639089753302411
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars is mine! No trespassing!",
+    "color": "#33FF57",
+    "owner": "Spirit3000",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443730692
+  },
+  {
+    "id": "bot_1743443732692_9789",
+    "type": "billboard_data",
+    "position": {
+      "x": 71.8635465004659,
+      "y": 59.2520615540761,
+      "z": -36.39813025372805
+    },
+    "quaternion": {
+      "x": -0.38457589164538347,
+      "y": -0.4671610211511327,
+      "z": -0.23630716407840408,
+      "w": 0.7602768496326923
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Planted my flag, now it's mine",
+    "color": "#FF5733",
+    "owner": "Spirit3000",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443732692
+  },
+  {
+    "id": "bot_1743443734693_6051",
+    "type": "billboard_data",
+    "position": {
+      "x": -22.38867386376985,
+      "y": 94.26705102881101,
+      "z": -24.74813877755833
+    },
+    "quaternion": {
+      "x": -0.168952983326823,
+      "y": 0.7070221819144634,
+      "z": -0.010937745696035235,
+      "w": 0.6866257273252775
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Will code for air",
+    "color": "#3357FF",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743443734693
+  }
+]

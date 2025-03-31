@@ -403,27 +403,139 @@ class PlayerCamera {
      * Create a crosshair element
      */
     createCrosshair() {
-        const crosshair = document.createElement('div');
-        crosshair.id = 'crosshair';
-        crosshair.style.position = 'absolute';
-        crosshair.style.top = '50%';
-        crosshair.style.left = '50%';
-        crosshair.style.transform = 'translate(-50%, -50%)';
-        crosshair.style.width = '20px';
-        crosshair.style.height = '20px';
-        crosshair.style.border = '2px solid white';
-        crosshair.style.borderRadius = '50%';
-        crosshair.style.opacity = '0.7';
-        crosshair.style.display = 'none'; // Hidden by default
+        // Remove ANY existing crosshair elements to prevent conflicts
+        const existingCrosshairs = document.querySelectorAll('#crosshair, .crosshair, #shooter-crosshair, #billboard-crosshair');
+        existingCrosshairs.forEach(element => {
+            if (element && element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        });
         
-        document.body.appendChild(crosshair);
-        this.crosshair = crosshair;
+        // Create shooter crosshair (circle)
+        const shooterCrosshair = document.createElement('div');
+        shooterCrosshair.id = 'shooter-crosshair';
+        shooterCrosshair.className = 'custom-crosshair';
+        shooterCrosshair.style.position = 'absolute';
+        shooterCrosshair.style.top = '50%';
+        shooterCrosshair.style.left = '50%';
+        shooterCrosshair.style.transform = 'translate(-50%, -50%)';
+        shooterCrosshair.style.width = '20px';
+        shooterCrosshair.style.height = '20px';
+        shooterCrosshair.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+        shooterCrosshair.style.borderRadius = '50%';
+        shooterCrosshair.style.opacity = '0.7';
+        shooterCrosshair.style.display = 'none'; // Hidden by default
+        shooterCrosshair.style.zIndex = '10000'; // Higher z-index to ensure it's on top
+        shooterCrosshair.style.pointerEvents = 'none'; // Make sure it doesn't interfere with clicks
+        document.body.appendChild(shooterCrosshair);
+        
+        // Create billboard crosshair (rectangle)
+        const billboardCrosshair = document.createElement('div');
+        billboardCrosshair.id = 'billboard-crosshair';
+        billboardCrosshair.className = 'custom-crosshair';
+        billboardCrosshair.style.position = 'absolute';
+        billboardCrosshair.style.top = '50%';
+        billboardCrosshair.style.left = '50%';
+        billboardCrosshair.style.transform = 'translate(-50%, -50%)';
+        billboardCrosshair.style.width = '24px';
+        billboardCrosshair.style.height = '16px';
+        billboardCrosshair.style.border = '2px solid rgba(51, 153, 255, 0.8)';
+        billboardCrosshair.style.borderRadius = '3px';
+        billboardCrosshair.style.opacity = '0.7';
+        billboardCrosshair.style.display = 'none'; // Hidden by default
+        billboardCrosshair.style.zIndex = '10000'; // Higher z-index to ensure it's on top
+        billboardCrosshair.style.pointerEvents = 'none'; // Make sure it doesn't interfere with clicks
+        document.body.appendChild(billboardCrosshair);
+        
+        // Store references to both crosshairs
+        this.shooterCrosshair = shooterCrosshair;
+        this.billboardCrosshair = billboardCrosshair;
+        
+        // Default crosshair is the shooter crosshair
+        this.crosshair = shooterCrosshair;
+        
+        // Also set up a MutationObserver to ensure our custom crosshairs aren't removed
+        this.setupCrosshairObserver();
+    }
+    
+    /**
+     * Set up an observer to watch for crosshair changes/removals
+     */
+    setupCrosshairObserver() {
+        // Create a new MutationObserver
+        this.crosshairObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                // Check if our crosshairs were removed from the DOM
+                if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+                    let needsReinsertion = false;
+                    
+                    // Check if our crosshairs were removed
+                    for (let i = 0; i < mutation.removedNodes.length; i++) {
+                        const node = mutation.removedNodes[i];
+                        if (node.id === 'shooter-crosshair' || node.id === 'billboard-crosshair') {
+                            needsReinsertion = true;
+                            break;
+                        }
+                    }
+                    
+                    // Re-insert our crosshairs if needed
+                    if (needsReinsertion && this.shooterCrosshair && this.billboardCrosshair) {
+                        if (!document.getElementById('shooter-crosshair')) {
+                            document.body.appendChild(this.shooterCrosshair);
+                        }
+                        if (!document.getElementById('billboard-crosshair')) {
+                            document.body.appendChild(this.billboardCrosshair);
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Start observing the body for removed nodes
+        this.crosshairObserver.observe(document.body, { childList: true });
+    }
+    
+    /**
+     * Update crosshair shape based on selected weapon
+     * @param {string} weaponType - Type of weapon ('billboard' or 'shooter')
+     */
+    updateCrosshairShape(weaponType) {
+        if (!this.shooterCrosshair || !this.billboardCrosshair) return;
+        
+        // First hide both crosshairs to ensure no overlap
+        this.shooterCrosshair.style.display = 'none';
+        this.billboardCrosshair.style.display = 'none';
+        
+        if (weaponType === 'billboard') {
+            // Update active crosshair reference
+            this.crosshair = this.billboardCrosshair;
+            // Only show if game is locked/active
+            if (this.isLocked) {
+                this.billboardCrosshair.style.display = 'block';
+            }
+        } else {
+            // Update active crosshair reference
+            this.crosshair = this.shooterCrosshair;
+            // Only show if game is locked/active
+            if (this.isLocked) {
+                this.shooterCrosshair.style.display = 'block';
+            }
+        }
     }
     
     /**
      * Show the crosshair
      */
     showCrosshair() {
+        // First hide both crosshairs to prevent overlap
+        if (this.shooterCrosshair) {
+            this.shooterCrosshair.style.display = 'none';
+        }
+        if (this.billboardCrosshair) {
+            this.billboardCrosshair.style.display = 'none';
+        }
+        
+        // Then only show the active crosshair
         if (this.crosshair) {
             this.crosshair.style.display = 'block';
         }
@@ -433,8 +545,11 @@ class PlayerCamera {
      * Hide the crosshair
      */
     hideCrosshair() {
-        if (this.crosshair) {
-            this.crosshair.style.display = 'none';
+        if (this.shooterCrosshair) {
+            this.shooterCrosshair.style.display = 'none';
+        }
+        if (this.billboardCrosshair) {
+            this.billboardCrosshair.style.display = 'none';
         }
     }
     
