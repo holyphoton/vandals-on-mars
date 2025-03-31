@@ -3,7 +3,8 @@
     "radius": 100,
     "dayNightCycle": 600,
     "maxBillboards": 500,
-    "terrainSeed": 42424242
+    "terrainSeed": 42424242,
+    "useServerTerrain": true
   },
   "player": {
     "runSpeed": 5,
@@ -41,5 +42,10 @@
   },
   "persistence": {
     "autoSaveDelay": 15
-  }
+  },
+  "server": {
+    "url": "ws://localhost:8090",
+    "reconnectInterval": 5000
+  },
+  "isMultiplayer": true
 } 

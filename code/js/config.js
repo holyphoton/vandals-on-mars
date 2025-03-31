@@ -55,42 +55,55 @@ const CONFIG = { ...DEFAULT_CONFIG };
 // Load configuration from JSON file
 async function loadConfig() {
     try {
-        console.log('Attempting to load configuration from /config.json...');
-        const response = await fetch('/config.json');
+        console.log('Attempting to load configuration from root /config.json...');
+        // Use an absolute path to the root config file
+        const response = await fetch('/../../config.json');
         if (!response.ok) {
-            console.error(`Failed to load config: HTTP ${response.status} ${response.statusText}`);
-            throw new Error(`Failed to load config: ${response.statusText}`);
+            console.error(`Failed to load root config: HTTP ${response.status} ${response.statusText}`);
+            console.log('Falling back to local config file...');
+            
+            // Try the local config as fallback (for development environments)
+            const localResponse = await fetch('/config.json');
+            if (!localResponse.ok) {
+                throw new Error(`Failed to load any config: ${localResponse.statusText}`);
+            }
+            return await processConfigResponse(localResponse, 'local');
         }
         
-        console.log('Config file response received, parsing JSON...');
-        const loadedConfig = await response.json();
-        
-        console.log('Raw loaded config:', loadedConfig);
-        
-        // Check if billboard config with damagePerShot exists
-        if (loadedConfig.billboard && loadedConfig.billboard.damagePerShot !== undefined) {
-            console.log(`Found damagePerShot in loaded config: ${loadedConfig.billboard.damagePerShot}`);
-        } else {
-            console.warn('damagePerShot not found in loaded config');
-        }
-        
-        // Merge loaded config with defaults
-        console.log('Merging loaded config with defaults...');
-        mergeConfig(CONFIG, loadedConfig);
-        
-        // Verify damagePerShot was properly merged
-        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
-            console.log(`Final CONFIG.billboard.damagePerShot after merge: ${CONFIG.billboard.damagePerShot}`);
-        } else {
-            console.warn('damagePerShot missing in final CONFIG after merge');
-        }
-        
-        console.log('Final configuration after merge:', CONFIG);
-        return CONFIG;
+        return await processConfigResponse(response, 'root');
     } catch (error) {
         console.warn('Error loading configuration, using defaults:', error);
         return CONFIG;
     }
+}
+
+// Helper function to process config response
+async function processConfigResponse(response, source) {
+    console.log(`${source} config file response received, parsing JSON...`);
+    const loadedConfig = await response.json();
+    
+    console.log(`Raw loaded config from ${source}:`, loadedConfig);
+    
+    // Check if billboard config with damagePerShot exists
+    if (loadedConfig.billboard && loadedConfig.billboard.damagePerShot !== undefined) {
+        console.log(`Found damagePerShot in ${source} config: ${loadedConfig.billboard.damagePerShot}`);
+    } else {
+        console.warn(`damagePerShot not found in ${source} config`);
+    }
+    
+    // Merge loaded config with defaults
+    console.log('Merging loaded config with defaults...');
+    mergeConfig(CONFIG, loadedConfig);
+    
+    // Verify damagePerShot was properly merged
+    if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+        console.log(`Final CONFIG.billboard.damagePerShot after merge: ${CONFIG.billboard.damagePerShot}`);
+    } else {
+        console.warn('damagePerShot missing in final CONFIG after merge');
+    }
+    
+    console.log('Final configuration after merge:', CONFIG);
+    return CONFIG;
 }
 
 // Helper function to merge configuration objects
@@ -137,40 +150,58 @@ async function reloadConfig() {
     try {
         // Force a cache-busting fetch of the config
         const cacheBuster = `?bust=${Date.now()}`;
-        const response = await fetch(`/config.json${cacheBuster}`);
+        
+        // Try root config first
+        const response = await fetch(`/../../config.json${cacheBuster}`);
         
         if (!response.ok) {
-            console.error(`Failed to reload config: HTTP ${response.status} ${response.statusText}`);
-            throw new Error(`Failed to reload config: ${response.statusText}`);
+            console.error(`Failed to reload root config: HTTP ${response.status} ${response.statusText}`);
+            console.log('Trying local config file...');
+            
+            // Try local config as fallback
+            const localResponse = await fetch(`/config.json${cacheBuster}`);
+            if (!localResponse.ok) {
+                throw new Error(`Failed to reload any config: ${localResponse.statusText}`);
+            }
+            
+            // Process the local config
+            const loadedConfig = await localResponse.json();
+            console.log('Raw reloaded config (local):', loadedConfig);
+            return processReloadedConfig(loadedConfig);
         }
         
+        // Process the root config
         const loadedConfig = await response.json();
-        console.log('Raw reloaded config:', loadedConfig);
-        
-        // Create a fresh CONFIG object based on defaults
-        const freshConfig = { ...DEFAULT_CONFIG };
-        
-        // Merge the loaded config into the fresh CONFIG
-        mergeConfig(freshConfig, loadedConfig);
-        
-        // Replace the global CONFIG with the fresh one
-        Object.keys(CONFIG).forEach(key => delete CONFIG[key]);
-        Object.assign(CONFIG, freshConfig);
-        
-        console.log('Configuration successfully reloaded:', CONFIG);
-        
-        // Specifically check damagePerShot
-        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
-            console.log(`Reloaded CONFIG.billboard.damagePerShot: ${CONFIG.billboard.damagePerShot}`);
-        } else {
-            console.warn('damagePerShot still missing in reloaded CONFIG');
-        }
-        
-        return CONFIG;
+        console.log('Raw reloaded config (root):', loadedConfig);
+        return processReloadedConfig(loadedConfig);
     } catch (error) {
         console.error('Error reloading configuration:', error);
         return CONFIG;
     }
+}
+
+// Helper function to process reloaded config
+function processReloadedConfig(loadedConfig) {
+    // Create a fresh CONFIG object based on defaults
+    const freshConfig = { ...DEFAULT_CONFIG };
+    
+    // Merge the loaded config into the fresh CONFIG
+    mergeConfig(freshConfig, loadedConfig);
+    
+    // Replace the global CONFIG with the fresh one
+    Object.keys(CONFIG).forEach(key => delete CONFIG[key]);
+    Object.assign(CONFIG, freshConfig);
+    
+    console.log('Configuration successfully reloaded:', CONFIG);
+    
+    // Specifically check damagePerShot
+    if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+        console.log(`Reloaded CONFIG.billboard.damagePerShot: ${CONFIG.billboard.damagePerShot}`);
+    } else {
+        console.warn('damagePerShot still missing in reloaded CONFIG');
+    }
+    
+    return CONFIG;
 }
 
 // Make CONFIG, CONSTANTS, and config functions available globally

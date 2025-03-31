@@ -454,5 +454,17 @@
     "shootingAmmo": 0,
     "billboardAmmo": 2,
     "lastUpdate": 1743412132394
+  },
+  "player_80246_yrrlw": {
+    "username": "Anonymous",
+    "billboardText": "YOYOMA",
+    "position": {
+      "x": 18.458820112347787,
+      "y": 32.56543654825979,
+      "z": -94.66786309239927
+    },
+    "shootingAmmo": 157,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743412517761
   }
 }
