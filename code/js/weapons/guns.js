@@ -244,6 +244,10 @@ class BillboardGun extends Gun {
         const initialArea = startSize * startSize;
         const initialHealth = initialArea * healthSizeMultiplier;
         
+        // Calculate scale factors based on ratio to starting size
+        const widthScale = 1.0; // Initially 1.0 since we're using startSize
+        const heightScale = 1.0; // Initially 1.0 since we're using startSize
+        
         // Create a billboard object for tracking
         const billboard = {
             id: billboardId,
@@ -273,8 +277,11 @@ class BillboardGun extends Gun {
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
-        // Position the sign halfway up the legs
-        signMesh.position.y = 2.8;
+        // Scale the sign based on width and height
+        signMesh.scale.set(widthScale, heightScale, 1);
+        
+        // Position the sign halfway up the legs (scaled by height)
+        signMesh.position.y = 2.8 * heightScale;
         billboardGroup.add(signMesh);
         
         // Create legs for the billboard
@@ -283,14 +290,18 @@ class BillboardGun extends Gun {
             color: 0x333333 // Dark gray
         });
         
-        // Left leg - positioned at lower left corner of sign
+        // Left leg - positioned at lower left corner of sign (scaled by width)
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-1.2, 0, 0);
+        leftLeg.position.set(-1.2 * widthScale, 0, 0);
+        // Scale leg height
+        leftLeg.scale.y = heightScale;
         billboardGroup.add(leftLeg);
         
-        // Right leg - positioned at lower right corner of sign
+        // Right leg - positioned at lower right corner of sign (scaled by width)
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(1.2, 0, 0);
+        rightLeg.position.set(1.2 * widthScale, 0, 0);
+        // Scale leg height
+        rightLeg.scale.y = heightScale;
         billboardGroup.add(rightLeg);
         
         // Set position from data
@@ -306,8 +317,11 @@ class BillboardGun extends Gun {
             const globeCenter = this.globe.globe.position.clone();
             const globeRadius = this.globe.radius || 100;
             
-            // Get normalized direction from center to billboard (normal to surface)
-            const surfaceNormal = position.clone().sub(globeCenter).normalize();
+            // Calculate ground sink factor for larger billboards (for consistent positioning)
+            const groundSinkFactor = -0.2 * (heightScale / 10);
+            const surfacePosition = globeCenter.clone().add(
+                position.clone().sub(globeCenter).normalize().multiplyScalar(globeRadius + groundSinkFactor)
+            );
             
             // SIMPLIFIED ORIENTATION APPROACH:
             // 1. Calculate up vector (normal to surface)
@@ -353,8 +367,19 @@ class BillboardGun extends Gun {
             const rotationMatrix = new THREE.Matrix4().makeRotationAxis(upVector, angle);
             billboardGroup.quaternion.premultiply(new THREE.Quaternion().setFromRotationMatrix(rotationMatrix));
             
+            // Reposition the billboard on the surface with proper height offset
+            const originalHeight = 4.0; // Original height in the model
+            const totalHeight = originalHeight * heightScale; // New scaled height
+            const centerOffset = totalHeight / 2; // Distance from base to center
+            
+            // Position the billboard with its base at the surface position
+            // and its center offset outward along the surface normal
+            billboardGroup.position.copy(surfacePosition);
+            billboardGroup.position.add(upVector.clone().multiplyScalar(centerOffset));
+            
             // Store the quaternion for later use
             billboard.quaternion = billboardGroup.quaternion.clone();
+            billboard.position = billboardGroup.position.clone();
         } else {
             // No globe reference, just face the camera
             billboardGroup.lookAt(cameraPosition);
