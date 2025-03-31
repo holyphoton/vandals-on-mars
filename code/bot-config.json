@@ -59,12 +59,11 @@
     "SolarHarvester",
     "MartianDreamer"
   ],
-  "spawnInterval": 10000,
+  "spawnInterval": 3000,
   "maxBots": 20,
   "spawnChance": 0.3,
   "minDistance": 20,
-  "checkInterval": 10000,
-  "initialCount": 15,
+  "checkInterval": 5000,
   "billboardSize": {
     "width": 5,
     "height": 5

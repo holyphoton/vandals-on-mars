@@ -1,1 +1,439 @@
-[]
+[
+  {
+    "type": "billboard_data",
+    "id": "bot_51674_ftjue",
+    "position": {
+      "x": -7.436330101161215,
+      "y": -20.090571311557913,
+      "z": 97.67840057557132
+    },
+    "quaternion": {
+      "x": 0.5643013978237512,
+      "y": -0.46688672183737456,
+      "z": -0.5310525293904079,
+      "w": 0.42610319455991
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Keep Mars weird",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418385790
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_75508_gkroy",
+    "position": {
+      "x": -54.89105570582094,
+      "y": -64.72058286547481,
+      "z": -52.89818670855997
+    },
+    "quaternion": {
+      "x": -0.57005073955195,
+      "y": -0.0368093919584543,
+      "z": 0.706148050102561,
+      "w": 0.4183803943019735
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No refunds on Mars property",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418388793
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_99776_qlzoq",
+    "position": {
+      "x": -71.07915068130495,
+      "y": 22.93186512554293,
+      "z": -66.49724731361633
+    },
+    "quaternion": {
+      "x": -0.1571017231128484,
+      "y": -0.3732831057424656,
+      "z": 0.600549517498149,
+      "w": 0.6894338609286419
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Planted my flag, now it's mine",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418394962
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_87070_wdftp",
+    "position": {
+      "x": -17.984891655898654,
+      "y": 14.76703938455921,
+      "z": 97.25470795771515
+    },
+    "quaternion": {
+      "x": -0.5074791831669851,
+      "y": 0.5756477380053069,
+      "z": 0.4106454452801998,
+      "w": -0.4924072284727039
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: Red planet, green opportunity",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418397962
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_25080_qjuro",
+    "position": {
+      "x": -40.8343969184708,
+      "y": -70.83982871827848,
+      "z": -57.56970293018499
+    },
+    "quaternion": {
+      "x": -0.6022595654258368,
+      "y": -0.09228998079707972,
+      "z": 0.7010581712272347,
+      "w": 0.3705177672569593
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: Red planet, green opportunity",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418400791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_55950_affwj",
+    "position": {
+      "x": -4.3027495239767415,
+      "y": 99.29491910321465,
+      "z": -11.045604864378337
+    },
+    "quaternion": {
+      "x": -0.02394658795829792,
+      "y": -0.7050163364000283,
+      "z": 0.05433199250057284,
+      "w": 0.7067011822016117
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "I peed here ¯\\_(ツ)_/¯",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418403792
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_33712_siqhj",
+    "position": {
+      "x": -2.8352093739792332,
+      "y": 71.32431476394392,
+      "z": 70.03430381791165
+    },
+    "quaternion": {
+      "x": 0.27686685846097214,
+      "y": -0.6582376707039543,
+      "z": -0.2583082826125257,
+      "w": 0.6506494775883187
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Unauthorized human access prohibited",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418406791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_17810_fglsi",
+    "position": {
+      "x": -65.46621984369219,
+      "y": 50.063390960647595,
+      "z": 56.63771662857457
+    },
+    "quaternion": {
+      "x": 0.4974621307407783,
+      "y": -0.705539174195447,
+      "z": -0.04705819456382511,
+      "w": 0.5025250525882713
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Earth called, they miss you",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418409791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_56107_zmwrm",
+    "position": {
+      "x": -13.756650895802858,
+      "y": -85.42059657280184,
+      "z": 50.140564788179645
+    },
+    "quaternion": {
+      "x": 0.6935136404787494,
+      "y": -0.232073666464075,
+      "z": -0.6679384802015237,
+      "w": 0.1379812685472634
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No refunds on Mars property",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418412791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_62267_aolrb",
+    "position": {
+      "x": 83.15735742465246,
+      "y": -31.27905628950309,
+      "z": 45.89634564741179
+    },
+    "quaternion": {
+      "x": 0.39548225050755764,
+      "y": 0.003305906684590671,
+      "z": -0.7070990531608656,
+      "w": 0.5861687381065945
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "This land costs 5 BTC, DM for details",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418415791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_45132_itaxx",
+    "position": {
+      "x": 56.79980571979046,
+      "y": 29.2287691321498,
+      "z": -76.93803432122208
+    },
+    "quaternion": {
+      "x": 0.5564811705496203,
+      "y": 0.6751408288920354,
+      "z": -0.21020195328059024,
+      "w": -0.4362667840023171
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Best view in the solar system",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418418790
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_88493_xishx",
+    "position": {
+      "x": -38.54865586933853,
+      "y": -34.66581554559641,
+      "z": -85.51188433911393
+    },
+    "quaternion": {
+      "x": -0.4973456871578476,
+      "y": -0.27207288509980093,
+      "z": 0.6526686335296576,
+      "w": 0.5026402963009317
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Trespassers will be spaced",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418421791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_23534_mtefb",
+    "position": {
+      "x": -67.3706545805866,
+      "y": 71.67224626227102,
+      "z": 18.007887635801854
+    },
+    "quaternion": {
+      "x": 0.334457018398497,
+      "y": -0.6857278822298009,
+      "z": 0.17256092122097733,
+      "w": 0.623007626633886
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Got Mars? I do!",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418424791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_27039_rzezs",
+    "position": {
+      "x": -44.59186643091971,
+      "y": 79.38983808743282,
+      "z": 41.337864684308684
+    },
+    "quaternion": {
+      "x": 0.32095313245594553,
+      "y": -0.7070785696585974,
+      "z": -0.006316354134479532,
+      "w": 0.6300706998160732
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Send pizza to Mars please",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418427791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_19968_sojjh",
+    "position": {
+      "x": -19.453215614424007,
+      "y": 90.21596727924758,
+      "z": -38.50521588211735
+    },
+    "quaternion": {
+      "x": -0.07327423818336522,
+      "y": -0.6756100579310453,
+      "z": 0.20868888236417774,
+      "w": 0.7032999971695205
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Alien parking only, humans towed",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418430791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_60354_bcoge",
+    "position": {
+      "x": -32.05275970398552,
+      "y": 54.853123004636345,
+      "z": 77.22535524034058
+    },
+    "quaternion": {
+      "x": 0.4221328530801611,
+      "y": -0.6726527786850943,
+      "z": -0.21803265656140017,
+      "w": 0.5672775813923931
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "First Martian, deal with it!",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418433790
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_84881_loiqs",
+    "position": {
+      "x": -38.964798681881085,
+      "y": -18.632008601702374,
+      "z": 90.19197702205317
+    },
+    "quaternion": {
+      "x": 0.6260812166876984,
+      "y": -0.5466421561502889,
+      "z": -0.4485335585208348,
+      "w": 0.32866747650300193
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Elon was here 2024",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418436791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_99068_riwbu",
+    "position": {
+      "x": -71.14295659265949,
+      "y": -69.95719319650347,
+      "z": 6.683625312811575
+    },
+    "quaternion": {
+      "x": 0.66468657220636,
+      "y": -0.30335173196954596,
+      "z": -0.6387313415756869,
+      "w": -0.2412296845924221
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "First Martian, deal with it!",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418439791
+  },
+  {
+    "type": "billboard_data",
+    "id": "bot_76935_yzbjl",
+    "position": {
+      "x": -85.83253002344169,
+      "y": 50.36924863007653,
+      "z": 9.783434070739844
+    },
+    "quaternion": {
+      "x": 0.4061911890294852,
+      "y": -0.6456295572505718,
+      "z": 0.28837904709675194,
+      "w": 0.5787993762564133
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Earth is so last millennium",
+    "owner": "Mars Bot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743418442793
+  }
+]

@@ -246,7 +246,7 @@ const httpServer = http.createServer((req, res) => {
   // Serve bot-config.json
   else if (parsedUrl.pathname === '/bot-config.json' && req.method === 'GET') {
     try {
-      const configFilePath = path.join(__dirname, 'bot-config.json');
+      const configFilePath = path.join(__dirname, 'code', 'bot-config.json');
       if (fs.existsSync(configFilePath)) {
         const data = fs.readFileSync(configFilePath, 'utf8');
         res.writeHead(200, { 'Content-Type': 'application/json' });

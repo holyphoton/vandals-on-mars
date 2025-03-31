@@ -490,5 +490,29 @@
     "shootingAmmo": 189,
     "billboardAmmo": 2,
     "lastUpdate": 1743415406400
+  },
+  "player_47358_mwgig": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": -57.06791754347748,
+      "y": 84.26977946930572,
+      "z": -2.2576659286607623
+    },
+    "shootingAmmo": 138,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743417039977
+  },
+  "player_81693_uswns": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 6.86995800814363,
+      "y": -77.105263406853,
+      "z": -66.11219276295533
+    },
+    "shootingAmmo": 111,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743418508958
   }
 }
