@@ -17,6 +17,9 @@ const billboards = [];
 // Store bot billboards separately
 const botBillboards = [];
 
+// Store powerups separately
+const powerups = [];
+
 // Store player data for persistence
 const playerData = {};
 
@@ -29,6 +32,9 @@ const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
 // Bot billboard data file path
 const BOT_BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data-bots.json');
 
+// Powerup data file path
+const POWERUP_DATA_FILE = path.join(__dirname, 'powerups-data.json');
+
 // Bot configuration
 let botConfig = {
   spawnInterval: 2000,
@@ -38,10 +44,25 @@ let botConfig = {
   checkInterval: 3000
 };
 
+// Powerup configuration
+let powerupConfig = {
+  spawnInterval: 5000,
+  maxPowerups: 10,
+  spawnChance: 0.3,
+  minDistance: 20,
+  checkInterval: 5000,
+  types: []
+};
+
 // Bot spawning control variables
 let botSpawningTimer = null;
 let botCheckTimer = null;
 let isSpawningBots = false;
+
+// Powerup spawning control variables
+let powerupSpawningTimer = null;
+let powerupCheckTimer = null;
+let isSpawningPowerups = false;
 
 // Generate and store terrain data
 let terrainData = null;
@@ -218,6 +239,72 @@ async function loadBotConfig() {
   } catch (error) {
     console.error('Error loading bot configuration:', error);
     return botConfig;
+  }
+}
+
+// Load saved powerup data from file
+function loadPowerupData() {
+  try {
+    if (fs.existsSync(POWERUP_DATA_FILE)) {
+      const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
+      const parsedData = JSON.parse(data);
+      
+      // Clear existing powerups and load from file
+      powerups.length = 0;
+      
+      // Copy all powerups from file
+      parsedData.forEach(powerup => {
+        powerups.push(powerup);
+      });
+      
+      console.log(`Loaded ${powerups.length} powerups from file`);
+    } else {
+      console.log('No powerup data file found, starting with empty powerups');
+    }
+  } catch (error) {
+    console.error('Error loading powerup data:', error);
+  }
+}
+
+// Save powerup data to file
+function savePowerupData() {
+  try {
+    fs.writeFileSync(
+      POWERUP_DATA_FILE,
+      JSON.stringify(powerups, null, 2),
+      'utf8'
+    );
+    console.log('Powerup data saved to file');
+  } catch (error) {
+    console.error('Error saving powerup data:', error);
+  }
+}
+
+// Load powerup configuration from the powerups-config.json file
+async function loadPowerupConfig() {
+  try {
+    const configFilePath = path.join(__dirname, 'code', 'powerups-config.json');
+    if (fs.existsSync(configFilePath)) {
+      const data = fs.readFileSync(configFilePath, 'utf8');
+      const parsedConfig = JSON.parse(data);
+      
+      // Update the powerup configuration
+      powerupConfig = parsedConfig;
+      
+      console.log('Powerup configuration loaded successfully:');
+      console.log(`- Maximum powerups: ${powerupConfig.maxPowerups}`);
+      console.log(`- Check interval: ${powerupConfig.checkInterval}ms`);
+      console.log(`- Spawn interval: ${powerupConfig.spawnInterval}ms`);
+      console.log(`- Powerup types: ${powerupConfig.types.length}`);
+      
+      return powerupConfig;
+    } else {
+      console.warn('Powerup configuration file not found, using defaults');
+      return powerupConfig;
+    }
+  } catch (error) {
+    console.error('Error loading powerup configuration:', error);
+    return powerupConfig;
   }
 }
 
@@ -526,11 +613,203 @@ function broadcastBillboardData(billboardData) {
   });
 }
 
+// Check if more powerups need to be spawned
+function checkPowerups() {
+  // Get the current count of powerups
+  const currentPowerupCount = powerups.length;
+  
+  console.log(`Checking powerups: ${currentPowerupCount}/${powerupConfig.maxPowerups}`);
+  
+  // If we have more than the maximum, trim the excess powerups
+  if (currentPowerupCount > powerupConfig.maxPowerups) {
+    console.log(`Found ${currentPowerupCount} powerups, exceeding maximum of ${powerupConfig.maxPowerups}`);
+    console.log(`Trimming excess powerups...`);
+    
+    // Sort powerups by timestamp (oldest first)
+    powerups.sort((a, b) => a.createdAt - b.createdAt);
+    
+    // Keep only the newest up to maxPowerups
+    const excess = powerups.splice(0, currentPowerupCount - powerupConfig.maxPowerups);
+    console.log(`Removed ${excess.length} excess powerups`);
+    
+    // Save the updated powerups
+    savePowerupData();
+    
+    // Stop any active spawning
+    if (isSpawningPowerups) {
+      stopSpawningPowerups();
+    }
+    
+    return;
+  }
+  
+  // If we need to spawn more powerups
+  if (currentPowerupCount < powerupConfig.maxPowerups) {
+    const powerupsToSpawn = powerupConfig.maxPowerups - currentPowerupCount;
+    console.log(`Need to spawn ${powerupsToSpawn} more powerups`);
+    
+    // Start spawning powerups if not already spawning
+    if (!isSpawningPowerups) {
+      startSpawningPowerups();
+    }
+  } else {
+    console.log('Maximum powerup count reached, no new spawns needed');
+    
+    // Stop any active spawning
+    if (isSpawningPowerups) {
+      stopSpawningPowerups();
+    }
+  }
+}
+
+// Start spawning powerups at the specified interval
+function startSpawningPowerups() {
+  if (isSpawningPowerups) return;
+  
+  console.log(`Starting powerup spawning with interval ${powerupConfig.spawnInterval}ms`);
+  isSpawningPowerups = true;
+  
+  // Immediately spawn the first powerup
+  spawnPowerup();
+  
+  // Set up interval for subsequent spawns
+  powerupSpawningTimer = setInterval(() => {
+    // Check if we've reached max powerups
+    if (powerups.length >= powerupConfig.maxPowerups) {
+      console.log('Maximum powerup count reached during spawning, stopping');
+      stopSpawningPowerups();
+      return;
+    }
+    
+    // Otherwise spawn another powerup
+    spawnPowerup();
+  }, powerupConfig.spawnInterval);
+}
+
+// Stop the powerup spawning process
+function stopSpawningPowerups() {
+  if (!isSpawningPowerups) return;
+  
+  console.log('Stopping powerup spawning');
+  
+  if (powerupSpawningTimer) {
+    clearInterval(powerupSpawningTimer);
+    powerupSpawningTimer = null;
+  }
+  
+  isSpawningPowerups = false;
+}
+
+// Generate a unique ID for powerups
+function generatePowerupId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `powerup_${timestamp}_${random}`;
+}
+
+// Select a random powerup type based on weights
+function selectRandomPowerupType() {
+  // If no types defined, return null
+  if (!powerupConfig.types || powerupConfig.types.length === 0) {
+    return null;
+  }
+  
+  // Calculate total weight
+  const totalWeight = powerupConfig.types.reduce((sum, type) => sum + (type.weight || 1), 0);
+  
+  // Generate random value between 0 and totalWeight
+  const random = Math.random() * totalWeight;
+  
+  // Find the selected type
+  let cumulativeWeight = 0;
+  for (const type of powerupConfig.types) {
+    cumulativeWeight += (type.weight || 1);
+    if (random < cumulativeWeight) {
+      return type;
+    }
+  }
+  
+  // Default to first type if something goes wrong
+  return powerupConfig.types[0];
+}
+
+// Spawn a single powerup
+function spawnPowerup() {
+  try {
+    // Check if we've reached the maximum before attempting to spawn
+    if (powerups.length >= powerupConfig.maxPowerups) {
+      console.log(`Maximum powerup count (${powerupConfig.maxPowerups}) reached, not spawning a new powerup`);
+      
+      // Stop the spawning process if it's still running
+      if (isSpawningPowerups) {
+        stopSpawningPowerups();
+      }
+      
+      return null;
+    }
+    
+    // Select a random powerup type based on weights
+    const powerupType = selectRandomPowerupType();
+    if (!powerupType) {
+      console.error('No powerup types defined in configuration');
+      return null;
+    }
+    
+    // Generate a random position
+    const position = getRandomPositionOnGlobe();
+    
+    // Calculate quaternion for orientation
+    const quaternion = calculateQuaternion(position);
+    
+    // Create the powerup data
+    const powerupData = {
+      id: generatePowerupId(),
+      type: powerupType.type,
+      position: position,
+      quaternion: quaternion,
+      size: powerupType.size || 1,
+      color: powerupType.color || '#FFFFFF',
+      text: powerupType.text || '',
+      effectAmount: powerupType.effectAmount || 0,
+      lifespan: powerupType.lifespan || null,
+      createdAt: Date.now(),
+      isCollected: false
+    };
+    
+    // Add to powerups array
+    powerups.push(powerupData);
+    
+    console.log(`Powerup spawned: "${powerupType.type}" (${powerups.length}/${powerupConfig.maxPowerups})`);
+    
+    // Save powerups to file
+    savePowerupData();
+    
+    // Broadcast to all connected clients
+    broadcastPowerupData(powerupData);
+    
+    return powerupData;
+  } catch (error) {
+    console.error('Error spawning powerup:', error);
+    return null;
+  }
+}
+
+// Broadcast powerup data to all connected clients
+function broadcastPowerupData(powerupData) {
+  powerupData.messageType = 'powerup_data'; // Add message type for client identification
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(powerupData));
+    }
+  });
+}
+
 // Initialize terrain data and player data at server startup
 initializeTerrainData();
 loadPlayerData();
 loadBillboardData(); // Load billboard data on startup
 loadBotBillboardData(); // Load bot billboard data on startup
+loadPowerupData(); // Load powerup data on startup
 
 // Load bot configuration and start bot management
 (async function initializeBotSystem() {
@@ -541,6 +820,17 @@ loadBotBillboardData(); // Load bot billboard data on startup
   
   // Perform initial check
   checkBotBillboards();
+})();
+
+// Load powerup configuration and start powerup management
+(async function initializePowerupSystem() {
+  await loadPowerupConfig();
+  
+  // Set up periodic checking for powerups
+  powerupCheckTimer = setInterval(checkPowerups, powerupConfig.checkInterval);
+  
+  // Perform initial check
+  checkPowerups();
 })();
 
 // Log server startup
@@ -643,7 +933,21 @@ httpServer.listen(8091, () => {
 
 // WebSocket server
 server.on('connection', (socket) => {
-  console.log('Player connected');
+  console.log('New client connected');
+  
+  // Send all existing billboards to the new client
+  const allBillboardsMessage = JSON.stringify({
+    type: 'all_billboards',
+    billboards: billboards
+  });
+  socket.send(allBillboardsMessage);
+  
+  // Send all existing powerups to the new client
+  const allPowerupsMessage = JSON.stringify({
+    type: 'all_powerups',
+    powerups: powerups
+  });
+  socket.send(allPowerupsMessage);
 
   socket.on('message', (message) => {
     try {
@@ -910,6 +1214,9 @@ server.on('connection', (socket) => {
           }
         }
       }
+      else if (data.type === 'powerup_collected') {
+        handlePowerupCollected(socket, data);
+      }
 
       // Broadcast the general message to all other clients for other message types
       // But don't broadcast billboard data or removals that are already handled above
@@ -939,3 +1246,53 @@ server.on('connection', (socket) => {
     console.log('Player disconnected');
   });
 });
+
+/**
+ * Handle powerup collected message from client
+ * @param {WebSocket} socket - Client WebSocket connection
+ * @param {Object} data - Powerup collected data
+ */
+function handlePowerupCollected(socket, data) {
+  try {
+    // Validate data
+    if (!data.powerupId) {
+      console.warn('Invalid powerup collected data (missing powerupId)');
+      return;
+    }
+    
+    console.log(`Powerup collected by player ${data.playerId}: ${data.powerupId} (${data.powerupType})`);
+    
+    // Find the powerup in our collection
+    const powerupIndex = powerups.findIndex(p => p.id === data.powerupId);
+    
+    if (powerupIndex === -1) {
+      console.warn(`Powerup ${data.powerupId} not found, cannot mark as collected`);
+      return;
+    }
+    
+    // Mark as collected
+    powerups[powerupIndex].isCollected = true;
+    powerups[powerupIndex].collectedBy = data.playerId;
+    powerups[powerupIndex].collectedAt = Date.now();
+    
+    // Save updated powerups data
+    savePowerupData();
+    
+    // Broadcast the collection to all clients
+    server.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'powerup_collected',
+          powerupId: data.powerupId,
+          powerupType: data.powerupType,
+          playerId: data.playerId
+        }));
+      }
+    });
+    
+    // Schedule a check for new powerups
+    setTimeout(checkPowerups, 1000);
+  } catch (error) {
+    console.error('Error handling powerup collected:', error);
+  }
+}

@@ -48,6 +48,20 @@ class Game {
         // WebSocket connection for multiplayer
         this.socket = null;
         this.connectedToServer = false;
+        this.playerId = null;
+        this.lastSyncTime = 0;
+        this.syncInterval = 100; // ms
+        
+        // Message handlers registry
+        this.messageHandlers = new Map();
+        
+        // Debugging flags
+        this.debugging = {
+          showColliders: false,
+          wireframe: false
+        };
+        
+        // Game objects
         this.billboards = []; // Global billboard data store
         
         // Player persistence system
@@ -1205,6 +1219,21 @@ class Game {
      * @param {Object} data - The parsed message data
      */
     processServerMessage(data) {
+        // First check for registered message handlers
+        if (data.type && this.messageHandlers && this.messageHandlers.has(data.type)) {
+            const handler = this.messageHandlers.get(data.type);
+            handler(data);
+            return;
+        }
+        
+        // Check for messageType (alternative field used by powerups)
+        if (data.messageType && this.messageHandlers && this.messageHandlers.has(data.messageType)) {
+            const handler = this.messageHandlers.get(data.messageType);
+            handler(data);
+            return;
+        }
+
+        // Process built-in message types
         switch (data.type) {
             case 'billboard_data':
                 this.processBillboardData(data);
@@ -1220,6 +1249,15 @@ class Game {
                 break;
             case 'terrain_data':
                 this.processTerrainData(data);
+                break;
+            case 'all_powerups':
+                this.processAllPowerups(data);
+                break;
+            case 'powerup_data':
+                this.processPowerupData(data);
+                break;
+            case 'powerup_collected':
+                this.processPowerupCollected(data);
                 break;
             default:
                 console.warn('Unknown message type:', data.type);
@@ -1694,6 +1732,60 @@ class Game {
         };
         
         this.socket.send(JSON.stringify(message));
+    }
+
+    /**
+     * Process all powerups received from server
+     * @param {Object} data - The all_powerups message data
+     */
+    processAllPowerups(data) {
+        console.log(`Received ${data.powerups ? data.powerups.length : 0} powerups from server`);
+        
+        // Forward to PowerupManager if available
+        if (this.powerupManager) {
+            this.powerupManager.handleAllPowerups(data);
+        } else {
+            console.warn('PowerupManager not available to process powerups from server');
+        }
+    }
+    
+    /**
+     * Process powerup data from server
+     * @param {Object} data - The powerup data
+     */
+    processPowerupData(data) {
+        // Forward to PowerupManager if available
+        if (this.powerupManager) {
+            this.powerupManager.handlePowerupData(data);
+        } else {
+            console.warn('PowerupManager not available to process powerup from server');
+        }
+    }
+    
+    /**
+     * Process powerup collected message from server
+     * @param {Object} data - The powerup_collected message data
+     */
+    processPowerupCollected(data) {
+        // Forward to PowerupManager if available
+        if (this.powerupManager) {
+            this.powerupManager.handlePowerupCollected(data);
+        } else {
+            console.warn('PowerupManager not available to process powerup collected from server');
+        }
+    }
+
+    /**
+     * Register a message handler for a specific message type
+     * @param {string} type - The message type to handle
+     * @param {Function} handler - The handler function
+     */
+    addMessageHandler(type, handler) {
+        if (!this.messageHandlers) {
+            this.messageHandlers = new Map();
+        }
+        this.messageHandlers.set(type, handler);
+        console.log(`Registered handler for message type: ${type}`);
     }
 }
 

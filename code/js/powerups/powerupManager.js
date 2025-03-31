@@ -21,6 +21,9 @@ class PowerupManager {
         this.checkInterval = 100; // How often to check for collisions (ms)
         this.lastCheckTime = 0;
         
+        // Flag to track if we've received initial powerups from server
+        this.initialPowerupsReceived = false;
+        
         // Register known powerup types
         this.registerPowerupTypes();
     }
@@ -31,7 +34,15 @@ class PowerupManager {
     initialize() {
         console.log('PowerupManager initialized');
         
-        // Nothing to do here yet until we implement server-side spawning
+        // Register for WebSocket message handling if game has a WebSocket
+        if (this.game && this.game.addMessageHandler) {
+            this.game.addMessageHandler('powerup_data', this.handlePowerupData.bind(this));
+            this.game.addMessageHandler('all_powerups', this.handleAllPowerups.bind(this));
+            this.game.addMessageHandler('powerup_collected', this.handlePowerupCollected.bind(this));
+            console.log('Registered WebSocket message handlers for powerups');
+        } else {
+            console.warn('Game WebSocket message handler registration not available');
+        }
     }
     
     /**
@@ -432,7 +443,7 @@ class PowerupManager {
                 this.game.audio.playSound('powerup_collect');
             }
             
-            // Send collection event to server if multiplayer
+            // Send collection event to server
             this.sendPowerupCollectedToServer(powerup);
             
             // Schedule removal
@@ -443,25 +454,169 @@ class PowerupManager {
     }
     
     /**
+     * Handle powerup data received from the server
+     * @param {Object} data The powerup data
+     */
+    handlePowerupData(data) {
+        try {
+            // Skip if already in our collection
+            if (this.powerups.has(data.id)) {
+                // Just update if needed
+                return;
+            }
+            
+            // Skip if already collected
+            if (data.isCollected) {
+                console.log(`Skipping already collected powerup from server: ${data.id}`);
+                return;
+            }
+            
+            console.log(`Received powerup data from server: ${data.type} (ID: ${data.id})`);
+            
+            // Create a powerup from the data
+            const powerup = this.createPowerupFromData(data);
+            
+            if (!powerup) {
+                console.error(`Failed to create powerup from server data: ${data.id}`);
+            } else {
+                console.log(`Created powerup from server data: ${powerup.id} (${powerup.type})`);
+            }
+        } catch (error) {
+            console.error('Error handling powerup data from server:', error);
+        }
+    }
+    
+    /**
+     * Handle all powerups data received from the server
+     * @param {Object} data The all_powerups message data
+     */
+    handleAllPowerups(data) {
+        try {
+            if (!data.powerups || !Array.isArray(data.powerups)) {
+                console.error('Invalid powerups data received:', data);
+                return;
+            }
+            
+            console.log(`Received all powerups from server: ${data.powerups.length} powerups`);
+            
+            // Clear existing powerups if this is our first sync
+            if (!this.initialPowerupsReceived) {
+                console.log('First powerup sync - clearing existing powerups');
+                this.clearAllPowerups();
+                this.initialPowerupsReceived = true;
+            }
+            
+            // Process each powerup
+            let createdCount = 0;
+            let skippedCount = 0;
+            
+            for (const powerupData of data.powerups) {
+                // Skip if invalid data
+                if (!powerupData || !powerupData.id || !powerupData.type) {
+                    console.warn('Skipping invalid powerup data:', powerupData);
+                    continue;
+                }
+                
+                // Skip if already in our collection
+                if (this.powerups.has(powerupData.id)) {
+                    skippedCount++;
+                    continue;
+                }
+                
+                // Skip if already collected
+                if (powerupData.isCollected) {
+                    skippedCount++;
+                    continue;
+                }
+                
+                try {
+                    // Create powerup from data
+                    const powerup = this.createPowerupFromData(powerupData);
+                    if (powerup) {
+                        createdCount++;
+                    }
+                } catch (createError) {
+                    console.error(`Error creating powerup ${powerupData.id}:`, createError);
+                }
+            }
+            
+            if (createdCount > 0 || skippedCount > 0) {
+                console.log(`Processed server powerups: ${createdCount} created, ${skippedCount} skipped`);
+            }
+        } catch (error) {
+            console.error('Error handling all powerups from server:', error);
+        }
+    }
+    
+    /**
+     * Handle powerup collected message from server
+     * @param {Object} data The powerup_collected message data
+     */
+    handlePowerupCollected(data) {
+        try {
+            const powerupId = data.powerupId;
+            
+            // Skip if not in our collection
+            if (!this.powerups.has(powerupId)) {
+                return;
+            }
+            
+            console.log(`Powerup collected by another player: ${powerupId}`);
+            
+            // Get the powerup
+            const powerup = this.powerups.get(powerupId);
+            
+            // Mark as collected
+            powerup.isCollected = true;
+            
+            // Schedule for removal
+            setTimeout(() => {
+                this.removePowerup(powerup);
+            }, 500);
+        } catch (error) {
+            console.error('Error handling powerup collected from server:', error);
+        }
+    }
+    
+    /**
      * Send powerup collected event to server
      * @param {Powerup} powerup The collected powerup
      */
     sendPowerupCollectedToServer(powerup) {
         try {
-            // Only send if multiplayer and websocket available
-            if (!this.game.isMultiplayer || !this.game.webSocket || 
-                this.game.webSocket.readyState !== WebSocket.OPEN) {
+            // Check for multiplayer setting
+            const isMultiplayer = this.game.isMultiplayer !== false; // Default to true if undefined
+            
+            // Find the appropriate WebSocket to use
+            let socket = null;
+            
+            // Try different possible socket properties
+            if (this.game.webSocket && this.game.webSocket.readyState === WebSocket.OPEN) {
+                socket = this.game.webSocket;
+            } else if (this.game.socket && this.game.socket.readyState === WebSocket.OPEN) {
+                socket = this.game.socket;
+            }
+            
+            // Return if we're not in multiplayer mode or no socket is available
+            if (!isMultiplayer || !socket) {
                 return;
             }
             
+            // Find the player ID
+            const playerId = this.game.playerId || 
+                            (this.game.persistence && this.game.persistence.playerId) || 
+                            'unknown_player';
+            
+            // Create the collection message
             const powerupData = {
                 type: 'powerup_collected',
                 powerupId: powerup.id,
                 powerupType: powerup.type,
-                playerId: this.game.playerId || ''
+                playerId: playerId
             };
             
-            this.game.webSocket.send(JSON.stringify(powerupData));
+            // Send the message
+            socket.send(JSON.stringify(powerupData));
             console.log(`Sent powerup collection event to server: ${powerup.id}`);
         }
         catch (error) {
