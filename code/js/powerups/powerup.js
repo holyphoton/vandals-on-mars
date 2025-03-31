@@ -87,15 +87,12 @@ class Powerup {
         
         this.mesh = new THREE.Mesh(geometry, material);
         
-        // Store the base position (on planet surface)
-        this.basePosition = new THREE.Vector3(
+        // Set exact position from data
+        this.mesh.position.set(
             this.position.x,
             this.position.y,
             this.position.z
         );
-        
-        // Set initial position
-        this.mesh.position.copy(this.basePosition);
         
         // Apply quaternion precisely as provided
         this.mesh.quaternion.set(
@@ -198,17 +195,11 @@ class Powerup {
      * Setup animation for the powerup
      */
     setupAnimation() {
-        // Base class animates the powerup with rotation and floating
+        // Store original quaternion for reference
         if (this.mesh) {
-            // For tracking float animation
-            this.floatPhase = Math.random() * Math.PI * 2; // Random starting phase
-            this.floatSpeed = 0.5 + Math.random() * 0.5; // Random float speed
-            this.floatHeight = 0.3; // Maximum float height variation
-            
-            // Store original quaternion for reference
             this.originalQuaternion = new THREE.Quaternion().copy(this.mesh.quaternion);
             
-            // Animation function to be called in the update loop
+            // Animation function to be called in the update loop - only rotate, don't float
             this.animate = (delta) => {
                 // Reset orientation to original quaternion to prevent drift
                 this.mesh.quaternion.copy(this.originalQuaternion);
@@ -220,23 +211,7 @@ class Powerup {
                 );
                 this.mesh.quaternion.multiply(localRotation);
                 
-                // Floating up/down motion
-                this.floatPhase += delta * this.floatSpeed;
-                // Calculate vertical offset based on sine wave
-                const verticalOffset = Math.sin(this.floatPhase) * this.floatHeight;
-                
-                // Get normalized direction from planet center to powerup (the up vector)
-                const upVector = this.basePosition.clone().normalize();
-                
-                // Calculate new position: base position + offset along up vector
-                const newPosition = this.basePosition.clone().add(
-                    upVector.multiplyScalar(verticalOffset)
-                );
-                
-                // Update position with the float effect
-                this.mesh.position.copy(newPosition);
-                
-                // Pulsing effect
+                // Pulsing effect for visibility
                 const pulseScale = 0.95 + 0.1 * Math.sin(Date.now() * 0.003);
                 this.mesh.scale.set(pulseScale, pulseScale, pulseScale);
             };

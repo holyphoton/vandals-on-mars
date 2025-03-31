@@ -119,8 +119,32 @@ class PowerupManager {
                 return null;
             }
             
+            // Make a copy of the data to avoid modifying the original
+            const cleanData = { ...data };
+            
+            // Ensure position and quaternion are properly parsed objects
+            if (cleanData.position && typeof cleanData.position === 'string') {
+                try {
+                    cleanData.position = JSON.parse(cleanData.position);
+                    console.log(`Parsed position from string for ${data.id}:`, cleanData.position);
+                } catch (e) {
+                    console.error('Failed to parse position string:', cleanData.position);
+                }
+            }
+            
+            if (cleanData.quaternion && typeof cleanData.quaternion === 'string') {
+                try {
+                    cleanData.quaternion = JSON.parse(cleanData.quaternion);
+                    console.log(`Parsed quaternion from string for ${data.id}:`, cleanData.quaternion);
+                } catch (e) {
+                    console.error('Failed to parse quaternion string:', cleanData.quaternion);
+                }
+            }
+            
+            console.log(`Creating powerup from exact server data:`, cleanData);
+            
             // Create from data (using static factory method)
-            const powerup = PowerupClass.fromData(data);
+            const powerup = PowerupClass.fromData(cleanData);
             
             // Initialize and add to scene
             powerup.initialize(this.scene);
@@ -128,7 +152,7 @@ class PowerupManager {
             // Add to managed collection
             this.powerups.set(powerup.id, powerup);
             
-            console.log(`Created ${data.type} powerup from data: ${powerup.id}`);
+            console.log(`Created ${data.type} powerup from data: ${powerup.id} at position: ${JSON.stringify(powerup.position)} with quaternion: ${JSON.stringify(powerup.quaternion)}`);
             return powerup;
         }
         catch (error) {
@@ -418,33 +442,27 @@ class PowerupManager {
     }
     
     /**
-     * Collect a powerup and apply its effects
+     * Collect a powerup (apply its effect and remove it)
      * @param {Powerup} powerup The powerup to collect
      */
     collectPowerup(powerup) {
-        if (!powerup || powerup.hasBeenCollected()) {
+        if (!powerup || powerup.isCollected) {
             return;
         }
         
-        // Apply powerup effect to the game object itself rather than just the player
-        // This ensures the powerup can access everything it needs including weaponManager
-        const success = powerup.applyEffect(this.game);
+        console.log(`Collecting powerup: ${powerup.type} (${powerup.id})`);
         
-        // If effect was applied successfully, mark for removal
-        if (success) {
-            // Play collection sound if available
-            if (this.game.audio && typeof this.game.audio.playSound === 'function') {
-                this.game.audio.playSound('powerup_collect');
-            }
-            
-            // Send collection event to server if multiplayer
-            this.sendPowerupCollectedToServer(powerup);
-            
-            // Schedule removal
-            setTimeout(() => {
-                this.removePowerup(powerup);
-            }, 500); // Small delay to allow for effects
-        }
+        // Apply the powerup effect
+        powerup.applyEffect(this.game);
+        
+        // Mark as collected
+        powerup.isCollected = true;
+        
+        // Send collection event to server
+        this.sendPowerupCollectedToServer(powerup);
+        
+        // Remove the powerup from the scene
+        this.removePowerup(powerup);
     }
     
     /**
@@ -544,9 +562,10 @@ class PowerupManager {
      */
     sendPowerupCollectedToServer(powerup) {
         try {
-            // Only send if multiplayer and websocket available
-            if (!this.game.isMultiplayer || !this.game.webSocket || 
-                this.game.webSocket.readyState !== WebSocket.OPEN) {
+            // Send collection event to server regardless of multiplayer status
+            // This ensures powerups are properly removed from powerups-data.json
+            if (!this.game.webSocket || this.game.webSocket.readyState !== WebSocket.OPEN) {
+                console.warn('WebSocket not available, powerup collection may not be saved');
                 return;
             }
             

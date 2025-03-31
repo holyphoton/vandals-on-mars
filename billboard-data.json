@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "type": "billboard_data",
+    "id": "billboard_72928_htgay",
+    "position": {
+      "x": -38.444956299769835,
+      "y": -85.41313721771357,
+      "z": -40.32991105540426
+    },
+    "quaternion": {
+      "x": 0.8482987204460578,
+      "y": -0.27007991541588083,
+      "z": 0.4462770916566519,
+      "w": -0.09101031612411828
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Orange Yaha Hai",
+    "owner": "Anonymous",
+    "player_id": "player_15890_bbhnb",
+    "billboard_category": "player",
+    "timestamp": 1743450179783
+  }
+]

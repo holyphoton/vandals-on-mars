@@ -137,6 +137,7 @@ class BillboardAmmoPowerup extends Powerup {
      * @returns {BillboardAmmoPowerup} New powerup instance
      */
     static fromData(data) {
+        console.log(`BillboardAmmoPowerup.fromData - Using exact position:`, data.position);
         return new BillboardAmmoPowerup(data);
     }
 }

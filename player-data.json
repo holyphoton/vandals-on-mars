@@ -1,1 +1,26 @@
-{}
+{
+  "player_15890_bbhnb": {
+    "username": "Anonymous",
+    "billboardText": "Orange Yaha Hai",
+    "position": {
+      "x": -36.90579073000383,
+      "y": -84.62762077441653,
+      "z": -42.88785856923505
+    },
+    "shootingAmmo": 300,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743450228204
+  },
+  "player_30860_qttlz": {
+    "username": "JM",
+    "billboardText": "JM's Turf",
+    "position": {
+      "x": -48.435445311473444,
+      "y": -83.41268487947826,
+      "z": -32.55106202071021
+    },
+    "shootingAmmo": 300,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743450232580
+  }
+}

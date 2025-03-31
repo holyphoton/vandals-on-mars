@@ -1,1 +1,482 @@
-[]
+[
+  {
+    "id": "bot_1743450123198_5242",
+    "type": "billboard_data",
+    "position": {
+      "x": 2.1179365116493,
+      "y": -91.33812049192514,
+      "z": -40.6554066507173
+    },
+    "quaternion": {
+      "x": 0.6900667931540614,
+      "y": -0.13964804529353253,
+      "z": 0.6931799358360681,
+      "w": -0.15429783208480222
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "First Martian, deal with it!",
+    "color": "#3357FF",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450123198
+  },
+  {
+    "id": "bot_1743450125200_7926",
+    "type": "billboard_data",
+    "position": {
+      "x": 77.80485269562513,
+      "y": -5.3278623351442445,
+      "z": 62.59407943208228
+    },
+    "quaternion": {
+      "x": 0.3134688318268244,
+      "y": 0.6205150623922983,
+      "z": 0.654504853418863,
+      "w": -0.29718974691022043
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: Like Earth but cooler",
+    "color": "#FF5733",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450125200
+  },
+  {
+    "id": "bot_1743450127200_6876",
+    "type": "billboard_data",
+    "position": {
+      "x": -49.90798221887474,
+      "y": -22.535837394615847,
+      "z": 83.67394662476437
+    },
+    "quaternion": {
+      "x": -0.20795507188176116,
+      "y": 0.5999851526493588,
+      "z": 0.7546084249806192,
+      "w": 0.16534397366474057
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Unauthorized human access prohibited",
+    "color": "#3357FF",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450127200
+  },
+  {
+    "id": "bot_1743450129202_7100",
+    "type": "billboard_data",
+    "position": {
+      "x": 63.851010649143696,
+      "y": 62.74688265190637,
+      "z": 44.563181625090785
+    },
+    "quaternion": {
+      "x": 0.1995772531671493,
+      "y": 0.7998282574275563,
+      "z": 0.38266761916671727,
+      "w": -0.4171440660969909
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars Colony #1 - Established 2025",
+    "color": "#FF33F5",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450129202
+  },
+  {
+    "id": "bot_1743450131203_7198",
+    "type": "billboard_data",
+    "position": {
+      "x": 64.93471698118276,
+      "y": 66.2468835816125,
+      "z": -37.34746238097011
+    },
+    "quaternion": {
+      "x": -0.3556032076849265,
+      "y": -0.4565110464267562,
+      "z": -0.2056986649838268,
+      "w": 0.7891971125127173
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Building Mars one billboard at a time",
+    "color": "#33FFF5",
+    "owner": "MarsTech",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450131203
+  },
+  {
+    "id": "bot_1743450133204_8427",
+    "type": "billboard_data",
+    "position": {
+      "x": 29.923289782950274,
+      "y": 93.39491853988919,
+      "z": -19.544460071668492
+    },
+    "quaternion": {
+      "x": 0.034492661166197085,
+      "y": 0.6842253549626556,
+      "z": -0.17842551282321684,
+      "w": 0.7062650043189694
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Reserved for my Mars mansion",
+    "color": "#FF33F5",
+    "owner": "H2OHunter",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450133204
+  },
+  {
+    "id": "bot_1743450135204_9876",
+    "type": "billboard_data",
+    "position": {
+      "x": -62.35726842059445,
+      "y": -29.658231275944235,
+      "z": 72.33229149352684
+    },
+    "quaternion": {
+      "x": -0.28042393757038775,
+      "y": 0.5559196279823874,
+      "z": 0.7547539808555106,
+      "w": 0.20654832568724163
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Better than Luna, cheaper than Europa",
+    "color": "#3357FF",
+    "owner": "OpportunityMax",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450135204
+  },
+  {
+    "id": "bot_1743450137204_2598",
+    "type": "billboard_data",
+    "position": {
+      "x": 13.308939616054822,
+      "y": 60.702421574697325,
+      "z": -78.34595165842285
+    },
+    "quaternion": {
+      "x": -0.4417016305958132,
+      "y": -0.07532765725871521,
+      "z": -0.03724998866460508,
+      "w": 0.893217695707715
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "This way to the secret Mars base →",
+    "color": "#F5FF33",
+    "owner": "Spirit3000",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450137204
+  },
+  {
+    "id": "bot_1743450139205_8539",
+    "type": "billboard_data",
+    "position": {
+      "x": -57.72337781698369,
+      "y": 44.07495825959387,
+      "z": -68.74161554555445
+    },
+    "quaternion": {
+      "x": -0.49687303546365896,
+      "y": 0.29043323795544124,
+      "z": 0.18094859858855003,
+      "w": 0.7975107056263806
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Sorry Earth, we're breaking up",
+    "color": "#F5FF33",
+    "owner": "SolarHarvester",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450139205
+  },
+  {
+    "id": "bot_1743450141205_228",
+    "type": "billboard_data",
+    "position": {
+      "x": -31.742484344871727,
+      "y": -76.31776175090076,
+      "z": 56.28511285365185
+    },
+    "quaternion": {
+      "x": -0.23842892013693281,
+      "y": 0.3328296366758027,
+      "z": 0.9081522222605855,
+      "w": 0.08738205877495372
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No Earth rules apply here",
+    "color": "#FF33F5",
+    "owner": "MartianDreamer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450141205
+  },
+  {
+    "id": "bot_1743450143207_2941",
+    "type": "billboard_data",
+    "position": {
+      "x": 61.991046343368765,
+      "y": 59.243320720741735,
+      "z": -51.45229949412988
+    },
+    "quaternion": {
+      "x": -0.40861547804839543,
+      "y": -0.37927495208604595,
+      "z": -0.19187701137857183,
+      "w": 0.8076924627132758
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No humans were involved in creating this billboard",
+    "color": "#3357FF",
+    "owner": "OxygenFarmer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450143207
+  },
+  {
+    "id": "bot_1743450145207_1569",
+    "type": "billboard_data",
+    "position": {
+      "x": -94.84928838504598,
+      "y": 18.416941224048994,
+      "z": 25.77651583904049
+    },
+    "quaternion": {
+      "x": -0.38790402371790755,
+      "y": 0.6112935325854115,
+      "z": 0.5073911334101256,
+      "w": 0.4673381250652395
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Oxygen not included",
+    "color": "#FF5733",
+    "owner": "DustRunner",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450145207
+  },
+  {
+    "id": "bot_1743450147208_5168",
+    "type": "billboard_data",
+    "position": {
+      "x": -2.064193429788013,
+      "y": 44.04782767012536,
+      "z": -89.75259318274519
+    },
+    "quaternion": {
+      "x": -0.5288892909772279,
+      "y": 0.009757209424556539,
+      "z": 0.006081080412102208,
+      "w": 0.8486129478241963
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Got Mars? I do!",
+    "color": "#3357FF",
+    "owner": "OpportunityMax",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450147208
+  },
+  {
+    "id": "bot_1743450149209_5840",
+    "type": "billboard_data",
+    "position": {
+      "x": -94.21988805567054,
+      "y": 31.982078431173296,
+      "z": 9.987960452424414
+    },
+    "quaternion": {
+      "x": -0.3900247615245414,
+      "y": 0.6039352968730803,
+      "z": 0.4335554096558571,
+      "w": 0.5432978458881378
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No humans were involved in creating this billboard",
+    "color": "#FF33F5",
+    "owner": "MarsBot",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450149209
+  },
+  {
+    "id": "bot_1743450151209_1352",
+    "type": "billboard_data",
+    "position": {
+      "x": 55.87089801339619,
+      "y": -39.740752481190206,
+      "z": 72.79502282028254
+    },
+    "quaternion": {
+      "x": 0.2687319822160931,
+      "y": 0.5197641303489252,
+      "z": 0.7915092445070749,
+      "w": -0.1764695055715701
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Warning: Low gravity dance zone",
+    "color": "#FF5733",
+    "owner": "MartianDreamer",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450151209
+  },
+  {
+    "id": "bot_1743450153210_6965",
+    "type": "billboard_data",
+    "position": {
+      "x": 19.746211427547802,
+      "y": 71.27518280623944,
+      "z": 67.30479515009114
+    },
+    "quaternion": {
+      "x": 0.05389243052986992,
+      "y": 0.9160011542160568,
+      "z": 0.3751262346202754,
+      "w": -0.1315971105535718
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Dust storms expected - Bring umbrella",
+    "color": "#33FFF5",
+    "owner": "SolarHarvester",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450153210
+  },
+  {
+    "id": "bot_1743450155211_4670",
+    "type": "billboard_data",
+    "position": {
+      "x": 29.22265413212405,
+      "y": 72.59915458173217,
+      "z": -62.25270467611838
+    },
+    "quaternion": {
+      "x": -0.3612644355356296,
+      "y": -0.20222481967258285,
+      "z": -0.0805744047974424,
+      "w": 0.9066977970730116
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "No humans were involved in creating this billboard",
+    "color": "#FF33F5",
+    "owner": "RedPlanet",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450155211
+  },
+  {
+    "id": "bot_1743450157212_1487",
+    "type": "billboard_data",
+    "position": {
+      "x": -60.62707299215276,
+      "y": -74.53333983385605,
+      "z": 27.73336030154132
+    },
+    "quaternion": {
+      "x": -0.5048023148087747,
+      "y": 0.3002515599354919,
+      "z": 0.7860288303446528,
+      "w": 0.19282712876310593
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Mars: Like Earth but cooler",
+    "color": "#3357FF",
+    "owner": "MarsTech",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450157212
+  },
+  {
+    "id": "bot_1743450159213_7079",
+    "type": "billboard_data",
+    "position": {
+      "x": 22.25984819884234,
+      "y": 77.05788799273331,
+      "z": 59.72085947358647
+    },
+    "quaternion": {
+      "x": 0.060098941209814294,
+      "y": 0.925966737131438,
+      "z": 0.33331468209755283,
+      "w": -0.16695820342177004
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Better than Luna, cheaper than Europa",
+    "color": "#F5FF33",
+    "owner": "MarsTech",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450159213
+  },
+  {
+    "id": "bot_1743450161213_3523",
+    "type": "billboard_data",
+    "position": {
+      "x": 83.24978014317348,
+      "y": -28.53508313569383,
+      "z": 47.48918968094022
+    },
+    "quaternion": {
+      "x": 0.4026377305437835,
+      "y": 0.5169025020999662,
+      "z": 0.6932231052273292,
+      "w": -0.3002272266872629
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Better than Luna, cheaper than Europa",
+    "color": "#FF33F5",
+    "owner": "RedRover",
+    "player_id": "bot_system",
+    "billboard_category": "bot",
+    "timestamp": 1743450161213
+  }
+]

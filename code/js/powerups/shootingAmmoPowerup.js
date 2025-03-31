@@ -137,6 +137,7 @@ class ShootingAmmoPowerup extends Powerup {
      * @returns {ShootingAmmoPowerup} New powerup instance
      */
     static fromData(data) {
+        console.log(`ShootingAmmoPowerup.fromData - Using exact position:`, data.position);
         return new ShootingAmmoPowerup(data);
     }
 }
