@@ -86,7 +86,18 @@ class Powerup {
         });
         
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.position.set(this.position.x, this.position.y, this.position.z);
+        
+        // Store the base position (on planet surface)
+        this.basePosition = new THREE.Vector3(
+            this.position.x,
+            this.position.y,
+            this.position.z
+        );
+        
+        // Set initial position
+        this.mesh.position.copy(this.basePosition);
+        
+        // Apply quaternion precisely as provided
         this.mesh.quaternion.set(
             this.quaternion.x,
             this.quaternion.y,
@@ -129,12 +140,12 @@ class Powerup {
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw text
+        // Draw text in ALL CAPS
         context.font = 'Bold 40px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillStyle = 'white';
-        context.fillText(this.text, canvas.width / 2, canvas.height / 2);
+        context.fillText(this.text.toUpperCase(), canvas.width / 2, canvas.height / 2);
         
         // Create texture
         const texture = new THREE.CanvasTexture(canvas);
@@ -147,21 +158,83 @@ class Powerup {
         // Create text plane slightly above the powerup
         const labelGeo = new THREE.PlaneGeometry(this.size * 1.2, this.size * 0.6);
         this.label = new THREE.Mesh(labelGeo, material);
-        this.label.position.set(0, this.size * 0.75, 0);
+        
+        // Position the label above the powerup
+        this.label.position.set(0, this.size * 0.8, 0);
+        
+        // Rotate the plane 180 degrees to flip the text so it reads correctly
+        this.label.rotation.set(0, Math.PI, 0);
         
         // Add label to mesh
         this.mesh.add(this.label);
+        
+        // Setup label update function - will be called in update method
+        this.updateLabel = (camera) => {
+            if (this.label) {
+                // Start with the base flipped rotation (180 degrees around Y-axis)
+                this.label.rotation.set(0, Math.PI, 0);
+                
+                // Only adjust the label to face the camera's horizontal direction
+                if (camera && camera.position) {
+                    // Get world positions
+                    const worldPos = new THREE.Vector3();
+                    this.mesh.getWorldPosition(worldPos);
+                    
+                    // Get direction from powerup to camera (horizontal only)
+                    const toCamera = new THREE.Vector3().subVectors(camera.position, worldPos);
+                    
+                    // Calculate horizontal angle for the label to face the camera
+                    // while staying aligned with the powerup's up direction
+                    const angle = Math.atan2(toCamera.x, toCamera.z);
+                    
+                    // Apply the camera-facing angle on top of the 180-degree flip
+                    this.label.rotation.y = Math.PI + angle;
+                }
+            }
+        };
     }
     
     /**
      * Setup animation for the powerup
      */
     setupAnimation() {
-        // Base class just rotates the powerup slowly
+        // Base class animates the powerup with rotation and floating
         if (this.mesh) {
-            // Will be called in the update loop
+            // For tracking float animation
+            this.floatPhase = Math.random() * Math.PI * 2; // Random starting phase
+            this.floatSpeed = 0.5 + Math.random() * 0.5; // Random float speed
+            this.floatHeight = 0.3; // Maximum float height variation
+            
+            // Store original quaternion for reference
+            this.originalQuaternion = new THREE.Quaternion().copy(this.mesh.quaternion);
+            
+            // Animation function to be called in the update loop
             this.animate = (delta) => {
-                this.mesh.rotation.y += delta * 0.5;
+                // Reset orientation to original quaternion to prevent drift
+                this.mesh.quaternion.copy(this.originalQuaternion);
+                
+                // Rotate the powerup around its local Y axis (the up vector on the planet surface)
+                const localRotation = new THREE.Quaternion().setFromAxisAngle(
+                    new THREE.Vector3(0, 1, 0), // Y-axis in local space
+                    delta * 0.5
+                );
+                this.mesh.quaternion.multiply(localRotation);
+                
+                // Floating up/down motion
+                this.floatPhase += delta * this.floatSpeed;
+                // Calculate vertical offset based on sine wave
+                const verticalOffset = Math.sin(this.floatPhase) * this.floatHeight;
+                
+                // Get normalized direction from planet center to powerup (the up vector)
+                const upVector = this.basePosition.clone().normalize();
+                
+                // Calculate new position: base position + offset along up vector
+                const newPosition = this.basePosition.clone().add(
+                    upVector.multiplyScalar(verticalOffset)
+                );
+                
+                // Update position with the float effect
+                this.mesh.position.copy(newPosition);
                 
                 // Pulsing effect
                 const pulseScale = 0.95 + 0.1 * Math.sin(Date.now() * 0.003);
@@ -183,6 +256,25 @@ class Powerup {
         // Animation update
         if (this.animate && this._isVisible) {
             this.animate(delta);
+        }
+        
+        // Update label orientation if needed
+        if (this.updateLabel && this._isVisible) {
+            // Try to find camera from different possible paths
+            let camera = null;
+            
+            // Global game object is accessible through window
+            if (window.game) {
+                if (window.game.camera) {
+                    camera = window.game.camera;
+                } else if (window.game.playerCamera && window.game.playerCamera.camera) {
+                    camera = window.game.playerCamera.camera;
+                }
+            }
+            
+            if (camera) {
+                this.updateLabel(camera);
+            }
         }
     }
     

@@ -202,25 +202,32 @@ class PowerupManager {
             position.y += direction.y;
             position.z += direction.z;
             
-            // Adjust position to be on the planet surface
+            // First, position exactly on the planet surface (for base position)
             const normalizedPos = new THREE.Vector3(position.x, position.y, position.z).normalize();
             const planetRadius = CONFIG.world.radius || 100;
             
-            // Scale normalized position to planet radius
-            normalizedPos.multiplyScalar(planetRadius);
+            // Create base position on planet surface (no floating offset yet)
+            const basePos = normalizedPos.clone().multiplyScalar(planetRadius);
             
-            // Use normalized position on planet surface
-            position.x = normalizedPos.x;
-            position.y = normalizedPos.y;
-            position.z = normalizedPos.z;
+            // Calculate floating offset along the surface normal
+            const floatingOffset = 1.0; // 1.0 units above surface
+            
+            // Apply floating offset to create final position
+            const finalPos = {
+                x: basePos.x + normalizedPos.x * floatingOffset,
+                y: basePos.y + normalizedPos.y * floatingOffset,
+                z: basePos.z + normalizedPos.z * floatingOffset
+            };
             
             // Calculate proper orientation (quaternion) for the powerup
             // Make it stand upright on the planet surface
-            const up = new THREE.Vector3(position.x, position.y, position.z).normalize();
+            const up = normalizedPos;
             const quaternion = this.calculateQuaternion(up);
             
+            console.log(`Creating powerup at position:`, finalPos, `with quaternion:`, quaternion);
+            
             // Create powerup with calculated position and quaternion
-            params.position = position;
+            params.position = finalPos;
             params.quaternion = quaternion;
             
             return this.createPowerup(type, params);
@@ -237,32 +244,30 @@ class PowerupManager {
      * @returns {Object} Quaternion object with x,y,z,w components
      */
     calculateQuaternion(up) {
-        // Similar to the server-side quaternion calculation
         try {
-            // Create a THREE.js quaternion
-            const quaternion = new THREE.Quaternion();
+            // SIMPLIFIED ORIENTATION APPROACH (matching billboard implementation):
+            // 1. Calculate up vector (normal to surface) - already provided as parameter
             
-            // Find a reference vector different from up
-            // Use world up (0,1,0) as the reference unless up is too close to it
-            let reference = new THREE.Vector3(0, 1, 0);
-            const worldUpDot = Math.abs(up.y); // Dot product with (0,1,0)
+            // 2. Find a forward direction (any perpendicular to up)
+            // We'll use world up to help find a stable direction
+            const worldUp = new THREE.Vector3(0, 1, 0);
             
-            if (worldUpDot > 0.9) {
-                // If up is too close to world up, use world right instead
-                reference = new THREE.Vector3(1, 0, 0);
-            }
+            // If upVector is too close to worldUp, use a different reference
+            const reference = Math.abs(up.dot(worldUp)) > 0.9 
+                ? new THREE.Vector3(1, 0, 0) 
+                : worldUp;
             
-            // Calculate right vector (cross product of up and reference)
-            const right = new THREE.Vector3().crossVectors(up, reference).normalize();
+            // 3. Calculate right vector
+            const rightVector = new THREE.Vector3().crossVectors(up, reference).normalize();
             
-            // Calculate forward vector (cross product of right and up)
-            const forward = new THREE.Vector3().crossVectors(right, up).normalize();
+            // 4. Calculate the true forward vector
+            const forwardVector = new THREE.Vector3().crossVectors(rightVector, up).normalize();
             
-            // Create a rotation matrix from right, up, forward
-            const rotMatrix = new THREE.Matrix4().makeBasis(right, up, forward);
+            // 5. Create the rotation matrix
+            const matrix = new THREE.Matrix4().makeBasis(rightVector, up, forwardVector);
             
-            // Extract quaternion from rotation matrix
-            quaternion.setFromRotationMatrix(rotMatrix);
+            // 6. Extract quaternion from rotation matrix
+            const quaternion = new THREE.Quaternion().setFromRotationMatrix(matrix);
             
             // Convert to plain object for consistency
             return {
@@ -300,14 +305,27 @@ class PowerupManager {
             const y = radius * Math.sin(phi) * Math.sin(theta);
             const z = radius * Math.cos(phi);
             
-            const position = { x, y, z };
+            // Create base position on planet surface (no floating offset yet)
+            const basePos = new THREE.Vector3(x, y, z);
+            const normalizedDir = basePos.clone().normalize();
+            
+            // Add floating offset along the surface normal
+            const floatingOffset = 1.0; // 1.0 units above surface
+            
+            // Calculate final position with floating offset
+            const finalPos = {
+                x: basePos.x + normalizedDir.x * floatingOffset,
+                y: basePos.y + normalizedDir.y * floatingOffset,
+                z: basePos.z + normalizedDir.z * floatingOffset
+            };
             
             // Calculate quaternion for proper orientation
-            const up = new THREE.Vector3(x, y, z).normalize();
-            const quaternion = this.calculateQuaternion(up);
+            const quaternion = this.calculateQuaternion(normalizedDir);
+            
+            console.log(`Spawning random powerup at position:`, finalPos, `with quaternion:`, quaternion);
             
             // Create powerup with calculated position and quaternion
-            params.position = position;
+            params.position = finalPos;
             params.quaternion = quaternion;
             
             return this.createPowerup(type, params);
