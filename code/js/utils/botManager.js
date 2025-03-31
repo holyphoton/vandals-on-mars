@@ -18,7 +18,6 @@ class BotManager {
         this.lastSpawnTime = Date.now();
         this.botPlayerId = "bot_system_player";
         this.respawnCheckerId = null; // Track the interval for checking respawns
-        this.spawnTimerId = null; // Track the spawning timer
         
         // Queue for billboards that couldn't be created due to weaponManager not being available
         this.pendingBillboards = [];
@@ -29,10 +28,15 @@ class BotManager {
         // Create a reference to this for use in callbacks
         const self = this;
         
+        // Initial spawning flags
+        this.initialSpawningStarted = false;
+        this.initialSpawningDone = false;
+        
         // Configuration defaults
         this.maxBots = 20;
-        this.spawnInterval = 3000;
-        this.checkInterval = 5000;
+        this.initialBotCount = 15;
+        this.spawnInterval = 10000;
+        this.checkInterval = 30000;
         
         console.log('BotManager instance created');
     }
@@ -53,12 +57,23 @@ class BotManager {
             // Store the raw config but also extract main properties for easy access
             this.config = rawConfig;
             
-            // Extract configuration directly from the root level
-            this.spawnInterval = rawConfig.spawnInterval || 3000;
-            this.maxBots = rawConfig.maxBots || 20;
-            this.checkInterval = rawConfig.checkInterval || 5000;
-            
-            console.log(`Loaded config values: maxBots=${this.maxBots}, spawnInterval=${this.spawnInterval}ms, checkInterval=${this.checkInterval}ms`);
+            // Extract configuration from the nested structure
+            if (rawConfig.botBillboards && rawConfig.botBillboards.spawn) {
+                // Set easy access properties
+                this.spawnInterval = rawConfig.botBillboards.spawn.spawnInterval || 10000;
+                this.maxBots = rawConfig.botBillboards.spawn.maxCount || 20;
+                this.initialBotCount = rawConfig.botBillboards.spawn.initialCount || 15;
+                this.checkInterval = rawConfig.botBillboards.spawn.checkInterval || 30000;
+                
+                console.log(`Extracted config values: maxBots=${this.maxBots}, initialCount=${this.initialBotCount}, checkInterval=${this.checkInterval/1000}s`);
+            } else {
+                // Set defaults if the structure is not as expected
+                this.spawnInterval = 10000;
+                this.maxBots = 20;
+                this.initialBotCount = 15;
+                this.checkInterval = 30000;
+                console.warn('Config does not have expected structure, using defaults');
+            }
             
             console.log('Bot configuration loaded successfully');
             return this.config;
@@ -67,10 +82,21 @@ class BotManager {
             
             // Use default configuration
             this.config = {
-                spawnInterval: 3000,
-                maxBots: 20,
-                checkInterval: 5000
+                botBillboards: {
+                    spawn: {
+                        initialCount: 15,
+                        maxCount: 20,
+                        spawnInterval: 10000,
+                        checkInterval: 30000
+                    }
+                }
             };
+            
+            // Set easy access properties
+            this.spawnInterval = 10000;
+            this.maxBots = 20;
+            this.initialBotCount = 15;
+            this.checkInterval = 30000;
             
             console.log('Using default bot configuration');
             return this.config;
@@ -98,149 +124,84 @@ class BotManager {
         // Set initialization flag
         this.isInitialized = true;
         
-        console.log(`BotManager initialized with maxBots=${this.maxBots}`);
+        console.log(`BotManager initialized with maxBots=${this.maxBots}, initialCount=${this.initialBotCount}`);
         
-        // Start the main billboard maintenance process
-        this.startBillboardMaintenance();
-    }
-    
-    /**
-     * Start the billboard maintenance process
-     * This handles both checking current count and spawning new billboards
-     */
-    startBillboardMaintenance() {
-        // Set up recurring check interval
-        console.log(`Setting up billboard check interval (${this.checkInterval}ms)`);
-        this.respawnCheckerId = setInterval(() => {
-            console.log('Scheduled billboard maintenance check triggered');
-            this.maintainBillboards();
-        }, this.checkInterval);
-        
-        // Do an initial check right away
-        this.maintainBillboards();
-    }
-    
-    /**
-     * Stop the billboard maintenance process
-     */
-    stopBillboardMaintenance() {
-        // Clear intervals
-        if (this.respawnCheckerId) {
-            clearInterval(this.respawnCheckerId);
-            this.respawnCheckerId = null;
+        // Set up a timer to check for respawn
+        if (this.checkInterval > 0) {
+            console.log(`Setting up respawn check interval (${this.checkInterval / 1000}s)`);
+            this.respawnCheckerId = setInterval(() => {
+                console.log('Scheduled respawn check triggered');
+                this.checkForRespawn();
+            }, this.checkInterval);
         }
-        
-        if (this.spawnTimerId) {
-            clearInterval(this.spawnTimerId);
-            this.spawnTimerId = null;
-        }
-        
-        console.log('Billboard maintenance stopped');
     }
     
     /**
-     * Maintain the billboard count at the configured level
+     * Check how many bot billboards exist on the server
+     * @returns {Promise} - Resolves when check is complete
      */
-    maintainBillboards() {
+    async checkServerBillboards() {
+        try {
+            // Request all billboards from server if connected
+            if (this.game && this.game.connectedToServer) {
+                console.log('Checking existing bot billboards from server...');
+                
+                // First, count bot billboards in the game
+                let botCount = 0;
+                if (this.game.billboards) {
+                    botCount = this.game.billboards.filter(b => 
+                        b.id && b.id.startsWith('bot_')
+                    ).length;
+                    console.log(`Found ${botCount} bot billboards in game data`);
+                }
+                
+                // If no bot billboards in game, and we have a connection, request them
+                if (this.game.requestAllBillboards && typeof this.game.requestAllBillboards === 'function') {
+                    console.log('Requesting all billboards from server to check bot count');
+                    
+                    // We don't wait for this to complete - it's a background operation
+                    // The billboards will be processed by the game when they arrive
+                    try {
+                        this.game.requestAllBillboards();
+                    } catch (error) {
+                        console.error('Error requesting billboards:', error);
+                    }
+                }
+            } else {
+                console.log('Not connected to server, using local bot billboard count');
+            }
+            
+            // Return the count in our local tracking
+            return this.botBillboards.size;
+        } catch (error) {
+            console.error('Error checking server billboards:', error);
+            return this.botBillboards.size;
+        }
+    }
+    
+    /**
+     * Check if more bot billboards need to be spawned
+     */
+    checkForRespawn() {
         if (!this.isInitialized) {
-            console.warn('Cannot maintain billboards: BotManager not initialized');
+            console.warn('Cannot check for respawn: BotManager not initialized');
             return;
         }
-        
-        // Get accurate count of billboards
-        this.getBillboardCount().then(count => {
-            console.log(`Current bot billboard count: ${count}/${this.maxBots}`);
-            
-            // If we already have a spawn timer running, don't start another one
-            if (this.spawnTimerId) {
-                console.log('Billboard spawning already in progress');
-                return;
-            }
-            
-            // If we need more billboards, start spawning
-            if (count < this.maxBots) {
-                const neededBillboards = this.maxBots - count;
-                console.log(`Need to spawn ${neededBillboards} more billboards`);
-                
-                // Spawn one billboard immediately
-                this.spawnBotBillboard();
-                
-                // Set up interval for spawning remaining billboards
-                let spawnedCount = 1;
-                
-                this.spawnTimerId = setInterval(() => {
-                    // Get current count again to ensure we don't exceed maxBots
-                    const currentCount = this.botBillboards.size;
-                    
-                    if (currentCount < this.maxBots) {
-                        // Spawn another billboard
-                        console.log(`Spawning billboard ${spawnedCount + 1}/${neededBillboards} (interval: ${this.spawnInterval}ms)`);
-                        this.spawnBotBillboard();
-                        spawnedCount++;
-                    } else {
-                        // We've reached the max, stop spawning
-                        console.log(`Reached target billboard count (${currentCount}/${this.maxBots}), stopping spawn interval`);
-                        clearInterval(this.spawnTimerId);
-                        this.spawnTimerId = null;
-                    }
-                    
-                    // If we've spawned all needed billboards, clear the interval
-                    if (spawnedCount >= neededBillboards) {
-                        console.log('Finished spawning all needed billboards');
-                        clearInterval(this.spawnTimerId);
-                        this.spawnTimerId = null;
-                    }
-                }, this.spawnInterval);
-            } else {
-                console.log(`No additional billboards needed, already at max (${count}/${this.maxBots})`);
-            }
-        });
+
+        // No longer spawning from client side - bot management is done on server
+        console.log('Bot billboard respawning is now handled by the server');
+        // We still track the count for informational purposes
+        const currentCount = this.botBillboards.size;
+        console.log(`Current bot billboards: ${currentCount}`);
     }
     
     /**
-     * Get an accurate count of bot billboards
-     * @returns {Promise<number>} - Resolves with the current billboard count
+     * Spawn initial set of bot billboards
      */
-    async getBillboardCount() {
-        // Get the count from our local tracking
-        const trackedCount = this.botBillboards.size;
-        
-        // Perform a real-time check of billboards in the game
-        let actualCount = 0;
-        
-        // Check method 1: Look in game.billboards if available
-        if (this.game && this.game.billboards && Array.isArray(this.game.billboards)) {
-            const gameBotBillboards = this.game.billboards.filter(b => 
-                b.id && b.id.startsWith('bot_')
-            );
-            actualCount = gameBotBillboards.length;
-            console.log(`Found ${actualCount} bot billboards in game.billboards array`);
-        }
-        
-        // Check method 2: Look in billboardGun.billboards if available
-        if (this.game && this.game.weaponManager && this.game.weaponManager.billboardGun && 
-            this.game.weaponManager.billboardGun.billboards) {
-            
-            const gunBotBillboards = this.game.weaponManager.billboardGun.billboards.filter(b => 
-                b.id && b.id.startsWith('bot_')
-            );
-            
-            // If we found billboards here, update the count if it's higher
-            if (gunBotBillboards.length > actualCount) {
-                actualCount = gunBotBillboards.length;
-                console.log(`Found ${actualCount} bot billboards in billboardGun.billboards array`);
-            }
-        }
-        
-        // If there's a discrepancy, log it and use the higher count to be safe
-        if (actualCount !== trackedCount) {
-            console.warn(`Billboard count mismatch: tracked=${trackedCount}, actual=${actualCount}`);
-            
-            // Use the higher of the two counts to ensure we don't create too many
-            return Math.max(trackedCount, actualCount);
-        }
-        
-        return trackedCount;
+    async spawnInitialBillboards() {
+        // Bot spawning is now fully managed by the server
+        console.log('Bot billboard spawning is now handled by the server');
+        return;
     }
     
     /**
@@ -256,6 +217,9 @@ class BotManager {
         if (this.pendingBillboards && this.pendingBillboards.length > 0) {
             this.processPendingBillboards();
         }
+
+        // No longer initiate spawning from client side
+        // All bot billboard management is done on the server
     }
     
     /**
@@ -598,29 +562,10 @@ class BotManager {
         // Check if this is one of our bot billboards
         if (this.botBillboards.has(billboardId)) {
             console.log(`Bot billboard removed: ${billboardId}`);
-            
-            // Log current count before removal
-            const beforeCount = this.botBillboards.size;
-            console.log(`Bot billboard count before removal: ${beforeCount}`);
-            
-            // Remove from our tracking
             this.botBillboards.delete(billboardId);
             
-            // Log count after removal
-            const afterCount = this.botBillboards.size;
-            console.log(`Bot billboard count after removal: ${afterCount}`);
-            
-            // Save updated billboard list
-            this.saveBotBillboards();
-            
-            // Trigger a maintenance check shortly after removal
-            setTimeout(() => {
-                console.log(`Billboard ${billboardId} was shot down - checking if need to spawn more`);
-                this.maintainBillboards();
-            }, 1500);
-        } else {
-            // This isn't one of our tracked billboards
-            console.log(`Billboard ${billboardId} removed but not in bot tracking`);
+            // No longer need to trigger respawn as server handles it
+            console.log("Billboard was removed - server will handle respawning");
         }
     }
 }

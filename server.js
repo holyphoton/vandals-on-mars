@@ -29,6 +29,20 @@ const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
 // Bot billboard data file path
 const BOT_BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data-bots.json');
 
+// Bot configuration
+let botConfig = {
+  spawnInterval: 2000,
+  maxBots: 20,
+  spawnChance: 0.3,
+  minDistance: 20,
+  checkInterval: 3000
+};
+
+// Bot spawning control variables
+let botSpawningTimer = null;
+let botCheckTimer = null;
+let isSpawningBots = false;
+
 // Generate and store terrain data
 let terrainData = null;
 
@@ -169,11 +183,312 @@ function initializeTerrainData() {
   }
 }
 
+// Load bot configuration from the bot-config.json file
+async function loadBotConfig() {
+  try {
+    const configFilePath = path.join(__dirname, 'code', 'bot-config.json');
+    if (fs.existsSync(configFilePath)) {
+      const data = fs.readFileSync(configFilePath, 'utf8');
+      const parsedConfig = JSON.parse(data);
+      
+      // Update the bot configuration
+      botConfig = {
+        spawnInterval: parsedConfig.spawnInterval || 2000,
+        maxBots: parsedConfig.maxBots || 20,
+        spawnChance: parsedConfig.spawnChance || 0.3,
+        minDistance: parsedConfig.minDistance || 20,
+        checkInterval: parsedConfig.checkInterval || 3000,
+        messages: parsedConfig.messages || [],
+        botSenders: parsedConfig.botSenders || [],
+        colors: parsedConfig.colors || ["#FF5733", "#33FF57", "#3357FF"],
+        billboardSize: parsedConfig.billboardSize || { width: 5, height: 5 },
+        health: parsedConfig.health || 100
+      };
+      
+      console.log('Bot configuration loaded successfully:');
+      console.log(`- Maximum bots: ${botConfig.maxBots}`);
+      console.log(`- Check interval: ${botConfig.checkInterval}ms`);
+      console.log(`- Spawn interval: ${botConfig.spawnInterval}ms`);
+      
+      return botConfig;
+    } else {
+      console.warn('Bot configuration file not found, using defaults');
+      return botConfig;
+    }
+  } catch (error) {
+    console.error('Error loading bot configuration:', error);
+    return botConfig;
+  }
+}
+
+// Generate a random position on the globe surface
+function getRandomPositionOnGlobe() {
+  // Use the world radius from CONFIG
+  const radius = CONFIG.world.radius || 100;
+  
+  // Generate random spherical coordinates
+  const theta = Math.random() * Math.PI * 2; // 0 to 2π
+  const phi = Math.acos(2 * Math.random() - 1); // 0 to π
+  
+  // Convert to Cartesian coordinates
+  const x = radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.sin(phi) * Math.sin(theta);
+  const z = radius * Math.cos(phi);
+  
+  return { x, y, z };
+}
+
+// Calculate quaternion for proper billboard orientation
+function calculateQuaternion(position) {
+  // Normalized position vector (direction from center to position)
+  const length = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
+  const normalizedPos = {
+    x: position.x / length,
+    y: position.y / length,
+    z: position.z / length
+  };
+  
+  // This is a simplified quaternion calculation for the billboard to face outward
+  // In a real implementation, you'd use proper quaternion math libraries
+  // Here we're using a simplified approach based on the normalized position
+  
+  // Find perpendicular vectors to create an orientation
+  let tangent = { x: 1, y: 0, z: 0 };
+  if (Math.abs(normalizedPos.x) > 0.9) {
+    tangent = { x: 0, y: 1, z: 0 };
+  }
+  
+  // Cross product to get a perpendicular vector
+  const cross = {
+    x: normalizedPos.y * tangent.z - normalizedPos.z * tangent.y,
+    y: normalizedPos.z * tangent.x - normalizedPos.x * tangent.z,
+    z: normalizedPos.x * tangent.y - normalizedPos.y * tangent.x
+  };
+  
+  // Normalize the cross product
+  const crossLength = Math.sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
+  const normalizedCross = {
+    x: cross.x / crossLength,
+    y: cross.y / crossLength,
+    z: cross.z / crossLength
+  };
+  
+  // Create a simple approximation of the quaternion
+  // In a production environment, use a proper quaternion library
+  return {
+    x: normalizedPos.x,
+    y: normalizedPos.y,
+    z: normalizedPos.z,
+    w: 1
+  };
+}
+
+// Check if more bot billboards need to be spawned
+function checkBotBillboards() {
+  // Get the current count of bot billboards
+  const currentBotCount = botBillboards.length;
+  
+  console.log(`Checking bot billboards: ${currentBotCount}/${botConfig.maxBots}`);
+  
+  // If we have more than the maximum, trim the excess billboards
+  if (currentBotCount > botConfig.maxBots) {
+    console.log(`Found ${currentBotCount} bot billboards, exceeding maximum of ${botConfig.maxBots}`);
+    console.log(`Trimming excess bot billboards...`);
+    
+    // Sort billboards by timestamp (oldest first)
+    botBillboards.sort((a, b) => a.timestamp - b.timestamp);
+    
+    // Keep only the newest up to maxBots
+    const excess = botBillboards.splice(0, currentBotCount - botConfig.maxBots);
+    console.log(`Removed ${excess.length} excess bot billboards`);
+    
+    // Update the main billboards array to remove excess bot billboards
+    for (const billboard of excess) {
+      const index = billboards.findIndex(b => b.id === billboard.id);
+      if (index !== -1) {
+        billboards.splice(index, 1);
+      }
+    }
+    
+    // Save the updated bot billboards
+    saveBotBillboardData();
+    
+    // Stop any active spawning
+    if (isSpawningBots) {
+      stopSpawningBots();
+    }
+    
+    return;
+  }
+  
+  // If we need to spawn more billboards
+  if (currentBotCount < botConfig.maxBots) {
+    const botsToSpawn = botConfig.maxBots - currentBotCount;
+    console.log(`Need to spawn ${botsToSpawn} more bot billboards`);
+    
+    // Start spawning bots if not already spawning
+    if (!isSpawningBots) {
+      startSpawningBots();
+    }
+  } else {
+    console.log('Maximum bot count reached, no new spawns needed');
+    
+    // Stop any active spawning
+    if (isSpawningBots) {
+      stopSpawningBots();
+    }
+  }
+}
+
+// Start spawning bots at the specified interval
+function startSpawningBots() {
+  if (isSpawningBots) return;
+  
+  console.log(`Starting bot spawning with interval ${botConfig.spawnInterval}ms`);
+  isSpawningBots = true;
+  
+  // Immediately spawn the first bot
+  spawnBotBillboard();
+  
+  // Set up interval for subsequent spawns
+  botSpawningTimer = setInterval(() => {
+    // Check if we've reached max bots
+    if (botBillboards.length >= botConfig.maxBots) {
+      console.log('Maximum bot count reached during spawning, stopping');
+      stopSpawningBots();
+      return;
+    }
+    
+    // Otherwise spawn another bot
+    spawnBotBillboard();
+  }, botConfig.spawnInterval);
+}
+
+// Stop the bot spawning process
+function stopSpawningBots() {
+  if (!isSpawningBots) return;
+  
+  console.log('Stopping bot spawning');
+  
+  if (botSpawningTimer) {
+    clearInterval(botSpawningTimer);
+    botSpawningTimer = null;
+  }
+  
+  isSpawningBots = false;
+}
+
+// Generate a unique ID for bot billboards
+function generateBotId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `bot_${timestamp}_${random}`;
+}
+
+// Spawn a single bot billboard
+function spawnBotBillboard() {
+  try {
+    // Check if we've reached the maximum before attempting to spawn
+    if (botBillboards.length >= botConfig.maxBots) {
+      console.log(`Maximum bot count (${botConfig.maxBots}) reached, not spawning a new billboard`);
+      
+      // Stop the spawning process if it's still running
+      if (isSpawningBots) {
+        stopSpawningBots();
+      }
+      
+      return null;
+    }
+    
+    // Generate a random position
+    const position = getRandomPositionOnGlobe();
+    
+    // Calculate quaternion for orientation
+    const quaternion = calculateQuaternion(position);
+    
+    // Get random message
+    const messages = botConfig.messages || [
+      "Mars is mine!", 
+      "Bot was here", 
+      "Mars billboard"
+    ];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    
+    // Get random color
+    const colors = botConfig.colors || ["#FF5733", "#33FF57", "#3357FF"];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Get random sender
+    const senders = botConfig.botSenders || ["MarsBot", "RedRover"];
+    const randomSender = senders[Math.floor(Math.random() * senders.length)];
+    
+    // Get billboard size
+    const width = botConfig.billboardSize?.width || 5;
+    const height = botConfig.billboardSize?.height || 5;
+    
+    // Create the billboard data
+    const billboardData = {
+      id: generateBotId(),
+      type: 'billboard_data',
+      position: position,
+      quaternion: quaternion,
+      width: width,
+      height: height,
+      health: botConfig.health || 100,
+      text: randomMessage,
+      color: randomColor,
+      owner: randomSender,
+      player_id: 'bot_system',
+      billboard_category: 'bot',
+      timestamp: Date.now()
+    };
+    
+    // Add to bot billboards array
+    botBillboards.push(billboardData);
+    
+    // Also add to main billboards array for client syncing
+    billboards.push(billboardData);
+    
+    console.log(`Bot billboard spawned: "${randomMessage}" by ${randomSender} (${botBillboards.length}/${botConfig.maxBots})`);
+    
+    // Save bot billboards to file
+    saveBotBillboardData();
+    
+    // Broadcast to all connected clients
+    broadcastBillboardData(billboardData);
+    
+    return billboardData;
+  } catch (error) {
+    console.error('Error spawning bot billboard:', error);
+    return null;
+  }
+}
+
+// Broadcast billboard data to all connected clients
+function broadcastBillboardData(billboardData) {
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(billboardData));
+    }
+  });
+}
+
 // Initialize terrain data and player data at server startup
 initializeTerrainData();
 loadPlayerData();
 loadBillboardData(); // Load billboard data on startup
 loadBotBillboardData(); // Load bot billboard data on startup
+
+// Load bot configuration and start bot management
+(async function initializeBotSystem() {
+  await loadBotConfig();
+  
+  // Set up periodic checking for bot billboards
+  botCheckTimer = setInterval(checkBotBillboards, botConfig.checkInterval);
+  
+  // Perform initial check
+  checkBotBillboards();
+})();
 
 // Log server startup
 console.log('WebSocket server running on port 8090');

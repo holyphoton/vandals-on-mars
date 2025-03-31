@@ -621,9 +621,13 @@ class Game {
             if (this.botManager) {
                 console.log('Initializing bot billboard system...');
                 
-                // Initialize the bot manager (which will handle billboard spawning)
+                // If the botManager has an initialize method, call it
                 if (typeof this.botManager.initialize === 'function') {
                     this.botManager.initialize();
+                }
+                // Otherwise, if it has a spawnInitialBillboards method, call that
+                else if (typeof this.botManager.spawnInitialBillboards === 'function') {
+                    this.botManager.spawnInitialBillboards();
                 }
                 
                 console.log('Bot billboard system initialized');
