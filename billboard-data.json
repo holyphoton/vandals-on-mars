@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "type": "billboard_data",
+    "id": "billboard_86588_vlkum",
+    "position": {
+      "x": 11.790081312025453,
+      "y": -95.61612240777377,
+      "z": 33.50388512392928
+    },
+    "quaternion": {
+      "x": 0.8823564283446115,
+      "y": -0.021288207296955144,
+      "z": -0.4360671218793145,
+      "w": 0.17561153380377245
+    },
+    "width": 5.05,
+    "height": 5.05,
+    "health": 102.00999999999999,
+    "text": "New Horizon's Turf",
+    "owner": "New Horizon",
+    "player_id": "player_80590_txunm",
+    "billboard_category": "player",
+    "timestamp": 1743408396464
+  }
+]

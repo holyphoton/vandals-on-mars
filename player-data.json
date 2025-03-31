@@ -310,5 +310,89 @@
     "shootingAmmo": 148,
     "billboardAmmo": 2,
     "lastUpdate": 1743316056909
+  },
+  "player_31085_ifcep": {
+    "username": "Anonymous",
+    "billboardText": "New Horizon",
+    "position": {
+      "x": 5.496319100506335,
+      "y": 101.07697671663148,
+      "z": 10.792370183186996
+    },
+    "shootingAmmo": 190,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743405143539
+  },
+  "player_23837_lgzdv": {
+    "username": "M1",
+    "billboardText": "M1's Turf",
+    "position": {
+      "x": 61.8746312376584,
+      "y": -80.83303389653166,
+      "z": 24.974301899521148
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743405537519
+  },
+  "player_57278_cwmbq": {
+    "username": "M1",
+    "billboardText": "YOYOMA",
+    "position": {
+      "x": 19.76316784713292,
+      "y": -68.7095041085429,
+      "z": -72.46834648178597
+    },
+    "shootingAmmo": 188,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743405792615
+  },
+  "player_51675_jjdcc": {
+    "username": "M1",
+    "billboardText": "New Horizon",
+    "position": {
+      "x": -76.73809733903678,
+      "y": 60.541206098948,
+      "z": 28.447614678022013
+    },
+    "shootingAmmo": 125,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743406100515
+  },
+  "player_65957_yzggz": {
+    "username": "Anonymous",
+    "billboardText": "YOYOMA",
+    "position": {
+      "x": 60.80878886983461,
+      "y": -35.74678705148734,
+      "z": 73.40094285279649
+    },
+    "shootingAmmo": 95,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743407528017
+  },
+  "player_57395_gsskv": {
+    "username": "New Horizon",
+    "billboardText": "New Horizon's Turf",
+    "position": {
+      "x": 32.61335379241477,
+      "y": 18.50429881470042,
+      "z": 94.64248559598938
+    },
+    "shootingAmmo": 133,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743408349018
+  },
+  "player_80590_txunm": {
+    "username": "New Horizon",
+    "billboardText": "New Horizon's Turf",
+    "position": {
+      "x": 3.940135464649907,
+      "y": -97.88062799010436,
+      "z": 27.696534021119138
+    },
+    "shootingAmmo": 199,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743408426627
   }
 }

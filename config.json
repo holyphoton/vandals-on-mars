@@ -22,10 +22,14 @@
   },
   "billboard": {
     "startSize": 5,
-    "maxSize": 50,
-    "growthPerDamage": 0.5,
+    "maxSize": 15,
+    "growthPerDamage": 0.1,
     "decayRate": 0.1,
-    "decayInterval": 86400
+    "decayInterval": 86400,
+    "startHealth": 100,
+    "maxHealth": 900,
+    "healthSizeMultiplier": 4,
+    "damagePerShot": 0.1
   },
   "powerUps": {
     "spawnCycle": 300,

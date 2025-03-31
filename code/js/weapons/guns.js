@@ -191,6 +191,10 @@ class BillboardGun extends Gun {
      * @param {THREE.Vector3} cameraPosition - The current camera position for orientation
      */
     placeBillboard(position, cameraPosition) {
+        // Get config values
+        const startSize = CONFIG.billboard?.startSize || 5;
+        const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
+        
         // Create a billboard group that contains sign and legs
         const billboardGroup = new THREE.Group();
         
@@ -236,25 +240,31 @@ class BillboardGun extends Gun {
             }
         }
         
+        // Calculate initial health based on size
+        const initialArea = startSize * startSize;
+        const initialHealth = initialArea * healthSizeMultiplier;
+        
         // Create a billboard object for tracking
         const billboard = {
             id: billboardId,
             mesh: billboardGroup,
             position: position.clone(),
-            width: 5, // Initial width
-            height: 5, // Initial height
-            health: 100,
+            width: startSize, // Initial width
+            height: startSize, // Initial height
+            health: initialHealth,
             text: billboardText,
             owner: window.game ? window.game.getUsername() : "Anonymous",
             player_id: playerId,
             billboard_category: "player"
         };
         
+        console.log(`Creating new billboard with size ${startSize}x${startSize} and health ${initialHealth}`);
+        
         // Create text texture for the billboard
         const textTexture = this.createTextTexture(billboardText);
         
         // Create the sign part of the billboard (the actual display)
-        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Base size
         const signMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             side: THREE.DoubleSide,
@@ -294,6 +304,10 @@ class BillboardGun extends Gun {
         // Orient the billboard properly on the planet surface
         if (this.globe && this.globe.globe) {
             const globeCenter = this.globe.globe.position.clone();
+            const globeRadius = this.globe.radius || 100;
+            
+            // Get normalized direction from center to billboard (normal to surface)
+            const surfaceNormal = position.clone().sub(globeCenter).normalize();
             
             // SIMPLIFIED ORIENTATION APPROACH:
             // 1. Calculate up vector (normal to surface)
@@ -338,19 +352,30 @@ class BillboardGun extends Gun {
             // Rotate around the up vector
             const rotationMatrix = new THREE.Matrix4().makeRotationAxis(upVector, angle);
             billboardGroup.quaternion.premultiply(new THREE.Quaternion().setFromRotationMatrix(rotationMatrix));
+            
+            // Store the quaternion for later use
+            billboard.quaternion = billboardGroup.quaternion.clone();
         } else {
             // No globe reference, just face the camera
             billboardGroup.lookAt(cameraPosition);
         }
         
-        // Add the billboard to the scene
+        // Add to scene and array
         this.scene.add(billboardGroup);
-        
-        // Add to tracked billboards
         this.placedBillboards.push(billboard);
         
-        // Sync with server if game is multiplayer enabled
-        this.syncBillboard(billboard);
+        // Remember for future syncing
+        this.lastPlacedBillboard = billboard;
+        
+        console.log(`Billboard placed at (${posVector.x.toFixed(2)}, ${posVector.y.toFixed(2)}, ${posVector.z.toFixed(2)})`);
+        console.log(`Text: "${billboardText}"`);
+        console.log(`Owner: ${billboard.owner}, ID: ${billboardId}`);
+        
+        // Sync the billboard with the server
+        if (window.game && typeof window.game.syncBillboardData === 'function') {
+            window.game.syncBillboardData(billboard);
+            console.log("Billboard synced with server");
+        }
         
         return billboard;
     }
@@ -367,6 +392,10 @@ class BillboardGun extends Gun {
             return null;
         }
         
+        // Get config values
+        const startSize = CONFIG.billboard?.startSize || 5;
+        const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
+        
         // Extract data with fallbacks for missing properties
         const id = data.id;
         const position = data.position || { x: 0, y: 0, z: 0 };
@@ -375,14 +404,25 @@ class BillboardGun extends Gun {
         const text = data.text || "Mars Billboard";
         const owner = data.owner || "Anonymous";
         const timestamp = data.timestamp || Date.now();
-        const health = data.health !== undefined ? data.health : 100; // Get health with fallback
-        const player_id = data.player_id || "unknown"; // Add player_id with fallback
-        const billboard_category = data.billboard_category || "player"; // Add billboard_category with fallback
+        const width = data.width || startSize;
+        const height = data.height || startSize;
+        const player_id = data.player_id || "unknown";
+        const billboard_category = data.billboard_category || "player";
+        
+        // Calculate health based on size if not provided
+        let health;
+        if (data.health !== undefined) {
+            health = data.health;
+        } else {
+            // Calculate health based on area and multiplier
+            const area = width * height;
+            health = area * healthSizeMultiplier;
+        }
         
         console.log(`Creating billboard from data - ID: ${id}, Text: "${text}", Owner: ${owner}`);
         console.log(`Position: (${position.x}, ${position.y}, ${position.z})`);
-        console.log(`Health: ${health}`); // Log health value
-        console.log(`Player ID: ${player_id}, Billboard Category: ${billboard_category}`); // Log new fields
+        console.log(`Size: ${width.toFixed(2)}x${height.toFixed(2)}, Health: ${health.toFixed(2)}`);
+        console.log(`Player ID: ${player_id}, Billboard Category: ${billboard_category}`);
         if (data.quaternion) {
             console.log(`Quaternion: (${quaternion.x}, ${quaternion.y}, ${quaternion.z}, ${quaternion.w})`);
         } else {
@@ -395,8 +435,12 @@ class BillboardGun extends Gun {
         // Create text texture for the billboard
         const textTexture = this.createTextTexture(text);
         
+        // Calculate scale factors based on ratio to starting size
+        const widthScale = width / startSize;
+        const heightScale = height / startSize;
+        
         // Create the sign part of the billboard (the actual display)
-        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Width x Height
+        const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Base size
         const signMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             side: THREE.DoubleSide,
@@ -405,8 +449,11 @@ class BillboardGun extends Gun {
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
-        // Position the sign a bit higher above the legs to ensure visibility
-        signMesh.position.y = 2.8; // This is where the sign is positioned relative to the legs
+        // Scale the sign based on width and height
+        signMesh.scale.set(widthScale, heightScale, 1);
+        
+        // Position the sign
+        signMesh.position.y = 2.8 * heightScale;
         billboardGroup.add(signMesh);
         
         // Create legs for the billboard
@@ -417,49 +464,25 @@ class BillboardGun extends Gun {
         
         // Left leg - positioned at lower left corner of sign
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-1.2, 0, 0);
+        leftLeg.position.set(-1.2 * widthScale, 0, 0);
+        leftLeg.scale.y = heightScale;
         billboardGroup.add(leftLeg);
         
         // Right leg - positioned at lower right corner of sign
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(1.2, 0, 0);
+        rightLeg.position.set(1.2 * widthScale, 0, 0);
+        rightLeg.scale.y = heightScale;
         billboardGroup.add(rightLeg);
         
-        // Initial position from data
+        // Set position from data
         const posVector = new THREE.Vector3(
             position.x || 0,
             position.y || 0,
             position.z || 0
         );
-        
-        // If we have a globe reference, ensure the billboard is properly positioned above the surface
-        if (this.globe && this.globe.globe) {
-            const globeCenter = this.globe.globe.position.clone();
-            const radius = this.globe.radius || 10; // Default radius if not defined
-            
-            // Get direction from center to billboard position
-            const centerToBillboard = posVector.clone().sub(globeCenter);
-            const distance = centerToBillboard.length();
-            centerToBillboard.normalize();
-            
-            // Ensure the billboard is at correct distance from center (radius + offset)
-            // Using a larger offset (2.0) to ensure it's visible above surface
-            const correctPosition = globeCenter.clone().add(
-                centerToBillboard.multiplyScalar(radius + 0.1) // Using 0.1 to match the offset in fire method
-            );
-            
-            console.log(`Billboard ${id} - Adjusting position to ensure above surface`);
-            console.log(`  Original: (${posVector.x.toFixed(2)}, ${posVector.y.toFixed(2)}, ${posVector.z.toFixed(2)})`);
-            console.log(`  Adjusted: (${correctPosition.x.toFixed(2)}, ${correctPosition.y.toFixed(2)}, ${correctPosition.z.toFixed(2)})`);
-            
-            // Update the position
-            posVector.copy(correctPosition);
-        }
-        
-        // Set the final position
         billboardGroup.position.copy(posVector);
         
-        // Use quaternion for rotation if available (more accurate) otherwise use Euler rotation
+        // Set rotation either from quaternion or euler angles
         if (data.quaternion) {
             billboardGroup.quaternion.set(
                 quaternion.x,
@@ -467,45 +490,36 @@ class BillboardGun extends Gun {
                 quaternion.z,
                 quaternion.w
             );
-            console.log(`Applied quaternion rotation for better orientation`);
         } else {
             billboardGroup.rotation.set(
-                rotation.x || 0,
-                rotation.y || 0,
-                rotation.z || 0
+                rotation.x,
+                rotation.y,
+                rotation.z
             );
-            console.log(`Applied Euler rotation as fallback`);
         }
         
-        // Apply health-based scaling
-        const healthScale = 0.5 + (health / 100) * 0.5;
-        billboardGroup.scale.set(healthScale, healthScale, healthScale);
-        console.log(`Applied health-based scaling: ${healthScale.toFixed(2)} based on health: ${health}`);
-        
-        // Add it to the scene
+        // Add to the scene
         this.scene.add(billboardGroup);
         
-        // Store billboard data
+        // Create a billboard object for tracking
         const billboardObject = {
-            id,
+            id: id,
             mesh: billboardGroup,
             position: posVector.clone(),
-            rotation: new THREE.Euler(rotation.x || 0, rotation.y || 0, rotation.z || 0),
-            quaternion: new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w),
+            quaternion: billboardGroup.quaternion.clone(),
+            width: width,
+            height: height,
+            health: health,
             text: text,
             owner: owner,
             timestamp: timestamp,
-            health: health, // Store the health value
-            width: data.width || 5,
-            height: data.height || 5,
             player_id: player_id,
             billboard_category: billboard_category
         };
         
-        // Add to placed billboards array
+        // Add to the array of placed billboards
         this.placedBillboards.push(billboardObject);
         
-        // Log for debugging
         console.log(`Billboard added - ID: ${id}, Total billboards: ${this.placedBillboards.length}`);
         console.log(`Text for this billboard: "${text}"`);
         
@@ -581,10 +595,39 @@ class BillboardGun extends Gun {
             console.log(`Updated billboard ${data.id} orientation with quaternion data`);
         }
         
-        // Scale according to health/size
-        const healthScale = 0.5 + (billboard.health / 100) * 0.5;
-        mesh.scale.set(healthScale, healthScale, healthScale);
-        console.log(`Applied scaling ${healthScale.toFixed(2)} based on health ${billboard.health}`);
+        // Get config values
+        const startSize = CONFIG.billboard?.startSize || 5;
+        
+        // Calculate scale factors based on width and height
+        const widthScale = billboard.width / startSize;
+        const heightScale = billboard.height / startSize;
+        
+        // Scale the child meshes instead of the entire group
+        // 1. Get all child meshes
+        const signMesh = mesh.children[0]; // Billboard panel
+        const leftLeg = mesh.children[1];  // Left leg 
+        const rightLeg = mesh.children[2]; // Right leg
+        
+        // 2. Scale the sign mesh for width and height
+        if (signMesh) {
+            signMesh.scale.set(widthScale, heightScale, 1);
+        }
+        
+        // 3. Scale the legs for height (maintain their width)
+        if (leftLeg && rightLeg) {
+            // Scale legs for height
+            leftLeg.scale.y = heightScale;
+            rightLeg.scale.y = heightScale;
+            
+            // Adjust leg positions to maintain proportional distance from center
+            leftLeg.position.x = -1.2 * widthScale;
+            rightLeg.position.x = 1.2 * widthScale;
+            
+            // Adjust sign position to sit on top of the taller legs
+            signMesh.position.y = 2.8 * heightScale;
+        }
+        
+        console.log(`Applied scaling: width=${widthScale.toFixed(2)}, height=${heightScale.toFixed(2)} based on billboard dimensions ${billboard.width.toFixed(2)}x${billboard.height.toFixed(2)}`);
         
         // NEVER update the text after initial creation
         // The text is preserved from the original creation
@@ -1170,30 +1213,71 @@ class ShooterGun extends Gun {
         // Get the signMesh (first child of the billboard group)
         const signMesh = billboard.mesh.children[0];
         
-        // Decrease billboard health
+        // Get config values
+        const sizeDamagePerShot = CONFIG.billboard?.damagePerShot || 0.1;
+        const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
+        const startSize = CONFIG.billboard?.startSize || 5;
+        
+        // Ensure billboard has width and height properties
+        if (typeof billboard.width === 'undefined') billboard.width = startSize;
+        if (typeof billboard.height === 'undefined') billboard.height = startSize;
+        
+        // Calculate current area and health from size
+        const currentArea = billboard.width * billboard.height;
+        const currentMaxHealth = currentArea * healthSizeMultiplier;
+        
+        // If health is not defined, initialize it based on current size
         if (typeof billboard.health === 'undefined') {
-            billboard.health = 100;
+            billboard.health = currentMaxHealth;
         }
         
-        // Standard damage amount
-        const damageAmount = 5;
-        billboard.health -= damageAmount;
-        console.log(`Billboard hit! Health reduced to: ${billboard.health}`);
+        // Apply damage to size
+        const newWidth = Math.max(1, billboard.width - sizeDamagePerShot);
+        const newHeight = Math.max(1, billboard.height - sizeDamagePerShot);
         
-        // Scale billboard based on health - scale the entire group
-        const healthScale = 0.5 + (billboard.health / 100) * 0.5;
-        billboard.mesh.scale.set(healthScale, healthScale, healthScale);
+        // Update size
+        billboard.width = newWidth;
+        billboard.height = newHeight;
         
-        // Log billboard children for debugging
-        console.log(`Billboard has ${billboard.mesh.children.length} children`);
+        // Calculate new area and max health
+        const newArea = newWidth * newHeight;
+        const newMaxHealth = newArea * healthSizeMultiplier;
         
-        // DO NOT update billboard text - keep original owner and text
-        // This prevents the ownership change issue
+        // Update health proportionally to size change
+        billboard.health = newMaxHealth;
+        
+        console.log(`Billboard hit! Size reduced to: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)}, Health: ${billboard.health.toFixed(2)}`);
+        
+        // Calculate scale factors based on ratio to starting size
+        const widthScale = newWidth / startSize;
+        const heightScale = newHeight / startSize;
+        
+        // Scale the billboard meshes
+        if (signMesh) {
+            signMesh.scale.set(widthScale, heightScale, 1);
+        }
+        
+        // Scale the legs if they exist
+        const leftLeg = billboard.mesh.children[1];  // Left leg 
+        const rightLeg = billboard.mesh.children[2]; // Right leg
+        
+        if (leftLeg && rightLeg) {
+            // Scale legs for height
+            leftLeg.scale.y = heightScale;
+            rightLeg.scale.y = heightScale;
+            
+            // Adjust leg positions to maintain proportional distance from center
+            leftLeg.position.x = -1.2 * widthScale;
+            rightLeg.position.x = 1.2 * widthScale;
+            
+            // Adjust sign position to sit on top of the taller legs
+            signMesh.position.y = 2.8 * heightScale;
+        }
         
         // Flash the billboard red
         if (signMesh && signMesh.material) {
             const originalColor = signMesh.material.color.clone();
-            const damageColor = new THREE.Color(1, billboard.health / 100, billboard.health / 100);
+            const damageColor = new THREE.Color(1, 0.3, 0.3);
             
             signMesh.material.color = damageColor;
             signMesh.material.emissive = new THREE.Color(0.5, 0, 0);
@@ -1220,37 +1304,70 @@ class ShooterGun extends Gun {
         // Create impact particles
         this.createBulletImpactEffect(billboard.mesh.position);
         
-        // === NEW FEATURE: GROW PLAYER'S BILLBOARDS ===
+        // Get information about the planet to reposition the billboard correctly
+        let globeCenter = new THREE.Vector3(0, 0, 0);   // Default center
+        let globeRadius = 100; // Default radius
+        
+        if (this.globe && this.globe.globe) {
+            globeCenter = this.globe.globe.position.clone();
+            globeRadius = this.globe.radius || 100;
+        }
+        
+        // Calculate the surface normal and position
+        const surfaceNormal = new THREE.Vector3().subVectors(billboard.position, globeCenter).normalize();
+        
+        // Add a ground sink factor for larger billboards
+        const groundSinkFactor = -0.2 * (heightScale / 10);
+        const surfacePosition = globeCenter.clone().add(
+            surfaceNormal.clone().multiplyScalar(globeRadius + groundSinkFactor)
+        );
+        
+        // Reposition the billboard with its base slightly sunk into the surface
+        const originalHeight = 4.0; // Original height in the model
+        const totalHeight = originalHeight * heightScale; // New scaled height
+        const centerOffset = totalHeight / 2; // Distance from base to center
+        
+        billboard.mesh.position.copy(surfacePosition);
+        billboard.mesh.position.add(surfaceNormal.clone().multiplyScalar(centerOffset));
+        
+        // Update the billboard's stored position
+        billboard.position = billboard.mesh.position.clone();
+        billboard.quaternion = billboard.mesh.quaternion.clone();
+        
+        // === GROW PLAYER'S BILLBOARDS ===
         // Only grow player billboards if the hit billboard is not owned by the player
+        const sizeDamage = sizeDamagePerShot; // Use the same value for growth as for damage
         if (this.weaponManager && this.weaponManager.billboardGun) {
             // Check if the hit billboard is not owned by the player
             const playerId = window.game?.persistence?.playerId;
             if (playerId && billboard.player_id !== playerId) {
-                this.growPlayerBillboards(damageAmount);
+                this.growPlayerBillboards(sizeDamage);
             }
         }
         
         // Sync the updated billboard (health/scale) with the server
         if (window.game && typeof window.game.syncBillboardData === 'function') {
             window.game.syncBillboardData(billboard);
-            console.log(`Synced damaged billboard with server. Health: ${billboard.health}`);
+            console.log(`Synced damaged billboard with server. Size: ${billboard.width.toFixed(2)}x${billboard.height.toFixed(2)}, Health: ${billboard.health.toFixed(2)}`);
         }
         
-        // If health is zero or less, destroy the billboard
-        if (billboard.health <= 0) {
-            console.log("Billboard destroyed due to health reaching zero");
+        // If size is too small, destroy the billboard
+        if (billboard.width <= 1 || billboard.height <= 1) {
+            console.log("Billboard destroyed due to size becoming too small");
             this.destroyBillboard(billboard);
         }
     }
 
     /**
      * Grows all player-owned billboards based on damage caused to other billboards
-     * @param {number} damageAmount - The amount of damage caused
+     * @param {number} damageAmount - The amount of damage caused to other billboards (in size)
      */
     growPlayerBillboards(damageAmount) {
         // Get growth per damage value from config
-        const growthPerDamage = CONFIG.billboard?.growthPerDamage || 0.5;
-        const maxSize = CONFIG.billboard?.maxSize || 50;
+        const growthPerDamage = CONFIG.billboard?.growthPerDamage || 0.1;
+        const maxSize = CONFIG.billboard?.maxSize || 15;
+        const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
+        const startSize = CONFIG.billboard?.startSize || 5;
         
         // Calculate growth amount for this damage
         const growthAmount = growthPerDamage * damageAmount;
@@ -1279,9 +1396,9 @@ class ShooterGun extends Gun {
         playerBillboards.forEach(billboard => {
             if (!billboard || !billboard.mesh) return;
             
-            // Get current width and height
-            let currentWidth = billboard.width || CONFIG.billboard.startSize;
-            let currentHeight = billboard.height || CONFIG.billboard.startSize;
+            // Get current width and height with fallbacks
+            let currentWidth = billboard.width || startSize;
+            let currentHeight = billboard.height || startSize;
             
             // Calculate new width and height, ensuring they don't exceed max size
             let newWidth = Math.min(currentWidth + growthAmount, maxSize);
@@ -1291,10 +1408,16 @@ class ShooterGun extends Gun {
             billboard.width = newWidth;
             billboard.height = newHeight;
             
-            console.log(`Billboard ${billboard.id} grown to ${billboard.width}x${billboard.height}`);
+            // Calculate new area and health
+            const newArea = newWidth * newHeight;
+            const newHealth = newArea * healthSizeMultiplier;
+            
+            // Update health
+            billboard.health = newHealth;
+            
+            console.log(`Billboard ${billboard.id} grown to ${newWidth.toFixed(2)}x${newHeight.toFixed(2)}, Health: ${newHealth.toFixed(2)}`);
             
             // Calculate scale factors based on ratio to starting size
-            const startSize = CONFIG.billboard.startSize;
             const widthScale = newWidth / startSize;
             const heightScale = newHeight / startSize;
             
@@ -1363,7 +1486,7 @@ class ShooterGun extends Gun {
             // Sync the updated billboard with the server
             if (window.game && typeof window.game.syncBillboardData === 'function') {
                 window.game.syncBillboardData(billboard);
-                console.log(`Synced grown billboard with server. Size: ${billboard.width}x${billboard.height}`);
+                console.log(`Synced grown billboard with server. Size: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)}, Health: ${newHealth.toFixed(2)}`);
             }
         });
     }
