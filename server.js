@@ -55,9 +55,10 @@ let terrainData = null;
 
 // Powerup related variables
 let powerupConfig = {};
-let powerups = [];
+let powerups = []; // All powerups
+let powerupsByType = {}; // Powerups organized by type
 let isSpawningPowerups = false;
-let powerupSpawningTimer = null;
+let powerupSpawningTimers = {}; // Timer IDs for each powerup type
 let powerupCheckTimer = null;
 
 // Load saved player data from file
@@ -181,18 +182,35 @@ function loadPowerupData() {
       if (data) {
         powerups = JSON.parse(data);
         console.log(`Loaded ${powerups.length} powerups from ${POWERUP_DATA_FILE}`);
+        
+        // Organize powerups by type
+        powerupsByType = {};
+        for (const powerup of powerups) {
+          if (!powerupsByType[powerup.type]) {
+            powerupsByType[powerup.type] = [];
+          }
+          powerupsByType[powerup.type].push(powerup);
+        }
+        
+        // Log counts by type
+        for (const type in powerupsByType) {
+          console.log(`Loaded ${powerupsByType[type].length} powerups of type ${type}`);
+        }
       } else {
         powerups = [];
+        powerupsByType = {};
         console.log('No powerup data found, initializing with empty array');
       }
     } else {
       powerups = [];
+      powerupsByType = {};
       console.log(`${POWERUP_DATA_FILE} not found, initializing with empty array`);
       savePowerupData();
     }
   } catch (error) {
     console.error('Error loading powerup data:', error);
     powerups = [];
+    powerupsByType = {};
   }
 }
 
@@ -647,18 +665,6 @@ function broadcastBillboardData(billboardData) {
 // Spawn a single powerup
 function spawnPowerup() {
   try {
-    // Check if we've reached the maximum before attempting to spawn
-    if (powerups.length >= powerupConfig.maxPowerups) {
-      console.log(`Maximum powerup count (${powerupConfig.maxPowerups}) reached, not spawning a new powerup`);
-      
-      // Stop the spawning process if it's still running
-      if (isSpawningPowerups) {
-        stopSpawningPowerups();
-      }
-      
-      return null;
-    }
-    
     // Calculate total weight for weighted random selection
     const types = powerupConfig.types || [];
     if (types.length === 0) {
@@ -684,6 +690,38 @@ function spawnPowerup() {
     // Fallback if somehow no type was selected
     if (!selectedType) {
       selectedType = types[0];
+    }
+    
+    // Spawn the selected type
+    return spawnPowerupOfType(selectedType.type);
+  } catch (error) {
+    console.error('Error spawning powerup:', error);
+    return null;
+  }
+}
+
+// Spawn a powerup of a specific type
+function spawnPowerupOfType(powerupType) {
+  try {
+    // Find the type configuration
+    const typeConfig = powerupConfig.types.find(t => t.type === powerupType);
+    if (!typeConfig) {
+      console.error(`Powerup type ${powerupType} not found in configuration`);
+      return null;
+    }
+    
+    // Check if we've reached the maximum for this type
+    const currentCountForType = powerupsByType[powerupType]?.length || 0;
+    if (currentCountForType >= typeConfig.maxPowerups) {
+      console.log(`Maximum powerup count (${typeConfig.maxPowerups}) for type ${powerupType} reached, not spawning`);
+      
+      // Stop the spawning process for this type if it's still running
+      if (powerupSpawningTimers[powerupType]) {
+        clearInterval(powerupSpawningTimers[powerupType]);
+        powerupSpawningTimers[powerupType] = null;
+      }
+      
+      return null;
     }
     
     // Generate a random position on the globe surface
@@ -716,15 +754,15 @@ function spawnPowerup() {
     // Create the powerup data
     const powerupData = {
       id: generatePowerupId(),
-      type: selectedType.type,
+      type: powerupType,
       position: position,
       quaternion: quaternion,
-      size: selectedType.size || 1.5,
-      color: selectedType.color || "#FFFFFF",
-      text: selectedType.text || selectedType.type,
-      effectAmount: selectedType.effectAmount,
-      effectDuration: selectedType.effectDuration,
-      lifespan: selectedType.lifespan || 300000, // 5 minutes default
+      size: typeConfig.size || 1.5,
+      color: typeConfig.color || "#FFFFFF",
+      text: typeConfig.text || powerupType,
+      effectAmount: typeConfig.effectAmount,
+      effectDuration: typeConfig.effectDuration,
+      lifespan: typeConfig.lifespan || 300000, // 5 minutes default
       createdAt: Date.now(),
       isCollected: false
     };
@@ -732,7 +770,13 @@ function spawnPowerup() {
     // Add to powerups array
     powerups.push(powerupData);
     
-    console.log(`Powerup spawned: "${powerupData.type}" (${powerups.length}/${powerupConfig.maxPowerups})`);
+    // Add to type-specific array
+    if (!powerupsByType[powerupType]) {
+      powerupsByType[powerupType] = [];
+    }
+    powerupsByType[powerupType].push(powerupData);
+    
+    console.log(`Powerup spawned: "${powerupData.type}" (${currentCountForType + 1}/${typeConfig.maxPowerups})`);
     
     // Save powerups to file
     savePowerupData();
@@ -742,7 +786,7 @@ function spawnPowerup() {
     
     return powerupData;
   } catch (error) {
-    console.error('Error spawning powerup:', error);
+    console.error(`Error spawning powerup of type ${powerupType}:`, error);
     return null;
   }
 }
@@ -758,40 +802,11 @@ function broadcastPowerupData(powerupData) {
 
 // Check if more powerups need to be spawned
 function checkPowerups() {
-  // Get the current count of powerups
+  // Get the current count of all powerups
   const currentPowerupCount = powerups.length;
+  console.log(`Checking powerups: ${currentPowerupCount} total powerups`);
   
-  console.log(`Checking powerups: ${currentPowerupCount}/${powerupConfig.maxPowerups}`);
-  
-  // If we have more than the maximum, trim the excess powerups
-  if (currentPowerupCount > powerupConfig.maxPowerups) {
-    console.log(`Found ${currentPowerupCount} powerups, exceeding maximum of ${powerupConfig.maxPowerups}`);
-    console.log(`Trimming excess powerups...`);
-    
-    // Sort powerups by timestamp (oldest first)
-    powerups.sort((a, b) => a.createdAt - b.createdAt);
-    
-    // Keep only the newest up to maxPowerups
-    const excess = powerups.splice(0, currentPowerupCount - powerupConfig.maxPowerups);
-    console.log(`Removed ${excess.length} excess powerups`);
-    
-    // Save the updated powerups
-    savePowerupData();
-    
-    // Broadcast removal to all clients
-    for (const powerup of excess) {
-      broadcastPowerupRemoval(powerup.id);
-    }
-    
-    // Stop any active spawning
-    if (isSpawningPowerups) {
-      stopSpawningPowerups();
-    }
-    
-    return;
-  }
-  
-  // Check for expired powerups
+  // Check for expired powerups (this applies to all types)
   const now = Date.now();
   const expiredPowerups = powerups.filter(powerup => 
     powerup.lifespan && (now - powerup.createdAt > powerup.lifespan)
@@ -800,10 +815,17 @@ function checkPowerups() {
   if (expiredPowerups.length > 0) {
     console.log(`Found ${expiredPowerups.length} expired powerups, removing them`);
     
-    // Remove expired powerups from the array
+    // Remove expired powerups from the arrays
     powerups = powerups.filter(powerup => 
       !(powerup.lifespan && (now - powerup.createdAt > powerup.lifespan))
     );
+    
+    // Also remove from type-specific arrays
+    for (const type in powerupsByType) {
+      powerupsByType[type] = powerupsByType[type].filter(powerup => 
+        !(powerup.lifespan && (now - powerup.createdAt > powerup.lifespan))
+      );
+    }
     
     // Save the updated powerups
     savePowerupData();
@@ -814,21 +836,60 @@ function checkPowerups() {
     }
   }
   
-  // If we need to spawn more powerups
-  if (currentPowerupCount < powerupConfig.maxPowerups) {
-    const powerupsToSpawn = powerupConfig.maxPowerups - currentPowerupCount;
-    console.log(`Need to spawn ${powerupsToSpawn} more powerups`);
+  // Check each type separately
+  for (const typeConfig of powerupConfig.types) {
+    const type = typeConfig.type;
+    const maxPowerupsForType = typeConfig.maxPowerups;
+    const currentCountForType = powerupsByType[type]?.length || 0;
     
-    // Start spawning powerups if not already spawning
-    if (!isSpawningPowerups) {
-      startSpawningPowerups();
+    console.log(`Checking ${type} powerups: ${currentCountForType}/${maxPowerupsForType}`);
+    
+    // If we have more than the maximum for this type, trim the excess
+    if (currentCountForType > maxPowerupsForType) {
+      console.log(`Found ${currentCountForType} ${type} powerups, exceeding maximum of ${maxPowerupsForType}`);
+      console.log(`Trimming excess ${type} powerups...`);
+      
+      // Sort type-specific powerups by timestamp (oldest first)
+      powerupsByType[type].sort((a, b) => a.createdAt - b.createdAt);
+      
+      // Keep only the newest up to maxPowerupsForType
+      const excess = powerupsByType[type].splice(0, currentCountForType - maxPowerupsForType);
+      console.log(`Removed ${excess.length} excess ${type} powerups`);
+      
+      // Also remove from main powerups array
+      for (const powerup of excess) {
+        const index = powerups.findIndex(p => p.id === powerup.id);
+        if (index !== -1) {
+          powerups.splice(index, 1);
+        }
+      }
+      
+      // Save the updated powerups
+      savePowerupData();
+      
+      // Broadcast removal to all clients
+      for (const powerup of excess) {
+        broadcastPowerupRemoval(powerup.id);
+      }
     }
-  } else {
-    console.log('Maximum powerup count reached, no new spawns needed');
     
-    // Stop any active spawning
-    if (isSpawningPowerups) {
-      stopSpawningPowerups();
+    // If we need to spawn more of this type
+    if (currentCountForType < maxPowerupsForType) {
+      const powerupsToSpawn = maxPowerupsForType - currentCountForType;
+      console.log(`Need to spawn ${powerupsToSpawn} more ${type} powerups`);
+      
+      // Start spawning this type if not already
+      if (!powerupSpawningTimers[type]) {
+        startSpawningPowerupOfType(type);
+      }
+    } else {
+      console.log(`Maximum ${type} powerup count reached, no new spawns needed`);
+      
+      // Stop spawning this type if active
+      if (powerupSpawningTimers[type]) {
+        clearInterval(powerupSpawningTimers[type]);
+        powerupSpawningTimers[type] = null;
+      }
     }
   }
 }
@@ -851,38 +912,66 @@ function broadcastPowerupRemoval(powerupId) {
 function startSpawningPowerups() {
   if (isSpawningPowerups) return;
   
-  console.log(`Starting powerup spawning with interval ${powerupConfig.spawnInterval}ms`);
+  console.log('Starting powerup spawning for all types');
   isSpawningPowerups = true;
   
-  // Immediately spawn the first powerup
-  spawnPowerup();
+  // Start spawning each type
+  for (const typeConfig of powerupConfig.types) {
+    startSpawningPowerupOfType(typeConfig.type);
+  }
+}
+
+// Start spawning a specific type of powerup
+function startSpawningPowerupOfType(powerupType) {
+  // Find the type configuration
+  const typeConfig = powerupConfig.types.find(t => t.type === powerupType);
+  if (!typeConfig) {
+    console.error(`Cannot start spawning: Type ${powerupType} not found in configuration`);
+    return;
+  }
+  
+  // Check if already spawning this type
+  if (powerupSpawningTimers[powerupType]) {
+    console.log(`Already spawning ${powerupType} powerups`);
+    return;
+  }
+  
+  console.log(`Starting ${powerupType} powerup spawning with interval ${typeConfig.spawnInterval}ms`);
+  
+  // Immediately spawn the first powerup of this type
+  spawnPowerupOfType(powerupType);
   
   // Set up interval for subsequent spawns
-  powerupSpawningTimer = setInterval(() => {
-    // Check if we've reached max powerups
-    if (powerups.length >= powerupConfig.maxPowerups) {
-      console.log('Maximum powerup count reached during spawning, stopping');
-      stopSpawningPowerups();
+  powerupSpawningTimers[powerupType] = setInterval(() => {
+    // Check if we've reached max powerups for this type
+    const currentCount = powerupsByType[powerupType]?.length || 0;
+    if (currentCount >= typeConfig.maxPowerups) {
+      console.log(`Maximum ${powerupType} powerup count (${typeConfig.maxPowerups}) reached during spawning, stopping`);
+      clearInterval(powerupSpawningTimers[powerupType]);
+      powerupSpawningTimers[powerupType] = null;
       return;
     }
     
-    // Apply spawn chance
-    if (Math.random() < (powerupConfig.spawnChance || 1.0)) {
-      // Spawn another powerup
-      spawnPowerup();
+    // Apply spawn chance for this type
+    if (Math.random() < (typeConfig.spawnChance || 0.3)) {
+      // Spawn another powerup of this type
+      spawnPowerupOfType(powerupType);
     }
-  }, powerupConfig.spawnInterval);
+  }, typeConfig.spawnInterval);
 }
 
 // Stop the powerup spawning process
 function stopSpawningPowerups() {
   if (!isSpawningPowerups) return;
   
-  console.log('Stopping powerup spawning');
+  console.log('Stopping all powerup spawning');
   
-  if (powerupSpawningTimer) {
-    clearInterval(powerupSpawningTimer);
-    powerupSpawningTimer = null;
+  // Clear all spawning timers
+  for (const type in powerupSpawningTimers) {
+    if (powerupSpawningTimers[type]) {
+      clearInterval(powerupSpawningTimers[type]);
+      powerupSpawningTimers[type] = null;
+    }
   }
   
   isSpawningPowerups = false;
@@ -1313,13 +1402,24 @@ server.on('connection', (socket) => {
         const powerupIndex = powerups.findIndex(p => p.id === powerupId);
         
         if (powerupIndex !== -1) {
-          // Mark as collected
-          powerups[powerupIndex].isCollected = true;
-          powerups[powerupIndex].collectedBy = playerId;
-          powerups[powerupIndex].collectedAt = Date.now();
+          // Get the powerup data
+          const powerup = powerups[powerupIndex];
           
-          // Remove from the array
-          const removedPowerup = powerups.splice(powerupIndex, 1)[0];
+          // Mark as collected
+          powerup.isCollected = true;
+          powerup.collectedBy = playerId;
+          powerup.collectedAt = Date.now();
+          
+          // Remove from the main array
+          powerups.splice(powerupIndex, 1);
+          
+          // Also remove from type-specific array
+          if (powerupsByType[powerup.type]) {
+            const typeIndex = powerupsByType[powerup.type].findIndex(p => p.id === powerupId);
+            if (typeIndex !== -1) {
+              powerupsByType[powerup.type].splice(typeIndex, 1);
+            }
+          }
           
           console.log(`Removed powerup ${powerupId} from server (collected by ${playerId})`);
           

@@ -1,8 +1,4 @@
 {
-    "spawnInterval": 3000,
-    "maxPowerups": 50,
-    "spawnChance": 0.3,
-    "minDistance": 20,
     "checkInterval": 3000,
     "types": [
         {
@@ -12,7 +8,11 @@
             "color": "#FF5500",
             "size": 1.5,
             "text": "Ammo",
-            "lifespan": 300000
+            "lifespan": 300000,
+            "spawnInterval": 3000,
+            "maxPowerups": 30,
+            "spawnChance": 0.3,
+            "minDistance": 20
         },
         {
             "type": "billboard_ammo",
@@ -21,7 +21,11 @@
             "color": "#33CC33",
             "size": 1.5,
             "text": "Billboard",
-            "lifespan": 300000
+            "lifespan": 300000,
+            "spawnInterval": 6000,
+            "maxPowerups": 20,
+            "spawnChance": 0.2,
+            "minDistance": 30
         }
     ]
 } 
