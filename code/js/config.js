@@ -55,22 +55,58 @@ const CONFIG = { ...DEFAULT_CONFIG };
 // Load configuration from JSON file
 async function loadConfig() {
     try {
-        console.log('Attempting to load configuration from root /config.json...');
-        // Use an absolute path to the root config file
-        const response = await fetch('/../../config.json');
+        console.log('Attempting to load configuration from local config.json...');
+        // Use a simple relative path to the config in the code directory
+        const response = await fetch('./config.json');
+        
         if (!response.ok) {
-            console.error(`Failed to load root config: HTTP ${response.status} ${response.statusText}`);
-            console.log('Falling back to local config file...');
-            
-            // Try the local config as fallback (for development environments)
-            const localResponse = await fetch('/config.json');
-            if (!localResponse.ok) {
-                throw new Error(`Failed to load any config: ${localResponse.statusText}`);
-            }
-            return await processConfigResponse(localResponse, 'local');
+            console.error(`Failed to load config: HTTP ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to load config: ${response.statusText}`);
         }
         
-        return await processConfigResponse(response, 'root');
+        console.log('Config file response received, parsing JSON...');
+        const loadedConfig = await response.json();
+        
+        console.log('Raw loaded config:', loadedConfig);
+        
+        // Dynamically replace the server URL with current hostname
+        if (loadedConfig.server && loadedConfig.server.url) {
+            // Extract the port from the original URL
+            const originalUrl = loadedConfig.server.url;
+            let port = "8090"; // Default port
+            
+            // Extract port if specified in the original URL
+            const portMatch = originalUrl.match(/:(\d+)$/);
+            if (portMatch && portMatch[1]) {
+                port = portMatch[1];
+            }
+            
+            // Construct new URL with current hostname
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
+            console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
+        }
+        
+        // Check if billboard config with damagePerShot exists
+        if (loadedConfig.billboard && loadedConfig.billboard.damagePerShot !== undefined) {
+            console.log(`Found damagePerShot in config: ${loadedConfig.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot not found in config');
+        }
+        
+        // Merge loaded config with defaults
+        console.log('Merging loaded config with defaults...');
+        mergeConfig(CONFIG, loadedConfig);
+        
+        // Verify damagePerShot was properly merged
+        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+            console.log(`Final CONFIG.billboard.damagePerShot after merge: ${CONFIG.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot missing in final CONFIG after merge');
+        }
+        
+        console.log('Final configuration after merge:', CONFIG);
+        return CONFIG;
     } catch (error) {
         console.warn('Error loading configuration, using defaults:', error);
         return CONFIG;
@@ -150,58 +186,58 @@ async function reloadConfig() {
     try {
         // Force a cache-busting fetch of the config
         const cacheBuster = `?bust=${Date.now()}`;
-        
-        // Try root config first
-        const response = await fetch(`/../../config.json${cacheBuster}`);
+        const response = await fetch(`./config.json${cacheBuster}`);
         
         if (!response.ok) {
-            console.error(`Failed to reload root config: HTTP ${response.status} ${response.statusText}`);
-            console.log('Trying local config file...');
-            
-            // Try local config as fallback
-            const localResponse = await fetch(`/config.json${cacheBuster}`);
-            if (!localResponse.ok) {
-                throw new Error(`Failed to reload any config: ${localResponse.statusText}`);
-            }
-            
-            // Process the local config
-            const loadedConfig = await localResponse.json();
-            console.log('Raw reloaded config (local):', loadedConfig);
-            return processReloadedConfig(loadedConfig);
+            console.error(`Failed to reload config: HTTP ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to reload config: ${response.statusText}`);
         }
         
-        // Process the root config
         const loadedConfig = await response.json();
-        console.log('Raw reloaded config (root):', loadedConfig);
-        return processReloadedConfig(loadedConfig);
+        console.log('Raw reloaded config:', loadedConfig);
+        
+        // Dynamically replace the server URL with current hostname
+        if (loadedConfig.server && loadedConfig.server.url) {
+            // Extract the port from the original URL
+            const originalUrl = loadedConfig.server.url;
+            let port = "8090"; // Default port
+            
+            // Extract port if specified in the original URL
+            const portMatch = originalUrl.match(/:(\d+)$/);
+            if (portMatch && portMatch[1]) {
+                port = portMatch[1];
+            }
+            
+            // Construct new URL with current hostname
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
+            console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
+        }
+        
+        // Create a fresh CONFIG object based on defaults
+        const freshConfig = { ...DEFAULT_CONFIG };
+        
+        // Merge the loaded config into the fresh CONFIG
+        mergeConfig(freshConfig, loadedConfig);
+        
+        // Replace the global CONFIG with the fresh one
+        Object.keys(CONFIG).forEach(key => delete CONFIG[key]);
+        Object.assign(CONFIG, freshConfig);
+        
+        console.log('Configuration successfully reloaded:', CONFIG);
+        
+        // Specifically check damagePerShot
+        if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
+            console.log(`Reloaded CONFIG.billboard.damagePerShot: ${CONFIG.billboard.damagePerShot}`);
+        } else {
+            console.warn('damagePerShot still missing in reloaded CONFIG');
+        }
+        
+        return CONFIG;
     } catch (error) {
         console.error('Error reloading configuration:', error);
         return CONFIG;
     }
-}
-
-// Helper function to process reloaded config
-function processReloadedConfig(loadedConfig) {
-    // Create a fresh CONFIG object based on defaults
-    const freshConfig = { ...DEFAULT_CONFIG };
-    
-    // Merge the loaded config into the fresh CONFIG
-    mergeConfig(freshConfig, loadedConfig);
-    
-    // Replace the global CONFIG with the fresh one
-    Object.keys(CONFIG).forEach(key => delete CONFIG[key]);
-    Object.assign(CONFIG, freshConfig);
-    
-    console.log('Configuration successfully reloaded:', CONFIG);
-    
-    // Specifically check damagePerShot
-    if (CONFIG.billboard && CONFIG.billboard.damagePerShot !== undefined) {
-        console.log(`Reloaded CONFIG.billboard.damagePerShot: ${CONFIG.billboard.damagePerShot}`);
-    } else {
-        console.warn('damagePerShot still missing in reloaded CONFIG');
-    }
-    
-    return CONFIG;
 }
 
 // Make CONFIG, CONSTANTS, and config functions available globally

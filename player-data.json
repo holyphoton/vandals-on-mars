@@ -466,5 +466,29 @@
     "shootingAmmo": 157,
     "billboardAmmo": 2,
     "lastUpdate": 1743412517761
+  },
+  "player_94586_vgrfc": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 3.561088116320337,
+      "y": 47.04575300618194,
+      "z": 90.20673908034324
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743414881578
+  },
+  "player_43590_vtpfz": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Turf",
+    "position": {
+      "x": 63.326076771864635,
+      "y": 73.61728749202703,
+      "z": 30.553935638476208
+    },
+    "shootingAmmo": 189,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743415406400
   }
 }
