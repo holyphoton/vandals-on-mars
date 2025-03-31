@@ -265,7 +265,7 @@ class BillboardGun extends Gun {
         console.log(`Creating new billboard with size ${startSize}x${startSize} and health ${initialHealth}`);
         
         // Create text texture for the billboard
-        const textTexture = this.createTextTexture(billboardText);
+        const textTexture = this.createTextTexture(billboardText, billboard.owner);
         
         // Create the sign part of the billboard (the actual display)
         const signGeometry = new THREE.PlaneGeometry(3.0, 2.0); // Base size
@@ -458,7 +458,7 @@ class BillboardGun extends Gun {
         const billboardGroup = new THREE.Group();
         
         // Create text texture for the billboard
-        const textTexture = this.createTextTexture(text);
+        const textTexture = this.createTextTexture(text, owner);
         
         // Calculate scale factors based on ratio to starting size
         const widthScale = width / startSize;
@@ -726,10 +726,11 @@ class BillboardGun extends Gun {
     /**
      * Creates a text texture for the billboard
      * @param {string} text - The text to display on the billboard
+     * @param {string} owner - The owner's name to display at the bottom
      * @returns {THREE.Texture} - The texture containing the text
      */
-    createTextTexture(text) {
-        console.log(`Creating new text texture with text: "${text}"`);
+    createTextTexture(text, owner) {
+        console.log(`Creating new text texture with text: "${text}" and owner: "${owner}"`);
         
         // Create a canvas element for the texture
         const canvas = document.createElement('canvas');
@@ -802,6 +803,23 @@ class BillboardGun extends Gun {
             canvas.width - 40,
             fontSize * 1.2
         );
+        
+        // Add "PROPERTY OF <username>" at the bottom
+        if (owner) {
+            // Create green background for the bottom section with more padding
+            const bottomSectionHeight = 54;
+            context.fillStyle = '#1c5b2e'; // Green background
+            context.fillRect(8, canvas.height - 8 - bottomSectionHeight, canvas.width - 16, bottomSectionHeight);
+            
+            // Set larger font size for owner text (increased from 0.7 to 0.9)
+            const ownerFontSize = Math.min(20, fontSize * 0.9);
+            context.font = `bold ${ownerFontSize}px Arial, sans-serif`;
+            context.fillStyle = '#ffffff'; // White text
+            
+            // Position the owner text with a line break, adjusted for new padding
+            context.fillText("PROPERTY OF", canvas.width / 2, canvas.height - 36);
+            context.fillText(owner.toUpperCase(), canvas.width / 2, canvas.height - 16);
+        }
         
         // Create a texture from the canvas
         const texture = new THREE.Texture(canvas);
