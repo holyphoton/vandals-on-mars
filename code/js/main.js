@@ -1119,7 +1119,13 @@ class Game {
                 return;
             }
             
-            const serverUrl = CONFIG.server.url || 'ws://localhost:8090';
+            let serverUrl = CONFIG.server.url || 'ws://localhost:8090';
+            
+            // Make sure we're using wss:// for https sites
+            if (window.location.protocol === 'https:' && serverUrl.startsWith('ws://')) {
+                serverUrl = serverUrl.replace('ws://', 'wss://');
+            }
+            
             console.log('Connecting to server:', serverUrl);
             
             try {

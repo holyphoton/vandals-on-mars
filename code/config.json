@@ -44,7 +44,7 @@
     "autoSaveDelay": 15
   },
   "server": {
-    "url": "wss://vandals-on-mars.onrender.com",
+    "url": "auto",
     "reconnectInterval": 5000
   },
   "isMultiplayer": true

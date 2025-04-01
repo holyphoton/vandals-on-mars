@@ -71,20 +71,30 @@ async function loadConfig() {
         
         // Dynamically replace the server URL with current hostname
         if (loadedConfig.server && loadedConfig.server.url) {
-            // Extract the port from the original URL
-            const originalUrl = loadedConfig.server.url;
-            let port = "8090"; // Default port
-            
-            // Extract port if specified in the original URL
-            const portMatch = originalUrl.match(/:(\d+)$/);
-            if (portMatch && portMatch[1]) {
-                port = portMatch[1];
+            // If set to "auto", automatically determine the WebSocket URL
+            if (loadedConfig.server.url === "auto") {
+                // Use current hostname without specifying port
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                loadedConfig.server.url = `${protocol}${window.location.hostname}`;
+                console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+            } 
+            // Otherwise, process normally
+            else {
+                // Extract the port from the original URL
+                const originalUrl = loadedConfig.server.url;
+                let port = "8090"; // Default port
+                
+                // Extract port if specified in the original URL
+                const portMatch = originalUrl.match(/:(\d+)$/);
+                if (portMatch && portMatch[1]) {
+                    port = portMatch[1];
+                }
+                
+                // Construct new URL with current hostname
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
+                console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
             }
-            
-            // Construct new URL with current hostname
-            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-            loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
-            console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
         }
         
         // Check if billboard config with damagePerShot exists
@@ -198,20 +208,30 @@ async function reloadConfig() {
         
         // Dynamically replace the server URL with current hostname
         if (loadedConfig.server && loadedConfig.server.url) {
-            // Extract the port from the original URL
-            const originalUrl = loadedConfig.server.url;
-            let port = "8090"; // Default port
-            
-            // Extract port if specified in the original URL
-            const portMatch = originalUrl.match(/:(\d+)$/);
-            if (portMatch && portMatch[1]) {
-                port = portMatch[1];
+            // If set to "auto", automatically determine the WebSocket URL
+            if (loadedConfig.server.url === "auto") {
+                // Use current hostname without specifying port
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                loadedConfig.server.url = `${protocol}${window.location.hostname}`;
+                console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+            } 
+            // Otherwise, process normally
+            else {
+                // Extract the port from the original URL
+                const originalUrl = loadedConfig.server.url;
+                let port = "8090"; // Default port
+                
+                // Extract port if specified in the original URL
+                const portMatch = originalUrl.match(/:(\d+)$/);
+                if (portMatch && portMatch[1]) {
+                    port = portMatch[1];
+                }
+                
+                // Construct new URL with current hostname
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
+                console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
             }
-            
-            // Construct new URL with current hostname
-            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-            loadedConfig.server.url = `${protocol}${window.location.hostname}:${port}`;
-            console.log(`Dynamically set server URL to: ${loadedConfig.server.url}`);
         }
         
         // Create a fresh CONFIG object based on defaults
