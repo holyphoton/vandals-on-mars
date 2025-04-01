@@ -956,8 +956,16 @@ class Game {
     showBillboardPopup() {
         if (!this.billboardPopup || !this.billboardTextInput) return;
         
+        // Get the player name input element
+        this.playerNameInput = document.getElementById('player-name-input');
+        
         // Set current billboard text in input
         this.billboardTextInput.value = this.billboardText || `${this.username}'s Turf`;
+        
+        // Set current username in input
+        if (this.playerNameInput) {
+            this.playerNameInput.value = this.username || 'Anonymous';
+        }
         
         // Show popup
         this.billboardPopup.style.display = 'flex';
@@ -965,11 +973,15 @@ class Game {
         // Add keyboard listener for Enter and Escape keys
         this.addPopupKeyboardListeners();
         
-        // Focus after a small delay to prevent the 'B' key from being entered
+        // Focus on player name input first
         setTimeout(() => {
-            this.billboardTextInput.focus();
-            // Select all text to make it easy to replace
-            this.billboardTextInput.select();
+            if (this.playerNameInput) {
+                this.playerNameInput.focus();
+                this.playerNameInput.select();
+            } else {
+                this.billboardTextInput.focus();
+                this.billboardTextInput.select();
+            }
         }, 50);
         
         // Pause the game
@@ -1049,6 +1061,22 @@ class Game {
         } else {
             this.billboardText = `${this.username}'s Turf`;
             console.log(`Billboard text reset to default: ${this.billboardText}`);
+        }
+        
+        // Get and save the player name if the input exists
+        const playerNameInput = document.getElementById('player-name-input');
+        if (playerNameInput) {
+            const playerName = playerNameInput.value.trim();
+            if (playerName && playerName !== 'Anonymous') {
+                // Update the username
+                this.username = playerName;
+                console.log(`Username updated: ${this.username}`);
+                
+                // Save the username to the server via persistence
+                if (this.persistence) {
+                    this.persistence.saveUsername(this.username);
+                }
+            }
         }
         
         // Also update the global window reference to ensure it's available

@@ -510,6 +510,17 @@ body.game-paused {
     margin-bottom: 20px;
 }
 
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #ddd;
+    font-weight: bold;
+}
+
 .popup-input {
     width: 100%;
     padding: 10px;
@@ -518,7 +529,7 @@ body.game-paused {
     background-color: #333;
     color: #fff;
     font-size: 16px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .popup-buttons {

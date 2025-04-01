@@ -380,6 +380,37 @@ class PlayerPersistence {
             console.log('Billboard text saved:', textData);
         }
     }
+
+    /**
+     * Save username for the player
+     * @param {string} username - The username to save
+     */
+    saveUsername(username) {
+        if (!this.isInitialized || !this.playerId) {
+            console.warn('Cannot save username: persistence not initialized');
+            return;
+        }
+        
+        console.log(`Saving username: ${username}`);
+        
+        // Save to localStorage as a fallback
+        localStorage.setItem('vandalsOnMarsUsername', username);
+        
+        // Send to server
+        if (this.game && this.game.socket && this.game.socket.readyState === WebSocket.OPEN) {
+            const message = {
+                type: 'player_save_username',
+                playerId: this.playerId,
+                username: username,
+                timestamp: Date.now()
+            };
+            
+            this.game.socket.send(JSON.stringify(message));
+            console.log('Sent username to server');
+        } else {
+            console.log('Server connection not available, saved only to localStorage');
+        }
+    }
 }
 
 // Export if in a module context

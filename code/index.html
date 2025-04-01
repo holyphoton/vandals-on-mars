@@ -457,10 +457,17 @@
         <!-- Billboard Text Edit Popup -->
         <div id="billboard-popup" class="popup-overlay">
             <div class="popup-container">
-                <div class="popup-title">Edit Billboard Text</div>
+                <div class="popup-title">Edit Player & Billboard</div>
                 <div class="popup-content">
-                    <input type="text" id="billboard-text-input" class="popup-input" maxlength="200" placeholder="Enter billboard text">
-                    <div style="color: #aaa; font-size: 14px;">Press B to open this dialog when shooting billboards (max 200 characters).</div>
+                    <div class="input-group">
+                        <label for="player-name-input">Player Name:</label>
+                        <input type="text" id="player-name-input" class="popup-input" maxlength="30" placeholder="Enter your name">
+                    </div>
+                    <div class="input-group">
+                        <label for="billboard-text-input">Billboard Text:</label>
+                        <input type="text" id="billboard-text-input" class="popup-input" maxlength="200" placeholder="Enter billboard text">
+                    </div>
+                    <div style="color: #aaa; font-size: 14px;">Press B to open this dialog. New billboards will use your updated information.</div>
                 </div>
                 <div class="popup-buttons">
                     <button id="cancel-billboard" class="popup-button cancel">Cancel</button>
