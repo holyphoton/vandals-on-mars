@@ -147,24 +147,24 @@
     "username": "Anonymous",
     "billboardText": "Anonymous's Billboard",
     "position": {
-      "x": 33.50129333729383,
-      "y": 92.31154279034048,
-      "z": -26.823169320491
+      "x": -28.57653815796795,
+      "y": 92.33436883687999,
+      "z": 31.952868390822243
     },
     "shootingAmmo": 109,
     "billboardAmmo": 0,
-    "lastUpdate": 1743509914066
+    "lastUpdate": 1743510592690
   },
   "player_82896_snkfp": {
     "username": "Anonymous",
     "billboardText": "Anonymous's Billboard",
     "position": {
-      "x": 0.2647515595666326,
-      "y": 78.16435824216721,
-      "z": 65.21888535694133
+      "x": 91.96339806936646,
+      "y": -26.139258021404785,
+      "z": -34.96730766910236
     },
-    "shootingAmmo": 196,
+    "shootingAmmo": 186,
     "billboardAmmo": 1,
-    "lastUpdate": 1743509732415
+    "lastUpdate": 1743510840954
   }
 }

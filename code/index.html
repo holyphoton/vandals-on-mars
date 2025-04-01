@@ -430,7 +430,6 @@
                 <div class="ammo-display">Ammo: 30/100</div>
                 <div class="billboard-count">Billboards: 5/5</div>
                 <div class="hud-help">Press Q to switch weapons</div>
-                <div class="hud-help">Press B to edit billboard</div>
             </div>
             <div class="crosshair" id="crosshair"></div>
         </div>
@@ -443,13 +442,15 @@
         
         <!-- Mobile action buttons -->
         <div id="mobile-action-buttons">
-            <button id="mobile-switch-weapon" class="mobile-action-button">
-                <span class="action-icon">🔄</span>
-                <span>Switch Weapon</span>
+            <button id="mobile-info" class="mobile-action-button">
+                <span class="action-icon">ℹ️</span>
+                <span class="button-text">Info</span>
+                <span class="key-hint">[i]</span>
             </button>
             <button id="mobile-edit-billboard" class="mobile-action-button">
                 <span class="action-icon">✏️</span>
-                <span>Edit Billboard</span>
+                <span class="button-text">Edit Billboard</span>
+                <span class="key-hint">[b]</span>
             </button>
         </div>
         
@@ -464,6 +465,27 @@
                 <div class="popup-buttons">
                     <button id="cancel-billboard" class="popup-button cancel">Cancel</button>
                     <button id="confirm-billboard" class="popup-button confirm">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Info Popup -->
+        <div id="info-popup" class="popup-overlay">
+            <div class="popup-container">
+                <div class="popup-title">How to Play</div>
+                <div class="popup-content" id="info-content">
+                    <ul class="info-list">
+                        <li><strong>Gameplay:</strong></li>
+                        <li>• Plant billboards to claim territory using the billboard gun</li>
+                        <li>• Shoot other players' billboards to shrink them with shooting gun</li>
+                        <li>• Shooting other billboards will grow your billboard in size and health</li>
+                        <li>• You can edit your billboard text by pressing B</li>
+                        <li>• Switch between weapons by pressing Q</li>
+                        <li>• Watch out for exciting powerups that give you ammos and other fun advantages</li>
+                    </ul>
+                </div>
+                <div class="popup-buttons">
+                    <button id="close-info" class="popup-button confirm">Got It!</button>
                 </div>
             </div>
         </div>

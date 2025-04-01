@@ -40,7 +40,8 @@ class PlayerControls {
             toggleCamera: ['t'],
             jump: [' '], // Space
             switchWeapon: ['q'], // Switch weapon binding
-            editBillboard: ['b'] // Edit billboard text
+            editBillboard: ['b'], // Edit billboard text
+            showInfo: ['i'] // Show info popup
         };
         
         // Initialize controls
@@ -236,37 +237,59 @@ class PlayerControls {
     }
 
     /**
-     * Set up mobile action buttons for weapon switching and billboard editing
+     * Set up action buttons for both mobile and desktop
      */
     setupMobileActionButtons() {
         // Get button elements
-        const switchWeaponButton = document.getElementById('mobile-switch-weapon');
+        const infoButton = document.getElementById('mobile-info');
         const editBillboardButton = document.getElementById('mobile-edit-billboard');
         
-        // Add event listener for weapon switching
-        if (switchWeaponButton) {
-            switchWeaponButton.addEventListener('touchend', (event) => {
+        // Add event listeners for info button
+        if (infoButton) {
+            // For touch events (mobile)
+            infoButton.addEventListener('touchend', (event) => {
                 event.preventDefault(); // Prevent default touch behavior
+                this.showInfoPopup();
                 
-                // Switch weapon if weapon manager exists
-                if (this.weaponManager) {
-                    this.weaponManager.switchWeapon();
-                    this.updateAmmoDisplay();
-                    
-                    // Add visual feedback
-                    switchWeaponButton.classList.add('active');
-                    setTimeout(() => {
-                        switchWeaponButton.classList.remove('active');
-                    }, 200);
-                }
+                // Add visual feedback
+                infoButton.classList.add('active');
+                setTimeout(() => {
+                    infoButton.classList.remove('active');
+                }, 200);
+            });
+            
+            // For mouse clicks (desktop)
+            infoButton.addEventListener('click', (event) => {
+                this.showInfoPopup();
+                
+                // Add visual feedback
+                infoButton.classList.add('active');
+                setTimeout(() => {
+                    infoButton.classList.remove('active');
+                }, 200);
             });
         }
         
-        // Add event listener for billboard editing
+        // Add event listeners for billboard editing
         if (editBillboardButton) {
+            // For touch events (mobile)
             editBillboardButton.addEventListener('touchend', (event) => {
                 event.preventDefault(); // Prevent default touch behavior
                 
+                // Show billboard popup if game exists
+                if (window.game) {
+                    window.game.showBillboardPopup();
+                    
+                    // Add visual feedback
+                    editBillboardButton.classList.add('active');
+                    setTimeout(() => {
+                        editBillboardButton.classList.remove('active');
+                    }, 200);
+                }
+            });
+            
+            // For mouse clicks (desktop)
+            editBillboardButton.addEventListener('click', (event) => {
                 // Show billboard popup if game exists
                 if (window.game) {
                     window.game.showBillboardPopup();
@@ -282,6 +305,58 @@ class PlayerControls {
         
         // Set up direct weapon selection from gun indicators
         this.setupWeaponIndicatorSelection();
+        
+        // Set up info popup close button
+        this.setupInfoPopupControls();
+    }
+
+    /**
+     * Set up the info popup controls
+     */
+    setupInfoPopupControls() {
+        const closeInfoButton = document.getElementById('close-info');
+        if (closeInfoButton) {
+            // For mouse clicks (desktop)
+            closeInfoButton.addEventListener('click', (event) => {
+                this.hideInfoPopup();
+            });
+            
+            // For touch events (mobile)
+            closeInfoButton.addEventListener('touchend', (event) => {
+                event.preventDefault(); // Prevent default behavior
+                this.hideInfoPopup();
+            });
+        }
+    }
+
+    /**
+     * Show the info popup with game instructions
+     */
+    showInfoPopup() {
+        const infoPopup = document.getElementById('info-popup');
+        if (infoPopup) {
+            infoPopup.style.display = 'flex';
+            
+            // Pause the game if it's running
+            if (window.game && typeof window.game.pauseGame === 'function') {
+                window.game.pauseGame();
+            }
+        }
+    }
+
+    /**
+     * Hide the info popup
+     */
+    hideInfoPopup() {
+        const infoPopup = document.getElementById('info-popup');
+        if (infoPopup) {
+            infoPopup.style.display = 'none';
+            
+            // Resume the game if it was paused
+            if (window.game && typeof window.game.resumeGame === 'function') {
+                window.game.resumeGame();
+            }
+        }
     }
 
     /**
@@ -503,7 +578,7 @@ class PlayerControls {
         // Skip key handling if input or textarea is focused
         if (document.activeElement && 
             (document.activeElement.tagName === 'INPUT' || 
-             document.activeElement.tagName === 'TEXTAREA')) {
+                document.activeElement.tagName === 'TEXTAREA')) {
             return;
         }
         
@@ -541,6 +616,11 @@ class PlayerControls {
             if (window.game) {
                 window.game.showBillboardPopup();
             }
+        }
+        
+        // Show info popup
+        if (this.keyBindings.showInfo.includes(key)) {
+            this.showInfoPopup();
         }
         
         // Admin command: Reveal billboards (Alt+R)

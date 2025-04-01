@@ -242,10 +242,10 @@ body, html {
     position: fixed;
     right: 20px;
     top: 20px;
-    display: none; /* Hidden by default */
-    z-index: 25;
+    display: flex; /* Show on all devices */
     flex-direction: column;
     gap: 15px;
+    z-index: 25;
 }
 
 .mobile-action-button {
@@ -257,15 +257,27 @@ body, html {
     display: flex;
     align-items: center;
     font-size: 11px;
-    text-transform:uppercase;
+    text-transform: uppercase;
     cursor: pointer;
     backdrop-filter: blur(2px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s, transform 0.1s;
 }
 
 .mobile-action-button .action-icon {
     font-size: 20px;
     margin-right: 8px;
+}
+
+.mobile-action-button .key-hint {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-left: 4px;
+    color: #ccc;
+}
+
+.mobile-action-button:hover {
+    background-color: rgba(40, 40, 40, 0.7);
 }
 
 .mobile-action-button:active, .mobile-action-button.active {
@@ -279,12 +291,13 @@ body, html {
         display: block !important; /* Important to override any inline styles */
     }
     
-    #mobile-action-buttons {
-        display: flex !important; /* Show action buttons on mobile */
-    }
-    
     /* Hide keyboard help text on mobile */
     .hud-help {
+        display: none !important;
+    }
+    
+    /* Hide key hints on mobile devices */
+    .key-hint {
         display: none !important;
     }
     
@@ -534,4 +547,66 @@ body.game-paused {
 
 .popup-button:hover {
     opacity: 0.9;
+}
+
+/* Info Popup Styles */
+.info-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    margin-bottom: 12px;
+    padding: 8px;
+    background-color: rgba(50, 50, 50, 0.5);
+    border-radius: 5px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.info-list li strong {
+    color: #ff9900;
+    margin-right: 5px;
+    display: inline-block;
+}
+
+#info-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Desktop enhancements for action buttons */
+@media (hover: hover) and (pointer: fine) {
+    .mobile-action-button {
+        padding: 10px 20px;
+        font-size: 12px;
+        background-color: rgba(20, 20, 20, 0.8);
+        border: 1px solid rgba(100, 100, 100, 0.3);
+        letter-spacing: 0.5px;
+    }
+    
+    .mobile-action-button:hover {
+        background-color: rgba(40, 40, 40, 0.9);
+        border-color: rgba(100, 100, 100, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    .mobile-action-button .action-icon {
+        font-size: 18px;
+    }
+    
+    .mobile-action-button .key-hint {
+        font-size: 11px;
+        opacity: 0.8;
+        color: #ffcc66;
+        letter-spacing: 0;
+        font-weight: normal;
+    }
+    
+    #mobile-action-buttons {
+        top: 15px;
+        right: 15px;
+    }
 } 
