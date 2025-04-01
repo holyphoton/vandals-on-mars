@@ -1033,5 +1033,28 @@
     "player_id": "player_26251_cajzn",
     "billboard_category": "player",
     "timestamp": 1743509591823
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_59892_nlols",
+    "position": {
+      "x": 45.841891450745365,
+      "y": 87.56155578274802,
+      "z": -25.12797916910131
+    },
+    "quaternion": {
+      "x": -0.260283301267078,
+      "y": -0.7329647451965237,
+      "z": -0.05426889055111435,
+      "w": 0.6261550709679334
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509901946
   }
 ]

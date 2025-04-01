@@ -126,6 +126,12 @@ class PlayerControls {
         
         // Listen for pointer lock changes to show/hide UI
         document.addEventListener('lockchange', this.onLockChange.bind(this), false);
+        
+        // Setup clickable weapon indicators (for both desktop and mobile)
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            this.setupWeaponIndicatorSelection();
+        }, 500);
     }
 
     /**
@@ -273,6 +279,74 @@ class PlayerControls {
                 }
             });
         }
+        
+        // Set up direct weapon selection from gun indicators
+        this.setupWeaponIndicatorSelection();
+    }
+
+    /**
+     * Set up weapon selection by clicking/tapping on gun indicators
+     */
+    setupWeaponIndicatorSelection() {
+        // Get all gun indicator elements
+        const gunIndicators = document.querySelectorAll('.gun-indicator');
+        
+        // Add click/touch handlers to each indicator
+        gunIndicators.forEach(indicator => {
+            // For mouse clicks (desktop)
+            indicator.addEventListener('click', (event) => {
+                this.handleWeaponIndicatorSelection(indicator, event);
+            });
+            
+            // For touch events (mobile)
+            indicator.addEventListener('touchend', (event) => {
+                this.handleWeaponIndicatorSelection(indicator, event);
+            });
+            
+            // Make sure the indicator is clickable
+            indicator.style.pointerEvents = 'auto';
+            indicator.style.cursor = 'pointer';
+        });
+    }
+
+    /**
+     * Handle selection of a weapon via the UI indicators
+     * @param {HTMLElement} indicator - The clicked gun indicator
+     * @param {Event} event - The click/touch event
+     */
+    handleWeaponIndicatorSelection(indicator, event) {
+        // Prevent default behavior
+        event.preventDefault();
+        
+        // Get the weapon type from the data attribute
+        const weaponType = indicator.getAttribute('data-weapon');
+        
+        console.log(`Weapon indicator selected: ${weaponType}`);
+        
+        // Switch to the selected weapon if weaponManager exists
+        if (this.weaponManager) {
+            // Check current active weapon
+            const currentlyActive = this.weaponManager.isBillboardGunActive() ? 'billboard' : 'shooter';
+            
+            // Only switch if different from current
+            if (currentlyActive !== weaponType) {
+                console.log(`Switching from ${currentlyActive} to ${weaponType}`);
+                
+                // For now we just have two weapons, so one switch toggles between them
+                this.weaponManager.switchWeapon();
+                
+                // Update UI
+                this.updateAmmoDisplay();
+                
+                // Add visual feedback
+                indicator.classList.add('active');
+                setTimeout(() => {
+                    // The class will be removed by the weaponManager's updateIndicator
+                }, 200);
+            } else {
+                console.log(`Already using ${weaponType} gun`);
+            }
+        }
     }
 
     /**
@@ -359,6 +433,7 @@ class PlayerControls {
         const blockingElements = [
             'mobile-switch-weapon',
             'mobile-edit-billboard',
+            'hud-section',
             'billboard-popup',
             'ammo-display',
             'billboard-count',

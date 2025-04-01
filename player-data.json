@@ -147,13 +147,13 @@
     "username": "Anonymous",
     "billboardText": "Anonymous's Billboard",
     "position": {
-      "x": -24.35587545587407,
-      "y": 92.18544483660236,
-      "z": 35.66335782081795
+      "x": 33.50129333729383,
+      "y": 92.31154279034048,
+      "z": -26.823169320491
     },
     "shootingAmmo": 109,
-    "billboardAmmo": 1,
-    "lastUpdate": 1743509587038
+    "billboardAmmo": 0,
+    "lastUpdate": 1743509914066
   },
   "player_82896_snkfp": {
     "username": "Anonymous",
