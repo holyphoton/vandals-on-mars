@@ -29,6 +29,9 @@ class PlayerCamera {
         this.isLocked = false;
         this.manualControlActive = false;
         
+        // Mobile detection
+        this.isMobile = Helpers && typeof Helpers.isMobile === 'function' ? Helpers.isMobile() : false;
+        
         // Initialize position and lookAt vectors
         this.position = new THREE.Vector3();
         this.lookAt = new THREE.Vector3();
@@ -124,8 +127,14 @@ class PlayerCamera {
         // Set initial position and orientation
         this.updateCameraPositionAndOrientation();
         
-        // Check if pointer lock is supported
-        this.checkPointerLockSupport();
+        // Mobile devices don't need pointer lock, use direct manual controls instead
+        if (this.isMobile) {
+            console.log('Mobile device detected, enabling manual controls without pointer lock');
+            this.enableManualControl();
+        } else {
+            // Only check pointer lock support on non-mobile devices
+            this.checkPointerLockSupport();
+        }
         
         // Set up event listeners
         this.setupEventListeners();
@@ -164,18 +173,21 @@ class PlayerCamera {
             return;
         }
         
-        // Mouse movement for camera rotation
-        document.addEventListener('mousemove', this.onMouseMove.bind(this));
-        
-        // Pointer lock change events
-        document.addEventListener('pointerlockchange', this.onPointerLockChange.bind(this));
-        document.addEventListener('mozpointerlockchange', this.onPointerLockChange.bind(this));
-        document.addEventListener('webkitpointerlockchange', this.onPointerLockChange.bind(this));
-        
-        // Pointer lock error events
-        document.addEventListener('pointerlockerror', this.onPointerLockError.bind(this));
-        document.addEventListener('mozpointerlockerror', this.onPointerLockError.bind(this));
-        document.addEventListener('webkitpointerlockerror', this.onPointerLockError.bind(this));
+        // Only add mouse movement for non-mobile devices
+        if (!this.isMobile) {
+            // Mouse movement for camera rotation
+            document.addEventListener('mousemove', this.onMouseMove.bind(this));
+            
+            // Pointer lock change events
+            document.addEventListener('pointerlockchange', this.onPointerLockChange.bind(this));
+            document.addEventListener('mozpointerlockchange', this.onPointerLockChange.bind(this));
+            document.addEventListener('webkitpointerlockchange', this.onPointerLockChange.bind(this));
+            
+            // Pointer lock error events
+            document.addEventListener('pointerlockerror', this.onPointerLockError.bind(this));
+            document.addEventListener('mozpointerlockerror', this.onPointerLockError.bind(this));
+            document.addEventListener('webkitpointerlockerror', this.onPointerLockError.bind(this));
+        }
         
         // Window resize
         window.addEventListener('resize', this.onWindowResize.bind(this));
@@ -343,6 +355,12 @@ class PlayerCamera {
     requestPointerLock() {
         // Check if already locked
         if (this.isLocked) return;
+        
+        // If on mobile, don't try to use pointer lock at all, just enable manual controls
+        if (this.isMobile) {
+            this.enableManualControl();
+            return;
+        }
         
         // If we're in manual control mode, just set the flag
         if (this.manualControlActive) {
@@ -659,6 +677,53 @@ class PlayerCamera {
             this.hideCrosshair();
             this.exitPointerLock();
         }
+    }
+    
+    /**
+     * Enable manual control without pointer lock
+     * Used as a fallback and for mobile devices
+     */
+    enableManualControl() {
+        console.log('Enabling manual camera control');
+        this.manualControlActive = true;
+        this.isLocked = true;
+        
+        // Show crosshair for first-person mode
+        this.showCrosshair();
+        
+        // Add FPS active class to body
+        document.body.classList.add('fps-active');
+        
+        // Dispatch events to notify other systems
+        const event = new CustomEvent('lockchange', { detail: { locked: true } });
+        document.dispatchEvent(event);
+        
+        const lockEvent = new CustomEvent('lock-state-changed', {
+            detail: { locked: true }
+        });
+        document.dispatchEvent(lockEvent);
+    }
+    
+    /**
+     * Update camera rotation based on touch joystick input
+     * @param {Object} joystickData - { x, y } from touch joystick
+     */
+    updateCameraFromJoystick(joystickData) {
+        if (!joystickData || (joystickData.x === 0 && joystickData.y === 0)) {
+            return;
+        }
+        
+        // Apply joystick values to camera rotation
+        // X controls left/right (heading)
+        this.spherical.heading -= joystickData.x * 0.05;
+        this.spherical.heading = (this.spherical.heading + Math.PI * 2) % (Math.PI * 2);
+        
+        // Y controls up/down (pitch)
+        this.spherical.pitch += joystickData.y * 0.05;
+        this.spherical.pitch = Math.max(-Math.PI/4, Math.min(Math.PI/4, this.spherical.pitch));
+        
+        // Apply the new orientation
+        this.updateCameraPositionAndOrientation();
     }
 }
 

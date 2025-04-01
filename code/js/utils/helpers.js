@@ -212,8 +212,37 @@ const Helpers = {
      * @returns {boolean} - True if user is on mobile
      */
     isMobile: function() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-               (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        const userAgent = navigator.userAgent;
+        const maxTouchPoints = navigator.maxTouchPoints || 0;
+        const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+        const isTouch = 'ontouchstart' in window || navigator.msMaxTouchPoints;
+        
+        // Debugging information for mobile detection
+        console.log('Mobile detection:', {
+            userAgent,
+            maxTouchPoints,
+            hasTouch: isTouch,
+            windowWidth: window.innerWidth,
+            windowHeight: window.innerHeight,
+            matchesMobileUA: mobileRegex.test(userAgent)
+        });
+        
+        // Check for the iOS user agent specifically
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+        if (isIOS) {
+            console.log('iOS device detected');
+        }
+        
+        // Improved device detection for all modern browsers
+        const isMobileDevice = (
+            mobileRegex.test(userAgent) || 
+            (maxTouchPoints && maxTouchPoints > 2) ||
+            window.innerWidth < 768 ||
+            isTouch
+        );
+        
+        console.log('Is mobile device:', isMobileDevice);
+        return isMobileDevice;
     },
 
     /**

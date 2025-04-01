@@ -121,7 +121,10 @@ class PlayerControls {
                 // Update camera movement
                 this.touchControls.camera = { x, y };
                 
-                // TODO: Implement camera rotation on mobile
+                // Update camera rotation using the camera's joystick method
+                if (this.playerCamera && typeof this.playerCamera.updateCameraFromJoystick === 'function') {
+                    this.playerCamera.updateCameraFromJoystick(this.touchControls.camera);
+                }
             });
             
             this.joysticks.right.on('end', () => {
@@ -132,19 +135,16 @@ class PlayerControls {
         
         // Add tap to shoot
         document.addEventListener('touchstart', (event) => {
-            // Check if not touching joysticks
+            // Check if not touching joysticks or other UI elements
             const touch = event.touches[0];
-            const leftJoystickEl = document.getElementById('left-joystick');
-            const rightJoystickEl = document.getElementById('right-joystick');
             
-            // Simple bounding box check
-            const isTouchingLeftJoystick = this.isTouchingElement(touch, leftJoystickEl);
-            const isTouchingRightJoystick = this.isTouchingElement(touch, rightJoystickEl);
-            
-            if (!isTouchingLeftJoystick && !isTouchingRightJoystick) {
-                // Simulate a click/shoot action
-                this.onClick(event);
+            // Check if touch is on any NippleJS or joystick elements
+            if (this.isTouchingJoystick(touch) || this.isTouchingUI(touch)) {
+                return; // Don't shoot if touching joysticks or UI
             }
+            
+            // Safe to trigger click/shoot action
+            this.onClick(event);
         });
     }
 
@@ -164,6 +164,75 @@ class PlayerControls {
             touch.clientY >= rect.top &&
             touch.clientY <= rect.bottom
         );
+    }
+
+    /**
+     * Check if a touch is touching any joystick element
+     * @param {Touch} touch - Touch object
+     * @returns {boolean} - True if touching joystick
+     */
+    isTouchingJoystick(touch) {
+        // Check container elements
+        const leftJoystickEl = document.getElementById('left-joystick');
+        const rightJoystickEl = document.getElementById('right-joystick');
+        const mobileControls = document.getElementById('mobile-controls');
+        
+        // Check if touching any of the container elements
+        if (this.isTouchingElement(touch, leftJoystickEl) || 
+            this.isTouchingElement(touch, rightJoystickEl) ||
+            this.isTouchingElement(touch, mobileControls)) {
+            return true;
+        }
+        
+        // Also check NippleJS elements which might extend beyond containers
+        const nippleElements = document.querySelectorAll('.nipple, .front, .back, .collection');
+        for (let i = 0; i < nippleElements.length; i++) {
+            if (this.isTouchingElement(touch, nippleElements[i])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if a touch is touching any UI element
+     * @param {Touch} touch - Touch object
+     * @returns {boolean} - True if touching UI
+     */
+    isTouchingUI(touch) {
+        // Check common UI elements
+        const gameUI = document.getElementById('game-ui');
+        const billboardPopup = document.getElementById('billboard-popup');
+        
+        if (this.isTouchingElement(touch, gameUI) || 
+            this.isTouchingElement(touch, billboardPopup)) {
+            return true;
+        }
+        
+        // Check element and all its parents for UI-related attributes
+        let element = document.elementFromPoint(touch.clientX, touch.clientY);
+        while (element) {
+            // Check if it's an input element
+            if (element.tagName === 'INPUT' || 
+                element.tagName === 'BUTTON' || 
+                element.tagName === 'TEXTAREA') {
+                return true;
+            }
+            
+            // Check for UI-related classes
+            if (element.classList && 
+                (element.classList.contains('ui-container') || 
+                 element.classList.contains('hud-section') || 
+                 element.classList.contains('popup-container') || 
+                 element.classList.contains('custom-crosshair'))) {
+                return true;
+            }
+            
+            element = element.parentElement;
+        }
+        
+        return false;
     }
 
     /**
@@ -240,18 +309,19 @@ class PlayerControls {
      * @param {MouseEvent} event - Mouse event
      */
     onClick(event) {
-        // Only handle left mouse button (button 0)
-        if (event.button !== 0) return;
+        // Only handle left mouse button (button 0) or touch events
+        if (event instanceof MouseEvent && event.button !== 0) return;
         
         // Check if we're clicking on an input element
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || 
-            event.target.tagName === 'BUTTON') {
+        if (event.target && (event.target.tagName === 'INPUT' || 
+            event.target.tagName === 'TEXTAREA' || 
+            event.target.tagName === 'BUTTON')) {
             // Don't handle the click if it's on an input, textarea, or button
             return;
         }
         
-        // If pointer is not locked and in first person, request lock
-        if (!this.playerCamera.isLocked && this.playerCamera.isFirstPerson) {
+        // If pointer is not locked and in first person, request lock (for non-mobile)
+        if (!this.playerCamera.isLocked && this.playerCamera.isFirstPerson && !this.isMobile) {
             this.playerCamera.requestPointerLock();
             return;
         }
@@ -363,9 +433,6 @@ class PlayerControls {
             x = this.touchControls.movement.x || 0;
             x = -x;
             z = this.touchControls.movement.y || 0;
-            
-            // Invert z for forward/backward
-            z = -z;
         }
         
         // Normalize diagonal movement
@@ -396,8 +463,9 @@ class PlayerControls {
      */
     update(deltaTime) {
         // Allow movement if in first-person mode AND EITHER pointer-locked OR using manual controls
+        // For mobile, we always use manual controls
         if (!this.playerCamera.isFirstPerson || 
-            (!this.playerCamera.isLocked && !this.playerCamera.manualControlActive)) {
+            (!this.playerCamera.isLocked && !this.playerCamera.manualControlActive && !this.isMobile)) {
             return;
         }
         
@@ -409,11 +477,6 @@ class PlayerControls {
         
         // Update camera position
         this.playerCamera.move(movement.z, movement.x, speed);
-        
-        // Log movement debug info if actually moving
-        if (movement.x !== 0 || movement.z !== 0) {
-            // Movement is happening, but no need to log it
-        }
     }
 
     /**

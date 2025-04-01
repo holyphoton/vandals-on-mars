@@ -1,1 +1,186 @@
-[]
+[
+  {
+    "type": "billboard_data",
+    "id": "billboard_72980_tnbjf",
+    "position": {
+      "x": 22.617928494198324,
+      "y": -94.48390390804897,
+      "z": -31.00228399531076
+    },
+    "quaternion": {
+      "x": 0.03614430313229615,
+      "y": -0.15060828226540984,
+      "z": 0.9807858144601805,
+      "w": -0.118616697044824
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505223344
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_90144_zpkzy",
+    "position": {
+      "x": 43.828818987633156,
+      "y": -88.76739597721888,
+      "z": -24.480695201993576
+    },
+    "quaternion": {
+      "x": 0.6832241135455293,
+      "y": 0.06914873514507625,
+      "z": 0.6844154015351251,
+      "w": -0.24494656813124605
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505235692
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_74192_qrukj",
+    "position": {
+      "x": 40.57739956338037,
+      "y": -91.86773934600335,
+      "z": -17.711959579012508
+    },
+    "quaternion": {
+      "x": 0.8642773741835535,
+      "y": 0.13970330960396288,
+      "z": 0.451048770990796,
+      "w": -0.17338573167297708
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505248107
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_87459_xidvv",
+    "position": {
+      "x": -28.316947819751174,
+      "y": -78.7738418210531,
+      "z": 58.247340805612716
+    },
+    "quaternion": {
+      "x": 0.8322280285375943,
+      "y": 0.01141828137286624,
+      "z": 0.4400210469505774,
+      "w": 0.33711661128967985
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505395446
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_89595_hlpxq",
+    "position": {
+      "x": -17.009036385247846,
+      "y": -87.61347247516014,
+      "z": 49.34057683174843
+    },
+    "quaternion": {
+      "x": -0.04994495531868246,
+      "y": 0.25505502287237636,
+      "z": 0.9628434636735212,
+      "w": 0.07338188609570451
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505409427
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_11421_vqlgv",
+    "position": {
+      "x": -15.95867167625023,
+      "y": -87.22123986104253,
+      "z": 50.37555474068877
+    },
+    "quaternion": {
+      "x": -0.16449900075971408,
+      "y": 0.266546899108677,
+      "z": 0.9489884229437422,
+      "w": 0.03624641283428589
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30618_vzfgn",
+    "billboard_category": "player",
+    "timestamp": 1743505424984
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_79975_mibto",
+    "position": {
+      "x": 47.58370349077281,
+      "y": -87.75081726176353,
+      "z": -20.86877169348496
+    },
+    "quaternion": {
+      "x": 0.7034319074135167,
+      "y": 0.10383852499394355,
+      "z": 0.6598628467556429,
+      "w": -0.24286238043633457
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Jugal's Billboard",
+    "owner": "Jugal",
+    "player_id": "player_85027_kuzoq",
+    "billboard_category": "player",
+    "timestamp": 1743505650744
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_30656_rvvdl",
+    "position": {
+      "x": 37.74719122590465,
+      "y": -90.07362618630333,
+      "z": -29.356631622260053
+    },
+    "quaternion": {
+      "x": 0.8141014657086286,
+      "y": 0.2407272178471557,
+      "z": -0.5280745967510327,
+      "w": -0.020650190915943806
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Jugal's Billboard",
+    "owner": "Jugal",
+    "player_id": "player_85027_kuzoq",
+    "billboard_category": "player",
+    "timestamp": 1743505664533
+  }
+]

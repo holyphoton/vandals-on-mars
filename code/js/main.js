@@ -85,57 +85,66 @@ class Game {
      * Initialize the game
      */
     async initialize() {
-        // Prevent duplicate initialization
-        if (this.isInitialized) {
-            console.warn('Game is already initialized, skipping duplicate initialization');
-            return;
-        }
-        
-        console.log('Initializing game');
-        
-        // Show loading screen
-        this.showLoadingScreen();
-        
-        // Load configuration
-        await this.loadConfiguration();
-        
-        // Create Three.js objects
-        this.setupThreeJS();
-        
-        // Create game objects
-        this.createGameObjects();
-        
-        // Setup event listeners
-        this.setupEventListeners();
-        
-        // Connect to the server
-        if (CONFIG.isMultiplayer) {
-            try {
-                // Connect to server and wait for connection to be established
-                this.updateLoadingProgress(0.8, 'Connecting to server...');
-                await this.connectToServer();
-                this.updateLoadingProgress(0.85, 'Server connected');
-                
-                // Initialize player persistence after connecting to server
-                // This needs to happen before showing the start screen
-                this.updateLoadingProgress(0.9, 'Loading player data...');
-                await this.initializePersistence();
-                this.updateLoadingProgress(0.95, 'Player data loaded');
-            } catch (error) {
-                console.error('Error during server connection or persistence initialization:', error);
-                // Continue without multiplayer features
-                this.updateLoadingProgress(0.9, 'Continuing in offline mode...');
+        try {
+            if (this.isInitialized) {
+                console.warn('Game is already initialized, skipping');
+                return;
             }
+            
+            console.log('Initializing game...');
+            
+            // Log mobile detection information
+            const isMobile = Helpers && typeof Helpers.isMobile === 'function' ? Helpers.isMobile() : false;
+            console.log('Mobile device detection at game initialization:', isMobile);
+            
+            // Show loading screen
+            this.showLoadingScreen();
+            this.updateLoadingProgress(0.1, 'Loading configuration...');
+            
+            // Load configuration
+            await this.loadConfiguration();
+            
+            // Create Three.js objects
+            this.setupThreeJS();
+            
+            // Create game objects
+            this.createGameObjects();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            // Connect to the server
+            if (CONFIG.isMultiplayer) {
+                try {
+                    // Connect to server and wait for connection to be established
+                    this.updateLoadingProgress(0.8, 'Connecting to server...');
+                    await this.connectToServer();
+                    this.updateLoadingProgress(0.85, 'Server connected');
+                    
+                    // Initialize player persistence after connecting to server
+                    // This needs to happen before showing the start screen
+                    this.updateLoadingProgress(0.9, 'Loading player data...');
+                    await this.initializePersistence();
+                    this.updateLoadingProgress(0.95, 'Player data loaded');
+                } catch (error) {
+                    console.error('Error during server connection or persistence initialization:', error);
+                    // Continue without multiplayer features
+                    this.updateLoadingProgress(0.9, 'Continuing in offline mode...');
+                }
+            }
+            
+            // Hide loading screen and show start screen
+            this.hideLoadingScreen();
+            this.showStartScreen();
+            
+            // Set initialization flag
+            this.isInitialized = true;
+            
+            console.log('Game initialized');
+        } catch (error) {
+            console.error('Error initializing game:', error);
+            this.showErrorMessage('Failed to initialize game: ' + error.message);
         }
-        
-        // Hide loading screen and show start screen
-        this.hideLoadingScreen();
-        this.showStartScreen();
-        
-        // Set initialization flag
-        this.isInitialized = true;
-        
-        console.log('Game initialized');
     }
 
     /**
@@ -560,117 +569,121 @@ class Game {
      * Start the game
      */
     async startGame() {
-        if (this.gameStarted) {
-            console.warn('Game already started, ignoring request');
-            return;
-        }
-        
-        console.log('Starting game...');
-        
-        // Verify DOM elements to prevent errors
-        this.verifyDomElements();
-        
-        // Get username from input
-        if (this.usernameInput && this.usernameInput.value.trim()) {
-            this.username = this.usernameInput.value.trim();
-        } else {
-            this.username = "Anonymous";
-        }
-        
-        console.log(`Starting game for user: ${this.username}`);
-        
-        // Set default billboard text based on username
-        this.billboardText = `${this.username}'s Turf`;
-        window.billboardText = this.billboardText;
-        
-        // Save billboard text in persistence if available
-        if (this.persistence) {
-            this.persistence.saveBillboardText(this.billboardText);
-        }
-        
-        // Hide start screen
-        this.hideStartScreen();
-        
-        // Ensure canvas is visible
-        this.ensureCanvasIsVisible();
-        
-        // Lock pointer if not already locked
-        if (this.playerCamera && !this.playerCamera.isLocked) {
-            this.playerCamera.requestPointerLock();
-        }
-        
-        // Start animations if not already running
-        if (!this.isAnimating) {
-            this.animate();
-        }
-        
-        // Connect to server if needed and not already connected
-        if (CONFIG.isMultiplayer && !this.connectedToServer) {
-            try {
-                await this.connectToServer();
-            } catch (error) {
-                console.error('Failed to connect to server:', error);
-                this.showErrorMessage('Could not connect to server. Playing in offline mode.');
-            }
-        }
-        
-        // Set flag to indicate weaponManager is ready
-        if (this.weaponManager) {
-            console.log('WeaponManager is ready for use');
-            this.weaponManager.isInitialized = true;
-        }
-        
-        // Initialize powerupManager if needed
-        if (this.powerupManager && !this.powerupManager.isInitialized) {
-            console.log('Initializing PowerupManager');
-            this.powerupManager.initialize();
-        }
-        
-        // Request existing billboards from server
-        if (this.connectedToServer) {
-            if (this.weaponManager) {
-                this.requestAllBillboards();
-            } else {
-                // Set a flag to request billboards once weapon manager is initialized
-                this.pendingBillboardRequest = true;
-            }
-        }
-        
-        // If we have persistence data, apply it
-        if (this.persistence && this.persistence.isInitialized) {
-            console.log('Applying persistence data (position, ammo, etc.)');
+        try {
+            console.log('Starting game, game started:', this.gameStarted);
             
-            // Validate position data before applying (wait for globe to be ready)
-            this.validatePlayerSpawnLocation();
-        }
-        
-        // Initialize bot manager with a longer delay
-        // This ensures the weapon manager and billboards are fully loaded first
-        setTimeout(() => {
-            if (this.botManager) {
-                console.log('Initializing bot billboard system...');
-                
-                // If the botManager has an initialize method, call it
-                if (typeof this.botManager.initialize === 'function') {
-                    this.botManager.initialize();
-                }
-                // Otherwise, if it has a spawnInitialBillboards method, call that
-                else if (typeof this.botManager.spawnInitialBillboards === 'function') {
-                    this.botManager.spawnInitialBillboards();
-                }
-                
-                console.log('Bot billboard system initialized');
-            } else {
-                console.warn('BotManager not available, bot billboards will not be spawned');
+            // Check device type
+            const isMobile = Helpers && typeof Helpers.isMobile === 'function' ? Helpers.isMobile() : false;
+            console.log('Device type at game start:', isMobile ? 'Mobile' : 'Desktop');
+            
+            if (this.gameStarted) {
+                console.warn('Game is already started, skipping');
+                return;
             }
-        }, 10000); // 10 second delay to ensure weapon manager is fully initialized
-        
-        // Set game started flag
-        this.gameStarted = true;
-        console.log('Game started successfully');
-        
-        // Show started message
-        this.showGameStartedMessage();
+            
+            // Get username from input
+            this.username = this.usernameInput.value.trim() || 'Anonymous';
+            console.log('Starting game with username:', this.username);
+            
+            // Set the billboard text to include the username
+            this.billboardText = `${this.username}'s Billboard`;
+            window.billboardText = this.billboardText;
+            
+            // Hide start screen
+            this.startScreen.style.display = 'none';
+            
+            // Start animation loop
+            this.gameStarted = true;
+            
+            // Make sure mobile controls are visible on mobile devices
+            if (isMobile) {
+                const mobileControls = document.getElementById('mobile-controls');
+                if (mobileControls) {
+                    mobileControls.style.display = 'block';
+                    console.log('Mobile controls enabled');
+                }
+            }
+            
+            // Ensure canvas is visible
+            this.ensureCanvasIsVisible();
+            
+            // Lock pointer if not already locked
+            if (this.playerCamera && !this.playerCamera.isLocked) {
+                this.playerCamera.requestPointerLock();
+            }
+            
+            // Start animations if not already running
+            if (!this.isAnimating) {
+                this.animate();
+            }
+            
+            // Connect to server if needed and not already connected
+            if (CONFIG.isMultiplayer && !this.connectedToServer) {
+                try {
+                    await this.connectToServer();
+                } catch (error) {
+                    console.error('Failed to connect to server:', error);
+                    this.showErrorMessage('Could not connect to server. Playing in offline mode.');
+                }
+            }
+            
+            // Set flag to indicate weaponManager is ready
+            if (this.weaponManager) {
+                console.log('WeaponManager is ready for use');
+                this.weaponManager.isInitialized = true;
+            }
+            
+            // Initialize powerupManager if needed
+            if (this.powerupManager && !this.powerupManager.isInitialized) {
+                console.log('Initializing PowerupManager');
+                this.powerupManager.initialize();
+            }
+            
+            // Request existing billboards from server
+            if (this.connectedToServer) {
+                if (this.weaponManager) {
+                    this.requestAllBillboards();
+                } else {
+                    // Set a flag to request billboards once weapon manager is initialized
+                    this.pendingBillboardRequest = true;
+                }
+            }
+            
+            // If we have persistence data, apply it
+            if (this.persistence && this.persistence.isInitialized) {
+                console.log('Applying persistence data (position, ammo, etc.)');
+                
+                // Validate position data before applying (wait for globe to be ready)
+                this.validatePlayerSpawnLocation();
+            }
+            
+            // Initialize bot manager with a longer delay
+            // This ensures the weapon manager and billboards are fully loaded first
+            setTimeout(() => {
+                if (this.botManager) {
+                    console.log('Initializing bot billboard system...');
+                    
+                    // If the botManager has an initialize method, call it
+                    if (typeof this.botManager.initialize === 'function') {
+                        this.botManager.initialize();
+                    }
+                    // Otherwise, if it has a spawnInitialBillboards method, call that
+                    else if (typeof this.botManager.spawnInitialBillboards === 'function') {
+                        this.botManager.spawnInitialBillboards();
+                    }
+                    
+                    console.log('Bot billboard system initialized');
+                } else {
+                    console.warn('BotManager not available, bot billboards will not be spawned');
+                }
+            }, 10000); // 10 second delay to ensure weapon manager is fully initialized
+            
+            // Show started message
+            this.showGameStartedMessage();
+        } catch (error) {
+            console.error('Error starting game:', error);
+            this.showErrorMessage('Failed to start game: ' + error.message);
+        }
     }
     
     /**

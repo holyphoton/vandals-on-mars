@@ -1,1 +1,662 @@
-[]
+[
+  {
+    "id": "powerup_1743505209496_4529",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 66.3101427496252,
+      "y": -40.473663638608514,
+      "z": 66.09725803838694
+    },
+    "quaternion": {
+      "x": 0.3204304563693977,
+      "y": 0.507207902525634,
+      "z": 0.7718319989381516,
+      "w": -0.21057025350600597
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505209496_9742",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -59.49166165049913,
+      "y": 81.49146578710331,
+      "z": -14.962726955067426
+    },
+    "quaternion": {
+      "x": -0.25005312541977986,
+      "y": 0.5831276691999688,
+      "z": 0.19494990362443307,
+      "w": 0.7479505939285267
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505229496_4099",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -12.120920034922271,
+      "y": -5.932538996873554,
+      "z": -101.10335443771189
+    },
+    "quaternion": {
+      "x": -0.7260855567855199,
+      "y": 0.040915477608476004,
+      "z": 0.04336862623542432,
+      "w": 0.6850144890277754
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505230496_3282",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 9.088336651503054,
+      "y": 92.28871246475796,
+      "z": -42.475824753689885
+    },
+    "quaternion": {
+      "x": -0.12037035702823472,
+      "y": 0.6832895961363333,
+      "z": -0.18197617374768177,
+      "w": 0.6967861774955753
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505234497_8095",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 40.437162000466024,
+      "y": -5.455049586910193,
+      "z": -93.4830378376335
+    },
+    "quaternion": {
+      "x": -0.710700402616761,
+      "y": -0.13945495290658697,
+      "z": -0.1471236788280332,
+      "w": 0.6736556070859212
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505237496_3062",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 68.65709690425678,
+      "y": -62.3851540601597,
+      "z": 42.40631553872176
+    },
+    "quaternion": {
+      "x": 0.4372408064346466,
+      "y": 0.38486160444839224,
+      "z": 0.7839834538526007,
+      "w": -0.21464381354964837
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505249497_889",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 64.39574338519711,
+      "y": 29.279531813761274,
+      "z": -73.4839931592914
+    },
+    "quaternion": {
+      "x": -0.5588247314702288,
+      "y": -0.28243686345132984,
+      "z": -0.21020895024499509,
+      "w": 0.7508372226374361
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505264500_761",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -95.76906067207324,
+      "y": 33.395870992723104,
+      "z": 10.816784116647097
+    },
+    "quaternion": {
+      "x": -0.3863621376742032,
+      "y": 0.6075338833549603,
+      "z": 0.4324569904712966,
+      "w": 0.5427778832450438
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505265500_5514",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -67.92791527212607,
+      "y": 75.72873401618297,
+      "z": 7.413310400156772
+    },
+    "quaternion": {
+      "x": -0.2395925649920443,
+      "y": 0.6948879587210981,
+      "z": 0.26716309327352694,
+      "w": 0.6231773497307802
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505274503_4892",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -74.57112494167895,
+      "y": -60.40372943726434,
+      "z": 34.56207162486465
+    },
+    "quaternion": {
+      "x": -0.4802767117236936,
+      "y": 0.38055637633807426,
+      "z": 0.7519514566138179,
+      "w": 0.24306404814506752
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505284505_9541",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -15.017376759549213,
+      "y": 57.05347647667852,
+      "z": -83.20684597547752
+    },
+    "quaternion": {
+      "x": -0.4675195730859334,
+      "y": 0.07872888772620831,
+      "z": 0.04185145737131306,
+      "w": 0.8794746537193883
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505294506_9907",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -98.68320328067533,
+      "y": -11.691514907255181,
+      "z": 22.99856233416215
+    },
+    "quaternion": {
+      "x": -0.4641213459905437,
+      "y": 0.5211365483739095,
+      "z": 0.5847244853608494,
+      "w": 0.4136488249280344
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505299507_6880",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 99.27222053043243,
+      "y": -13.148711540535158,
+      "z": 19.39426760104608
+    },
+    "quaternion": {
+      "x": 0.47761184785431604,
+      "y": 0.5094393430545279,
+      "z": 0.5799494729070304,
+      "w": -0.419543904034148
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505319510_2703",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 81.51870222894553,
+      "y": -41.0790588678972,
+      "z": -45.51057140309652
+    },
+    "quaternion": {
+      "x": 0.722238982697585,
+      "y": 0.27664075955988626,
+      "z": 0.4239561150625199,
+      "w": -0.47127694036859274
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505385978_6211",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -96.13192126334087,
+      "y": -33.939811405736016,
+      "z": 3.2776387784358096
+    },
+    "quaternion": {
+      "x": -0.5673027116665581,
+      "y": 0.41532932811945394,
+      "z": 0.5869746654445077,
+      "w": 0.4014099209859186
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505385979_8258",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 14.176698488243924,
+      "y": -100.14663555729754,
+      "z": -13.178490297725663
+    },
+    "quaternion": {
+      "x": 0.7006597761178363,
+      "y": 0.0030400142541274276,
+      "z": 0.70710024629704,
+      "w": -0.09526740329464009
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505390980_6624",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -0.6701588476802298,
+      "y": -79.17344841387137,
+      "z": -64.3048672603787
+    },
+    "quaternion": {
+      "x": 0.9423805107724411,
+      "y": -0.001742975556602221,
+      "z": -0.004910417493069167,
+      "w": -0.33450235089237546
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505400982_3151",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -48.37804189498301,
+      "y": -88.2073145528737,
+      "z": 16.82363580732964
+    },
+    "quaternion": {
+      "x": -0.5595251706734008,
+      "y": 0.21191831629815805,
+      "z": 0.786969110074032,
+      "w": 0.15067126597178904
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505410983_2417",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 33.09780848442301,
+      "y": 46.74100143840745,
+      "z": -84.40268868977606
+    },
+    "quaternion": {
+      "x": -0.5113992517348196,
+      "y": -0.15862768540136385,
+      "z": -0.09668634471548636,
+      "w": 0.8390231304885645
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505425984_212",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -43.280810502698046,
+      "y": 37.87658638967298,
+      "z": 84.23856388670916
+    },
+    "quaternion": {
+      "x": -0.13180232408948553,
+      "y": 0.8048448206933573,
+      "z": 0.5449390848881757,
+      "w": 0.1946647264630284
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627408,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505627410_7939",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 61.975946640289045,
+      "y": 5.751470346103777,
+      "z": 80.80781290752729
+    },
+    "quaternion": {
+      "x": 0.22071471496934694,
+      "y": 0.6882270174954339,
+      "z": 0.6504548658494731,
+      "w": -0.2335316990861919
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505627410,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505627410_6297",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -24.694340491382622,
+      "y": -93.08075450771058,
+      "z": 33.61789237847872
+    },
+    "quaternion": {
+      "x": 0.676445922288075,
+      "y": 0.03606767817636845,
+      "z": 0.7061863228574778,
+      "w": 0.20596338077395124
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505627410,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505632412_5295",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -57.211197494679666,
+      "y": -49.464671322466366,
+      "z": -68.44066899282278
+    },
+    "quaternion": {
+      "x": 0.8099789036303507,
+      "y": -0.1731199697211711,
+      "z": -0.2939524701469146,
+      "w": -0.4770278786947813
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505632412,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505637414_809",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 6.965991794200964,
+      "y": -101.02710246428023,
+      "z": -12.206536199714925
+    },
+    "quaternion": {
+      "x": 0.7039655147227352,
+      "y": -0.018345339628893707,
+      "z": 0.7068687632891275,
+      "w": -0.0665774292170731
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505637414,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505641414_9036",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 65.03231391019219,
+      "y": 60.74491205008988,
+      "z": 49.848307970412286
+    },
+    "quaternion": {
+      "x": 0.19900055786604354,
+      "y": 0.8009672332565309,
+      "z": 0.40327360594623174,
+      "w": -0.3952476033646567
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505641414,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505647416_2735",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 12.875379376000343,
+      "y": -96.11020217042196,
+      "z": -31.63943180091391
+    },
+    "quaternion": {
+      "x": 0.6897075572839824,
+      "y": -0.06758751780295821,
+      "z": 0.7038692545048653,
+      "w": -0.15589575178741225
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505647416,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505652418_5958",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -1.4442847224874988,
+      "y": 85.51261021193142,
+      "z": 55.583338658114755
+    },
+    "quaternion": {
+      "x": -0.003692573392213427,
+      "y": 0.958657597157915,
+      "z": 0.28426555028450057,
+      "w": 0.012452840423208981
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505652418,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505655416_3092",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 4.997440237881104,
+      "y": 56.7970972861551,
+      "z": -84.57609195828239
+    },
+    "quaternion": {
+      "x": -0.47052093753119867,
+      "y": -0.026032057358149233,
+      "z": -0.013888980710550197,
+      "w": 0.881895388098433
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743505655416,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505662419_1680",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -79.36919641433742,
+      "y": 44.871505650005346,
+      "z": 45.728313343527844
+    },
+    "quaternion": {
+      "x": -0.26480170076701726,
+      "y": 0.7346340434721937,
+      "z": 0.45817212730747503,
+      "w": 0.4245835408975871
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505662419,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505672421_2229",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 26.007254937200194,
+      "y": -19.377058332841944,
+      "z": -96.70652667218029
+    },
+    "quaternion": {
+      "x": -0.7647079306362055,
+      "y": -0.08335636306513869,
+      "z": -0.1010314846225821,
+      "w": 0.6309248264837912
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743505672421,
+    "isCollected": false
+  }
+]
