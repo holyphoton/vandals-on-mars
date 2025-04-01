@@ -171,13 +171,13 @@
     "username": "Anonymous",
     "billboardText": "Anonymous's Billboard",
     "position": {
-      "x": -72.96990372310668,
-      "y": -37.76755568243195,
-      "z": -60.10195411477857
+      "x": -60.78344623229414,
+      "y": -33.79731651848261,
+      "z": -74.33945157367859
     },
-    "shootingAmmo": 194,
+    "shootingAmmo": 193,
     "billboardAmmo": 3,
-    "lastUpdate": 1743511356472
+    "lastUpdate": 1743511701973
   },
   "player_18038_psrvf": {
     "username": "Anonymous",

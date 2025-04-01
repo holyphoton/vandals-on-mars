@@ -564,7 +564,7 @@ body.game-paused {
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
-.info-list li strong {
+.info-list li strong, .info-list li a {
     color: #ff9900;
     margin-right: 5px;
     display: inline-block;
