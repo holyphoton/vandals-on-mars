@@ -52,6 +52,9 @@ sleep 1
 
 # Start server with nodemon for automatic reloading
 echo -e "${YELLOW}Starting development server with auto-reload...${NC}"
+echo -e "${YELLOW}Game will be available at:${NC} http://localhost:${PORT}"
+echo -e "${YELLOW}WebSocket server will run on:${NC} ws://localhost:${PORT}"
+echo -e "${YELLOW}Important:${NC} Make sure 'auto' is selected in config.json for WebSocket URL"
 echo -e "${YELLOW}Any changes to server files will automatically restart the server${NC}"
 
 npx nodemon server.js

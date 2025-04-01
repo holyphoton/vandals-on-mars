@@ -70,7 +70,8 @@ fi
 
 echo -e "${GREEN}=== Server started successfully ===${NC}"
 echo -e "${YELLOW}Game is available at:${NC} http://localhost:${PORT}"
-echo -e "${YELLOW}WebSocket server running on same port:${NC} ${PORT}"
+echo -e "${YELLOW}WebSocket server running on:${NC} ws://localhost:${PORT}"
+echo -e "${YELLOW}Important:${NC} Make sure 'auto' is selected in config.json for WebSocket URL"
 echo -e "${YELLOW}To stop the server, run:${NC} pkill -f \"node server.js\""
 echo ""
 echo -e "${YELLOW}Leave this terminal window open. Press Ctrl+C to stop the server.${NC}"

@@ -73,10 +73,18 @@ async function loadConfig() {
         if (loadedConfig.server && loadedConfig.server.url) {
             // If set to "auto", automatically determine the WebSocket URL
             if (loadedConfig.server.url === "auto") {
-                // Use current hostname without specifying port
+                // Use current hostname including the port for local development
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                loadedConfig.server.url = `${protocol}${window.location.hostname}`;
-                console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+                
+                // For localhost development, explicitly use port 3000
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    loadedConfig.server.url = `${protocol}${window.location.hostname}:3000`;
+                    console.log(`Auto-configured WebSocket URL to local dev server: ${loadedConfig.server.url}`);
+                } else {
+                    // For deployed sites, don't specify port (use same as HTTP)
+                    loadedConfig.server.url = `${protocol}${window.location.hostname}`;
+                    console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+                }
             } 
             // Otherwise, process normally
             else {
@@ -210,10 +218,18 @@ async function reloadConfig() {
         if (loadedConfig.server && loadedConfig.server.url) {
             // If set to "auto", automatically determine the WebSocket URL
             if (loadedConfig.server.url === "auto") {
-                // Use current hostname without specifying port
+                // Use current hostname including the port for local development
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                loadedConfig.server.url = `${protocol}${window.location.hostname}`;
-                console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+                
+                // For localhost development, explicitly use port 3000
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    loadedConfig.server.url = `${protocol}${window.location.hostname}:3000`;
+                    console.log(`Auto-configured WebSocket URL to local dev server: ${loadedConfig.server.url}`);
+                } else {
+                    // For deployed sites, don't specify port (use same as HTTP)
+                    loadedConfig.server.url = `${protocol}${window.location.hostname}`;
+                    console.log(`Auto-configured WebSocket URL to: ${loadedConfig.server.url}`);
+                }
             } 
             // Otherwise, process normally
             else {
