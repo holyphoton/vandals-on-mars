@@ -8,6 +8,30 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}=== Vandals on Mars Server Starter ===${NC}"
 
+# Create data directory if it doesn't exist
+echo -e "${YELLOW}Checking data directory...${NC}"
+if [ ! -d "data" ]; then
+    mkdir -p data
+    echo -e "${GREEN}✓ Created data directory${NC}"
+else
+    echo -e "${GREEN}✓ Data directory already exists${NC}"
+fi
+
+# Install dependencies if needed
+echo -e "${YELLOW}Checking dependencies...${NC}"
+if [ ! -d "node_modules" ]; then
+    echo -e "${YELLOW}Installing dependencies...${NC}"
+    npm install
+    echo -e "${GREEN}✓ Dependencies installed${NC}"
+else
+    echo -e "${GREEN}✓ Dependencies already installed${NC}"
+fi
+
+# Set environment variables for local development
+export PORT=3000
+export DATA_DIR="./data"
+echo -e "${GREEN}✓ Environment configured: PORT=$PORT, DATA_DIR=$DATA_DIR${NC}"
+
 # Kill any existing server processes
 echo -e "${YELLOW}Stopping any existing server processes...${NC}"
 
@@ -31,39 +55,25 @@ fi
 sleep 1
 
 # Start WebSocket server
-echo -e "${YELLOW}Starting WebSocket server...${NC}"
+echo -e "${YELLOW}Starting Express/WebSocket server...${NC}"
 node server.js &
-WEBSOCKET_PID=$!
+SERVER_PID=$!
 
-# Check if WebSocket server started successfully
+# Check if server started successfully
 sleep 2
-if ps -p $WEBSOCKET_PID > /dev/null; then
-    echo -e "${GREEN}✓ WebSocket server started successfully (PID: $WEBSOCKET_PID)${NC}"
+if ps -p $SERVER_PID > /dev/null; then
+    echo -e "${GREEN}✓ Server started successfully (PID: $SERVER_PID)${NC}"
 else
-    echo -e "${RED}✗ WebSocket server failed to start${NC}"
+    echo -e "${RED}✗ Server failed to start${NC}"
     exit 1
 fi
 
-# Start HTTP server with no cache
-echo -e "${YELLOW}Starting HTTP server...${NC}"
-npx http-server code -c-1 -p 8081 &
-HTTP_PID=$!
-
-# Check if HTTP server started successfully
-sleep 2
-if ps -p $HTTP_PID > /dev/null; then
-    echo -e "${GREEN}✓ HTTP server started successfully (PID: $HTTP_PID)${NC}"
-else
-    echo -e "${RED}✗ HTTP server failed to start${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}=== All servers started successfully ===${NC}"
-echo -e "${YELLOW}Game is available at:${NC} http://localhost:8081"
-echo -e "${YELLOW}WebSocket server running on port:${NC} 8090"
-echo -e "${YELLOW}To stop all servers, run:${NC} pkill -f \"node server.js\" && pkill -f \"http-server\""
+echo -e "${GREEN}=== Server started successfully ===${NC}"
+echo -e "${YELLOW}Game is available at:${NC} http://localhost:${PORT}"
+echo -e "${YELLOW}WebSocket server running on same port:${NC} ${PORT}"
+echo -e "${YELLOW}To stop the server, run:${NC} pkill -f \"node server.js\""
 echo ""
-echo -e "${YELLOW}Leave this terminal window open. Press Ctrl+C to stop all servers.${NC}"
+echo -e "${YELLOW}Leave this terminal window open. Press Ctrl+C to stop the server.${NC}"
 
 # Keep the script running to make it easier to stop servers with Ctrl+C
-wait 
+wait % 
