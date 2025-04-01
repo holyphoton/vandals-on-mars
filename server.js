@@ -366,7 +366,7 @@ function loadPowerupConfig() {
       powerupConfig = {
         shooting_ammo: {
           weight: 0.6,
-          lifespan: 60000,
+          lifespan: 86400000,
           maxPowerups: 30,
           spawnInterval: 3000,
           spawnChance: 0.2,
@@ -374,7 +374,7 @@ function loadPowerupConfig() {
         },
         billboard_ammo: {
           weight: 0.4,
-          lifespan: 60000,
+          lifespan: 86400000,
           maxPowerups: 20,
           spawnInterval: 6000,
           spawnChance: 0.15,
@@ -393,7 +393,7 @@ function loadPowerupConfig() {
     powerupConfig = {
       shooting_ammo: {
         weight: 0.6,
-        lifespan: 60000,
+        lifespan: 86400000,
         maxPowerups: 30,
         spawnInterval: 3000,
         spawnChance: 0.2,
@@ -401,7 +401,7 @@ function loadPowerupConfig() {
       },
       billboard_ammo: {
         weight: 0.4,
-        lifespan: 60000,
+        lifespan: 86400000,
         maxPowerups: 20,
         spawnInterval: 6000,
         spawnChance: 0.15,
@@ -918,7 +918,7 @@ function spawnPowerupOfType(type) {
       quaternion: quaternion,
       size: typeConfig.size || 1.5,
       color: typeConfig.color || "#FFFF00",
-      lifespan: typeConfig.lifespan || 60000, // 1 minute default
+      lifespan: typeConfig.lifespan || 86400000, // 1 minute default
       spawnTime: Date.now(),
       isCollected: false
     };
