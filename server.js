@@ -332,8 +332,28 @@ function loadPowerupConfig() {
   try {
     if (fs.existsSync(POWERUP_CONFIG_FILE)) {
       const data = fs.readFileSync(POWERUP_CONFIG_FILE, 'utf8');
-      powerupConfig = JSON.parse(data);
-      console.log('Loaded powerup configuration from file');
+      const configData = JSON.parse(data);
+      console.log('Loaded raw powerup configuration from file');
+      
+      // Initialize powerupConfig as an empty object
+      powerupConfig = {};
+      
+      // Convert from the "types" array to a key-value structure
+      if (configData.types && Array.isArray(configData.types)) {
+        for (const typeConfig of configData.types) {
+          if (typeConfig.type) {
+            // Use the type field as the key
+            powerupConfig[typeConfig.type] = { ...typeConfig };
+            
+            // Add the check interval from the parent object
+            if (configData.checkInterval) {
+              powerupConfig[typeConfig.type].checkInterval = configData.checkInterval;
+            }
+          }
+        }
+      }
+      
+      console.log('Processed powerup configuration:', JSON.stringify(powerupConfig, null, 2));
       
       // Initialize powerupsByType structure
       for (const type in powerupConfig) {
@@ -786,12 +806,20 @@ function startPowerupSystem() {
   console.log('Starting powerup system');
   isSpawningPowerups = true;
   
+  // Make sure powerupConfig has the right structure
+  console.log('PowerupConfig:', JSON.stringify(powerupConfig, null, 2));
+  
+  // Valid powerup types
+  const validTypes = ['shooting_ammo', 'billboard_ammo'];
+  
   // Start spawning for each powerup type
-  for (const type in powerupConfig) {
-    if (!powerupConfig[type].spawnInterval) continue;
-    
-    console.log(`Setting up spawning for powerup type: ${type}`);
-    startSpawningPowerupOfType(type);
+  for (const type of validTypes) {
+    if (powerupConfig[type] && powerupConfig[type].spawnInterval) {
+      console.log(`Setting up spawning for powerup type: ${type}`);
+      startSpawningPowerupOfType(type);
+    } else {
+      console.warn(`No configuration found for powerup type: ${type}`);
+    }
   }
   
   // Set up periodic check for expired powerups
@@ -957,8 +985,11 @@ function checkPowerups() {
     });
   }
   
+  // Valid powerup types
+  const validTypes = ['shooting_ammo', 'billboard_ammo'];
+  
   // Check if we need to spawn more of each type
-  for (const type in powerupConfig) {
+  for (const type of validTypes) {
     const typeConfig = powerupConfig[type];
     if (!typeConfig) continue;
     
