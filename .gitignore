@@ -36,4 +36,12 @@ admin.txt
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# Game data files (should be kept in persistent storage)
+/data/
+billboard-data.json
+billboard-data-bots.json
+player-data.json
+powerups-data.json
+terrain-data.json 

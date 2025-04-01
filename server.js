@@ -1,7 +1,16 @@
+const express = require('express');
 const WebSocket = require('ws');
-const server = new WebSocket.Server({ port: 8090 });
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const url = require('url');
+
+// Get port from environment variable or use default
+const PORT = process.env.PORT || 3000;
+const WS_PORT = process.env.WS_PORT || 8090;
+
+// Get data directory from environment variable or use current directory
+const DATA_DIR = process.env.DATA_DIR || __dirname;
 
 // Game configuration
 const CONFIG = {
@@ -21,20 +30,23 @@ const botBillboards = [];
 const playerData = {};
 
 // Player data file path
-const PLAYER_DATA_FILE = path.join(__dirname, 'player-data.json');
+const PLAYER_DATA_FILE = path.join(DATA_DIR, 'player-data.json');
 
 // Billboard data file path
-const BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data.json');
+const BILLBOARD_DATA_FILE = path.join(DATA_DIR, 'billboard-data.json');
 
 // Bot billboard data file path
-const BOT_BILLBOARD_DATA_FILE = path.join(__dirname, 'billboard-data-bots.json');
+const BOT_BILLBOARD_DATA_FILE = path.join(DATA_DIR, 'billboard-data-bots.json');
 
 // Bot configuration file path
 const BOT_CONFIG_FILE = path.join(__dirname, 'code', 'bot-config.json');
 
 // Powerup related constants
-const POWERUP_DATA_FILE = path.join(__dirname, 'powerups-data.json');
+const POWERUP_DATA_FILE = path.join(DATA_DIR, 'powerups-data.json');
 const POWERUP_CONFIG_FILE = path.join(__dirname, 'code', 'powerups-config.json');
+
+// Create terrain data file path
+const TERRAIN_DATA_FILE = path.join(DATA_DIR, 'terrain-data.json');
 
 // Bot configuration
 let botConfig = {
@@ -61,6 +73,78 @@ let isSpawningPowerups = false;
 let powerupSpawningTimers = {}; // Timer IDs for each powerup type
 let powerupCheckTimer = null;
 
+// Create Express app
+const app = express();
+
+// Create HTTP server
+const httpServer = http.createServer(app);
+
+// Create WebSocket server using the HTTP server
+const wsServer = new WebSocket.Server({ server: httpServer });
+
+// Serve static files from code directory
+app.use(express.static(path.join(__dirname, 'code')));
+
+// Set up API routes
+app.use(express.json());
+
+// Serve bot-config.json
+app.get('/bot-config.json', (req, res) => {
+  try {
+    const configFilePath = path.join(__dirname, 'code', 'bot-config.json');
+    if (fs.existsSync(configFilePath)) {
+      res.sendFile(configFilePath);
+    } else {
+      res.status(404).json({ success: false, error: 'Bot configuration not found' });
+    }
+  } catch (error) {
+    console.error('Error serving bot config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Serve powerups-config.json
+app.get('/powerups-config.json', (req, res) => {
+  try {
+    const configFilePath = path.join(__dirname, 'code', 'powerups-config.json');
+    if (fs.existsSync(configFilePath)) {
+      res.sendFile(configFilePath);
+    } else {
+      res.status(404).json({ success: false, error: 'Powerup configuration not found' });
+    }
+  } catch (error) {
+    console.error('Error serving powerup config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Save bot billboards API endpoint
+app.post('/save-bot-billboards', express.json(), (req, res) => {
+  try {
+    if (req.body && Array.isArray(req.body)) {
+      // Replace all bot billboards with the new list
+      const newBotBillboards = req.body.filter(bb => bb && bb.id && bb.id.startsWith('bot_'));
+      
+      // Clear existing bot billboards and add new ones
+      botBillboards.length = 0;
+      botBillboards.push(...newBotBillboards);
+      
+      console.log(`Updated ${botBillboards.length} bot billboards from client`);
+      
+      // Save to file
+      saveBotBillboardData();
+      
+      res.json({ success: true, count: botBillboards.length });
+    } else {
+      console.error('Invalid bot billboard data received');
+      res.status(400).json({ success: false, error: 'Invalid data format' });
+    }
+  } catch (error) {
+    console.error('Error handling bot billboard save:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Load saved player data from file
 function loadPlayerData() {
   try {
@@ -74,6 +158,13 @@ function loadPlayerData() {
       console.log(`Loaded player data for ${Object.keys(playerData).length} players`);
     } else {
       console.log('No player data file found, starting with empty player data');
+      // Create directory if it doesn't exist
+      const dir = path.dirname(PLAYER_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      // Create empty file
+      fs.writeFileSync(PLAYER_DATA_FILE, JSON.stringify({}), 'utf8');
     }
   } catch (error) {
     console.error('Error loading player data:', error);
@@ -83,38 +174,46 @@ function loadPlayerData() {
 // Save player data to file
 function savePlayerData() {
   try {
-    fs.writeFileSync(
-      PLAYER_DATA_FILE,
-      JSON.stringify(playerData, null, 2),
-      'utf8'
-    );
-    console.log('Player data saved to file');
+    // Create directory if it doesn't exist
+    const dir = path.dirname(PLAYER_DATA_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(PLAYER_DATA_FILE, JSON.stringify(playerData, null, 2), 'utf8');
+    console.log(`Saved player data for ${Object.keys(playerData).length} players`);
   } catch (error) {
     console.error('Error saving player data:', error);
   }
 }
 
-// Load saved billboard data from file
+// Load billboard data from file
 function loadBillboardData() {
   try {
     if (fs.existsSync(BILLBOARD_DATA_FILE)) {
       const data = fs.readFileSync(BILLBOARD_DATA_FILE, 'utf8');
-      const parsedData = JSON.parse(data);
+      const loadedBillboards = JSON.parse(data);
       
-      // Clear existing billboards and load from file
-      billboards.length = 0;
-      
-      // Copy all billboards from file
-      parsedData.forEach(billboard => {
-        // Only add non-bot billboards to the billboards array
-        if (!billboard.id || !billboard.id.startsWith('bot_')) {
-          billboards.push(billboard);
-        }
-      });
-      
-      console.log(`Loaded ${billboards.length} player billboards from file`);
+      if (Array.isArray(loadedBillboards)) {
+        // Clear existing billboards (not bot billboards)
+        billboards.length = 0;
+        
+        // Filter out bot billboards
+        const playerBillboards = loadedBillboards.filter(bb => !bb.id.startsWith('bot_'));
+        billboards.push(...playerBillboards);
+        
+        console.log(`Loaded ${billboards.length} player billboards`);
+      } else {
+        console.log('Invalid billboard data format, starting with empty billboards');
+      }
     } else {
       console.log('No billboard data file found, starting with empty billboards');
+      // Create directory if it doesn't exist
+      const dir = path.dirname(BILLBOARD_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      // Create empty file
+      fs.writeFileSync(BILLBOARD_DATA_FILE, JSON.stringify([]), 'utf8');
     }
   } catch (error) {
     console.error('Error loading billboard data:', error);
@@ -124,40 +223,50 @@ function loadBillboardData() {
 // Save billboard data to file
 function saveBillboardData() {
   try {
-    // Filter out any bot billboards before saving to billboard-data.json
-    const playerBillboards = billboards.filter(billboard => 
-      !billboard.id || !billboard.id.startsWith('bot_')
-    );
+    // Filter out bot billboards when saving to billboard-data.json
+    const playerBillboards = billboards.filter(bb => !bb.id.startsWith('bot_'));
     
-    fs.writeFileSync(
-      BILLBOARD_DATA_FILE,
-      JSON.stringify(playerBillboards, null, 2),
-      'utf8'
-    );
-    console.log('Player billboard data saved to file');
+    // Create directory if it doesn't exist
+    const dir = path.dirname(BILLBOARD_DATA_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    fs.writeFileSync(BILLBOARD_DATA_FILE, JSON.stringify(playerBillboards, null, 2), 'utf8');
+    console.log(`Saved ${playerBillboards.length} player billboards`);
   } catch (error) {
     console.error('Error saving billboard data:', error);
   }
 }
 
-// Load saved bot billboard data from file
+// Load bot billboard data from file
 function loadBotBillboardData() {
   try {
     if (fs.existsSync(BOT_BILLBOARD_DATA_FILE)) {
       const data = fs.readFileSync(BOT_BILLBOARD_DATA_FILE, 'utf8');
-      const parsedData = JSON.parse(data);
+      const loadedBotBillboards = JSON.parse(data);
       
-      // Clear existing bot billboards and load from file
-      botBillboards.length = 0;
-      
-      // Copy all bot billboards from file
-      parsedData.forEach(billboard => {
-        botBillboards.push(billboard);
-      });
-      
-      console.log(`Loaded ${botBillboards.length} bot billboards from file`);
+      if (Array.isArray(loadedBotBillboards)) {
+        // Clear existing bot billboards
+        botBillboards.length = 0;
+        
+        // Only add billboards with bot_ prefix to ensure data integrity
+        const validBotBillboards = loadedBotBillboards.filter(bb => bb.id && bb.id.startsWith('bot_'));
+        botBillboards.push(...validBotBillboards);
+        
+        console.log(`Loaded ${botBillboards.length} bot billboards`);
+      } else {
+        console.log('Invalid bot billboard data format, starting with empty bot billboards');
+      }
     } else {
       console.log('No bot billboard data file found, starting with empty bot billboards');
+      // Create directory if it doesn't exist
+      const dir = path.dirname(BOT_BILLBOARD_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      // Create empty file
+      fs.writeFileSync(BOT_BILLBOARD_DATA_FILE, JSON.stringify([]), 'utf8');
     }
   } catch (error) {
     console.error('Error loading bot billboard data:', error);
@@ -167,105 +276,35 @@ function loadBotBillboardData() {
 // Save bot billboard data to file
 function saveBotBillboardData() {
   try {
-    fs.writeFileSync(BOT_BILLBOARD_DATA_FILE, JSON.stringify(botBillboards, null, 2));
-    console.log(`Saved ${botBillboards.length} bot billboards to ${BOT_BILLBOARD_DATA_FILE}`);
+    // Create directory if it doesn't exist
+    const dir = path.dirname(BOT_BILLBOARD_DATA_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    fs.writeFileSync(BOT_BILLBOARD_DATA_FILE, JSON.stringify(botBillboards, null, 2), 'utf8');
+    console.log(`Saved ${botBillboards.length} bot billboards`);
   } catch (error) {
     console.error('Error saving bot billboard data:', error);
   }
 }
 
-// Load powerups from file
-function loadPowerupData() {
-  try {
-    if (fs.existsSync(POWERUP_DATA_FILE)) {
-      const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
-      if (data) {
-        powerups = JSON.parse(data);
-        
-        // Reset timestamps for all loaded powerups to prevent immediate expiration
-        const now = Date.now();
-        powerups.forEach(powerup => {
-          powerup.createdAt = now;
-        });
-        
-        console.log(`Loaded ${powerups.length} powerups from ${POWERUP_DATA_FILE} (timestamps reset)`);
-        
-        // Organize powerups by type
-        powerupsByType = {};
-        for (const powerup of powerups) {
-          if (!powerupsByType[powerup.type]) {
-            powerupsByType[powerup.type] = [];
-          }
-          powerupsByType[powerup.type].push(powerup);
-        }
-        
-        // Log counts by type
-        for (const type in powerupsByType) {
-          console.log(`Loaded ${powerupsByType[type].length} powerups of type ${type}`);
-        }
-        
-        // Save with updated timestamps
-        savePowerupData();
-      } else {
-        powerups = [];
-        powerupsByType = {};
-        console.log('No powerup data found, initializing with empty array');
-      }
-    } else {
-      powerups = [];
-      powerupsByType = {};
-      console.log(`${POWERUP_DATA_FILE} not found, initializing with empty array`);
-      savePowerupData();
-    }
-  } catch (error) {
-    console.error('Error loading powerup data:', error);
-    powerups = [];
-    powerupsByType = {};
-  }
-}
-
-// Save powerups to file
-function savePowerupData() {
-  try {
-    console.log(`[DEBUG SERVER] Saving ${powerups.length} powerups to ${POWERUP_DATA_FILE}`);
-    fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify(powerups, null, 2));
-    
-    // Verify the file was written correctly
-    if (fs.existsSync(POWERUP_DATA_FILE)) {
-      const stats = fs.statSync(POWERUP_DATA_FILE);
-      console.log(`[DEBUG SERVER] Successfully saved powerups-data.json: ${stats.size} bytes`);
-      
-      // Optionally verify contents
-      const savedContent = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
-      const savedPowerups = JSON.parse(savedContent);
-      console.log(`[DEBUG SERVER] Verified saved file contains ${savedPowerups.length} powerups`);
-      
-      // Log IDs of first few powerups for verification
-      if (savedPowerups.length > 0) {
-        const sampleIds = savedPowerups.slice(0, Math.min(3, savedPowerups.length)).map(p => p.id);
-        console.log(`[DEBUG SERVER] Sample powerup IDs in saved file: ${sampleIds.join(', ')}`);
-      }
-    } else {
-      console.error(`[DEBUG SERVER] Failed to save powerup data: File does not exist after save`);
-    }
-  } catch (error) {
-    console.error(`[DEBUG SERVER] Error saving powerup data:`, error);
-  }
-}
-
 // Try to load saved terrain data or generate new
 function initializeTerrainData() {
-  const terrainFilePath = path.join(__dirname, 'terrain-data.json');
-  
   try {
     // Check if terrain data file already exists
-    if (fs.existsSync(terrainFilePath)) {
+    if (fs.existsSync(TERRAIN_DATA_FILE)) {
       console.log('Loading terrain data from file');
-      const fileData = fs.readFileSync(terrainFilePath, 'utf8');
+      const fileData = fs.readFileSync(TERRAIN_DATA_FILE, 'utf8');
       terrainData = JSON.parse(fileData);
       console.log(`Loaded terrain data: ${terrainData.craters.length} craters, ${terrainData.rocks.length} rocks, ${terrainData.towers.length || 0} towers`);
     } else {
       console.log('No terrain data file found, will generate terrain on first request');
+      // Create directory if it doesn't exist
+      const dir = path.dirname(TERRAIN_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
     }
   } catch (error) {
     console.error('Error loading terrain data:', error);
@@ -273,892 +312,163 @@ function initializeTerrainData() {
   }
 }
 
-// Load bot configuration from the bot-config.json file
-async function loadBotConfig() {
-  try {
-    if (fs.existsSync(BOT_CONFIG_FILE)) {
-      const data = fs.readFileSync(BOT_CONFIG_FILE, 'utf8');
-      const parsedConfig = JSON.parse(data);
-      
-      // Update the bot configuration
-      botConfig = {
-        spawnInterval: parsedConfig.spawnInterval || 2000,
-        maxBots: parsedConfig.maxBots || 20,
-        spawnChance: parsedConfig.spawnChance || 0.3,
-        minDistance: parsedConfig.minDistance || 20,
-        checkInterval: parsedConfig.checkInterval || 3000,
-        messages: parsedConfig.messages || [],
-        botSenders: parsedConfig.botSenders || [],
-        colors: parsedConfig.colors || ["#FF5733", "#33FF57", "#3357FF"],
-        billboardSize: parsedConfig.billboardSize || { width: 5, height: 5 },
-        health: parsedConfig.health || 100
-      };
-      
-      console.log('Bot configuration loaded successfully:');
-      console.log(`- Maximum bots: ${botConfig.maxBots}`);
-      console.log(`- Check interval: ${botConfig.checkInterval}ms`);
-      console.log(`- Spawn interval: ${botConfig.spawnInterval}ms`);
-      
-      return botConfig;
-    } else {
-      console.warn('Bot configuration file not found, using defaults');
-      return botConfig;
-    }
-  } catch (error) {
-    console.error('Error loading bot configuration:', error);
-    return botConfig;
-  }
-}
-
-// Load powerup configuration from file
-async function loadPowerupConfig() {
+// Load powerup configuration
+function loadPowerupConfig() {
   try {
     if (fs.existsSync(POWERUP_CONFIG_FILE)) {
       const data = fs.readFileSync(POWERUP_CONFIG_FILE, 'utf8');
       powerupConfig = JSON.parse(data);
-      console.log('Powerup configuration loaded successfully');
+      console.log('Loaded powerup configuration from file');
+      
+      // Initialize powerupsByType structure
+      for (const type in powerupConfig) {
+        if (!powerupsByType[type]) {
+          powerupsByType[type] = [];
+        }
+      }
     } else {
-      console.log('Powerup configuration file not found, using default values');
+      console.log('No powerup configuration file found, using defaults');
       powerupConfig = {
-        spawnInterval: 3000,
-        maxPowerups: 20,
-        spawnChance: 0.3,
-        minDistance: 20,
-        checkInterval: 3000,
-        types: [
-          {
-            type: "shooting_ammo",
-            weight: 75,
-            effectAmount: 100,
-            color: "#FF5500",
-            size: 1.5,
-            text: "Ammo",
-            lifespan: null
-          },
-          {
-            type: "billboard_ammo",
-            weight: 25,
-            effectAmount: 1,
-            color: "#33CC33",
-            size: 1.5,
-            text: "Billboard",
-            lifespan: null
-          }
-        ]
+        shooting_ammo: {
+          weight: 0.6,
+          lifespan: 60000,
+          maxPowerups: 30,
+          spawnInterval: 3000,
+          spawnChance: 0.2,
+          minDistance: 25
+        },
+        billboard_ammo: {
+          weight: 0.4,
+          lifespan: 60000,
+          maxPowerups: 20,
+          spawnInterval: 6000,
+          spawnChance: 0.15,
+          minDistance: 30
+        }
       };
+      
+      // Initialize powerupsByType structure
+      for (const type in powerupConfig) {
+        powerupsByType[type] = [];
+      }
     }
   } catch (error) {
     console.error('Error loading powerup configuration:', error);
+    // Use defaults
     powerupConfig = {
-      spawnInterval: 3000,
-      maxPowerups: 20,
-      spawnChance: 0.3,
-      minDistance: 20,
-      checkInterval: 3000,
-      types: [
-        {
-          type: "shooting_ammo",
-          weight: 75,
-          effectAmount: 100,
-          color: "#FF5500",
-          size: 1.5,
-          text: "Ammo",
-          lifespan: null
-        },
-        {
-          type: "billboard_ammo",
-          weight: 25,
-          effectAmount: 1,
-          color: "#33CC33",
-          size: 1.5,
-          text: "Billboard",
-          lifespan: null
-        }
-      ]
-    };
-  }
-}
-
-// Generate a random position on the globe surface
-function getRandomPositionOnGlobe() {
-  // Use the world radius from CONFIG
-  const radius = CONFIG.world.radius || 100;
-  
-  // Generate random spherical coordinates
-  const theta = Math.random() * Math.PI * 2; // 0 to 2π
-  const phi = Math.acos(2 * Math.random() - 1); // 0 to π
-  
-  // Convert to Cartesian coordinates
-  const x = radius * Math.sin(phi) * Math.cos(theta);
-  const y = radius * Math.sin(phi) * Math.sin(theta);
-  const z = radius * Math.cos(phi);
-  
-  return { x, y, z };
-}
-
-// Calculate quaternion for proper billboard orientation
-function calculateQuaternion(position) {
-  // Normalized position vector (direction from center to position) - this is the "up" vector
-  const length = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
-  const up = {
-    x: position.x / length,
-    y: position.y / length,
-    z: position.z / length
-  };
-  
-  // Use a similar approach to what's done in the client-side placeBillboard method
-  // Find a reference vector different from up
-  // Use world up (0,1,0) as the reference unless up is too close to it
-  let reference;
-  const worldUpDot = Math.abs(up.y); // Dot product with (0,1,0)
-  
-  if (worldUpDot > 0.9) {
-    // If up is too close to world up, use world right instead
-    reference = { x: 1, y: 0, z: 0 };
-  } else {
-    reference = { x: 0, y: 1, z: 0 };
-  }
-  
-  // Calculate right vector (cross product of up and reference)
-  const right = {
-    x: up.y * reference.z - up.z * reference.y,
-    y: up.z * reference.x - up.x * reference.z,
-    z: up.x * reference.y - up.y * reference.x
-  };
-  
-  // Normalize right vector
-  const rightLength = Math.sqrt(right.x * right.x + right.y * right.y + right.z * right.z);
-  const rightNorm = {
-    x: right.x / rightLength,
-    y: right.y / rightLength,
-    z: right.z / rightLength
-  };
-  
-  // Calculate forward vector (cross product of right and up)
-  const forward = {
-    x: rightNorm.y * up.z - rightNorm.z * up.y,
-    y: rightNorm.z * up.x - rightNorm.x * up.z,
-    z: rightNorm.x * up.y - rightNorm.y * up.x
-  };
-  
-  // Create a rotation matrix from these three orthogonal vectors
-  // This is similar to THREE.Matrix4().makeBasis() on the client
-  // Matrix rows are rightNorm, up, forward (for a right-handed coordinate system)
-  const rotMatrix = [
-    rightNorm.x, up.x, forward.x, 0,
-    rightNorm.y, up.y, forward.y, 0,
-    rightNorm.z, up.z, forward.z, 0,
-    0, 0, 0, 1
-  ];
-  
-  // Convert rotation matrix to quaternion using the same algorithm as THREE.js
-  // Algorithm from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-  const m11 = rotMatrix[0], m12 = rotMatrix[1], m13 = rotMatrix[2];
-  const m21 = rotMatrix[4], m22 = rotMatrix[5], m23 = rotMatrix[6];
-  const m31 = rotMatrix[8], m32 = rotMatrix[9], m33 = rotMatrix[10];
-  
-  const trace = m11 + m22 + m33;
-  let qx, qy, qz, qw;
-  
-  if (trace > 0) {
-    const s = 0.5 / Math.sqrt(trace + 1.0);
-    qw = 0.25 / s;
-    qx = (m32 - m23) * s;
-    qy = (m13 - m31) * s;
-    qz = (m21 - m12) * s;
-  } else if (m11 > m22 && m11 > m33) {
-    const s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
-    qw = (m32 - m23) / s;
-    qx = 0.25 * s;
-    qy = (m12 + m21) / s;
-    qz = (m13 + m31) / s;
-  } else if (m22 > m33) {
-    const s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
-    qw = (m13 - m31) / s;
-    qx = (m12 + m21) / s;
-    qy = 0.25 * s;
-    qz = (m23 + m32) / s;
-  } else {
-    const s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
-    qw = (m21 - m12) / s;
-    qx = (m13 + m31) / s;
-    qy = (m23 + m32) / s;
-    qz = 0.25 * s;
-  }
-  
-  return {
-    x: qx,
-    y: qy,
-    z: qz,
-    w: qw
-  };
-}
-
-// Check if more bot billboards need to be spawned
-function checkBotBillboards() {
-  // Get the current count of bot billboards
-  const currentBotCount = botBillboards.length;
-  
-  console.log(`Checking bot billboards: ${currentBotCount}/${botConfig.maxBots}`);
-  
-  // If we have more than the maximum, trim the excess billboards
-  if (currentBotCount > botConfig.maxBots) {
-    console.log(`Found ${currentBotCount} bot billboards, exceeding maximum of ${botConfig.maxBots}`);
-    console.log(`Trimming excess bot billboards...`);
-    
-    // Sort billboards by timestamp (oldest first)
-    botBillboards.sort((a, b) => a.timestamp - b.timestamp);
-    
-    // Keep only the newest up to maxBots
-    const excess = botBillboards.splice(0, currentBotCount - botConfig.maxBots);
-    console.log(`Removed ${excess.length} excess bot billboards`);
-    
-    // Update the main billboards array to remove excess bot billboards
-    for (const billboard of excess) {
-      const index = billboards.findIndex(b => b.id === billboard.id);
-      if (index !== -1) {
-        billboards.splice(index, 1);
+      shooting_ammo: {
+        weight: 0.6,
+        lifespan: 60000,
+        maxPowerups: 30,
+        spawnInterval: 3000,
+        spawnChance: 0.2,
+        minDistance: 25
+      },
+      billboard_ammo: {
+        weight: 0.4,
+        lifespan: 60000,
+        maxPowerups: 20,
+        spawnInterval: 6000,
+        spawnChance: 0.15,
+        minDistance: 30
       }
-    }
+    };
     
-    // Save the updated bot billboards
-    saveBotBillboardData();
-    
-    // Stop any active spawning
-    if (isSpawningBots) {
-      stopSpawningBots();
-    }
-    
-    return;
-  }
-  
-  // If we need to spawn more billboards
-  if (currentBotCount < botConfig.maxBots) {
-    const botsToSpawn = botConfig.maxBots - currentBotCount;
-    console.log(`Need to spawn ${botsToSpawn} more bot billboards`);
-    
-    // Start spawning bots if not already spawning
-    if (!isSpawningBots) {
-      startSpawningBots();
-    }
-  } else {
-    console.log('Maximum bot count reached, no new spawns needed');
-    
-    // Stop any active spawning
-    if (isSpawningBots) {
-      stopSpawningBots();
+    // Initialize powerupsByType structure
+    for (const type in powerupConfig) {
+      powerupsByType[type] = [];
     }
   }
 }
 
-// Start spawning bots at the specified interval
-function startSpawningBots() {
-  if (isSpawningBots) return;
-  
-  console.log(`Starting bot spawning with interval ${botConfig.spawnInterval}ms`);
-  isSpawningBots = true;
-  
-  // Immediately spawn the first bot
-  spawnBotBillboard();
-  
-  // Set up interval for subsequent spawns
-  botSpawningTimer = setInterval(() => {
-    // Check if we've reached max bots
-    if (botBillboards.length >= botConfig.maxBots) {
-      console.log('Maximum bot count reached during spawning, stopping');
-      stopSpawningBots();
-      return;
-    }
-    
-    // Otherwise spawn another bot
-    spawnBotBillboard();
-  }, botConfig.spawnInterval);
-}
-
-// Stop the bot spawning process
-function stopSpawningBots() {
-  if (!isSpawningBots) return;
-  
-  console.log('Stopping bot spawning');
-  
-  if (botSpawningTimer) {
-    clearInterval(botSpawningTimer);
-    botSpawningTimer = null;
-  }
-  
-  isSpawningBots = false;
-}
-
-// Generate a unique ID for bot billboards
-function generateBotId() {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
-  return `bot_${timestamp}_${random}`;
-}
-
-// Generate a unique ID for powerups
-function generatePowerupId() {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
-  return `powerup_${timestamp}_${random}`;
-}
-
-// Spawn a single bot billboard
-function spawnBotBillboard() {
+// Load bot configuration
+function loadBotConfig() {
   try {
-    // Check if we've reached the maximum before attempting to spawn
-    if (botBillboards.length >= botConfig.maxBots) {
-      console.log(`Maximum bot count (${botConfig.maxBots}) reached, not spawning a new billboard`);
-      
-      // Stop the spawning process if it's still running
-      if (isSpawningBots) {
-        stopSpawningBots();
-      }
-      
-      return null;
-    }
-    
-    // Generate a random position
-    const position = getRandomPositionOnGlobe();
-    
-    // Calculate quaternion for orientation
-    const quaternion = calculateQuaternion(position);
-    
-    // Get random message
-    const messages = botConfig.messages || [
-      "Mars is mine!", 
-      "Bot was here", 
-      "Mars billboard"
-    ];
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    
-    // Get random color
-    const colors = botConfig.colors || ["#FF5733", "#33FF57", "#3357FF"];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Get random sender
-    const senders = botConfig.botSenders || ["MarsBot", "RedRover"];
-    const randomSender = senders[Math.floor(Math.random() * senders.length)];
-    
-    // Get billboard size
-    const width = botConfig.billboardSize?.width || 5;
-    const height = botConfig.billboardSize?.height || 5;
-    
-    // Create the billboard data
-    const billboardData = {
-      id: generateBotId(),
-      type: 'billboard_data',
-      position: position,
-      quaternion: quaternion,
-      width: width,
-      height: height,
-      health: botConfig.health || 100,
-      text: randomMessage,
-      color: randomColor,
-      owner: randomSender,
-      player_id: 'bot_system',
-      billboard_category: 'bot',
-      timestamp: Date.now()
-    };
-    
-    // Add to bot billboards array
-    botBillboards.push(billboardData);
-    
-    // Also add to main billboards array for client syncing
-    billboards.push(billboardData);
-    
-    console.log(`Bot billboard spawned: "${randomMessage}" by ${randomSender} (${botBillboards.length}/${botConfig.maxBots})`);
-    
-    // Save bot billboards to file
-    saveBotBillboardData();
-    
-    // Broadcast to all connected clients
-    broadcastBillboardData(billboardData);
-    
-    return billboardData;
-  } catch (error) {
-    console.error('Error spawning bot billboard:', error);
-    return null;
-  }
-}
-
-// Broadcast billboard data to all connected clients
-function broadcastBillboardData(billboardData) {
-  server.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(billboardData));
-    }
-  });
-}
-
-// Spawn a single powerup
-function spawnPowerup() {
-  try {
-    // Calculate total weight for weighted random selection
-    const types = powerupConfig.types || [];
-    if (types.length === 0) {
-      console.error('No powerup types configured, cannot spawn');
-      return null;
-    }
-    
-    // Calculate total weight
-    const totalWeight = types.reduce((sum, type) => sum + (type.weight || 1), 0);
-    
-    // Select a random powerup type based on weights
-    let randomValue = Math.random() * totalWeight;
-    let selectedType = null;
-    
-    for (const type of types) {
-      randomValue -= (type.weight || 1);
-      if (randomValue <= 0) {
-        selectedType = type;
-        break;
-      }
-    }
-    
-    // Fallback if somehow no type was selected
-    if (!selectedType) {
-      selectedType = types[0];
-    }
-    
-    // Spawn the selected type
-    return spawnPowerupOfType(selectedType.type);
-  } catch (error) {
-    console.error('Error spawning powerup:', error);
-    return null;
-  }
-}
-
-// Spawn a powerup of a specific type
-function spawnPowerupOfType(powerupType) {
-  try {
-    // Find the type configuration
-    const typeConfig = powerupConfig.types.find(t => t.type === powerupType);
-    if (!typeConfig) {
-      console.error(`Powerup type ${powerupType} not found in configuration`);
-      return null;
-    }
-    
-    // Check if we've reached the maximum for this type
-    const currentCountForType = powerupsByType[powerupType]?.length || 0;
-    if (currentCountForType >= typeConfig.maxPowerups) {
-      console.log(`Maximum powerup count (${typeConfig.maxPowerups}) for type ${powerupType} reached, not spawning`);
-      
-      // Stop the spawning process for this type if it's still running
-      if (powerupSpawningTimers[powerupType]) {
-        clearInterval(powerupSpawningTimers[powerupType]);
-        powerupSpawningTimers[powerupType] = null;
-      }
-      
-      return null;
-    }
-    
-    // Generate a random position on the globe surface
-    const basePosition = getRandomPositionOnGlobe();
-    
-    // Calculate normalized direction from center to position (normal vector)
-    const length = Math.sqrt(
-      basePosition.x * basePosition.x + 
-      basePosition.y * basePosition.y + 
-      basePosition.z * basePosition.z
-    );
-    
-    const normalVector = {
-      x: basePosition.x / length,
-      y: basePosition.y / length,
-      z: basePosition.z / length
-    };
-    
-    // Add elevation - make powerup float 2 units above surface
-    const floatingOffset = 2.0;
-    const position = {
-      x: basePosition.x + normalVector.x * floatingOffset,
-      y: basePosition.y + normalVector.y * floatingOffset,
-      z: basePosition.z + normalVector.z * floatingOffset
-    };
-    
-    // Calculate quaternion for orientation
-    const quaternion = calculateQuaternion(position);
-    
-    // Create the powerup data
-    const powerupData = {
-      id: generatePowerupId(),
-      type: powerupType,
-      position: position,
-      quaternion: quaternion,
-      size: typeConfig.size || 1.5,
-      color: typeConfig.color || "#FFFFFF",
-      text: typeConfig.text || powerupType,
-      effectAmount: typeConfig.effectAmount,
-      effectDuration: typeConfig.effectDuration,
-      lifespan: typeConfig.lifespan || null, // 24 hours default
-      createdAt: Date.now(),
-      isCollected: false
-    };
-    
-    // Add to powerups array
-    powerups.push(powerupData);
-    
-    // Add to type-specific array
-    if (!powerupsByType[powerupType]) {
-      powerupsByType[powerupType] = [];
-    }
-    powerupsByType[powerupType].push(powerupData);
-    
-    console.log(`Powerup spawned: "${powerupData.type}" (${currentCountForType + 1}/${typeConfig.maxPowerups})`);
-    
-    // Save powerups to file
-    savePowerupData();
-    
-    // Broadcast to all connected clients
-    broadcastPowerupData(powerupData);
-    
-    return powerupData;
-  } catch (error) {
-    console.error(`Error spawning powerup of type ${powerupType}:`, error);
-    return null;
-  }
-}
-
-// Broadcast powerup data to all connected clients
-function broadcastPowerupData(powerupData) {
-  server.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(powerupData));
-    }
-  });
-}
-
-// Check if more powerups need to be spawned
-function checkPowerups() {
-  // Get the current count of all powerups
-  const currentPowerupCount = powerups.length;
-  console.log(`Checking powerups: ${currentPowerupCount} total powerups`);
-  
-  // Check for expired powerups (this applies to all types)
-  const now = Date.now();
-  const expiredPowerups = powerups.filter(powerup => 
-    powerup.lifespan && (now - powerup.createdAt > powerup.lifespan)
-  );
-  
-  if (expiredPowerups.length > 0) {
-    console.log(`Found ${expiredPowerups.length} expired powerups, removing them`);
-    
-    // Remove expired powerups from the arrays
-    powerups = powerups.filter(powerup => 
-      !(powerup.lifespan && (now - powerup.createdAt > powerup.lifespan))
-    );
-    
-    // Also remove from type-specific arrays
-    for (const type in powerupsByType) {
-      powerupsByType[type] = powerupsByType[type].filter(powerup => 
-        !(powerup.lifespan && (now - powerup.createdAt > powerup.lifespan))
-      );
-    }
-    
-    // Save the updated powerups
-    savePowerupData();
-    
-    // Broadcast removal to all clients
-    for (const powerup of expiredPowerups) {
-      broadcastPowerupRemoval(powerup.id);
-    }
-  }
-  
-  // Check each type separately
-  for (const typeConfig of powerupConfig.types) {
-    const type = typeConfig.type;
-    const maxPowerupsForType = typeConfig.maxPowerups;
-    const currentCountForType = powerupsByType[type]?.length || 0;
-    
-    console.log(`Checking ${type} powerups: ${currentCountForType}/${maxPowerupsForType}`);
-    
-    // If we have more than the maximum for this type, trim the excess
-    if (currentCountForType > maxPowerupsForType) {
-      console.log(`Found ${currentCountForType} ${type} powerups, exceeding maximum of ${maxPowerupsForType}`);
-      console.log(`Trimming excess ${type} powerups...`);
-      
-      // Sort type-specific powerups by timestamp (oldest first)
-      powerupsByType[type].sort((a, b) => a.createdAt - b.createdAt);
-      
-      // Keep only the newest up to maxPowerupsForType
-      const excess = powerupsByType[type].splice(0, currentCountForType - maxPowerupsForType);
-      console.log(`Removed ${excess.length} excess ${type} powerups`);
-      
-      // Also remove from main powerups array
-      for (const powerup of excess) {
-        const index = powerups.findIndex(p => p.id === powerup.id);
-        if (index !== -1) {
-          powerups.splice(index, 1);
-        }
-      }
-      
-      // Save the updated powerups
-      savePowerupData();
-      
-      // Broadcast removal to all clients
-      for (const powerup of excess) {
-        broadcastPowerupRemoval(powerup.id);
-      }
-    }
-    
-    // If we need to spawn more of this type
-    if (currentCountForType < maxPowerupsForType) {
-      const powerupsToSpawn = maxPowerupsForType - currentCountForType;
-      console.log(`Need to spawn ${powerupsToSpawn} more ${type} powerups`);
-      
-      // Start spawning this type if not already
-      if (!powerupSpawningTimers[type]) {
-        startSpawningPowerupOfType(type);
-      }
+    if (fs.existsSync(BOT_CONFIG_FILE)) {
+      const data = fs.readFileSync(BOT_CONFIG_FILE, 'utf8');
+      const loadedConfig = JSON.parse(data);
+      // Update our config with loaded values
+      Object.assign(botConfig, loadedConfig);
+      console.log('Loaded bot configuration from file');
     } else {
-      console.log(`Maximum ${type} powerup count reached, no new spawns needed`);
+      console.log('No bot configuration file found, using defaults');
+    }
+  } catch (error) {
+    console.error('Error loading bot configuration:', error);
+    // Continue with defaults
+  }
+}
+
+// Load powerup data from file
+function loadPowerupData() {
+  try {
+    if (fs.existsSync(POWERUP_DATA_FILE)) {
+      const data = fs.readFileSync(POWERUP_DATA_FILE, 'utf8');
+      const loadedPowerups = JSON.parse(data);
       
-      // Stop spawning this type if active
-      if (powerupSpawningTimers[type]) {
-        clearInterval(powerupSpawningTimers[type]);
-        powerupSpawningTimers[type] = null;
-      }
-    }
-  }
-}
-
-// Broadcast powerup removal to all connected clients
-function broadcastPowerupRemoval(powerupId) {
-  console.log(`[DEBUG SERVER] Broadcasting powerup removal for ID: ${powerupId} to all clients`);
-  
-  const removalData = {
-    type: 'powerup_removed',
-    id: powerupId
-  };
-  
-  let clientCount = 0;
-  server.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(removalData));
-      clientCount++;
-    }
-  });
-  
-  console.log(`[DEBUG SERVER] Sent powerup_removed message to ${clientCount} connected clients`);
-}
-
-// Start spawning powerups at the specified interval
-function startSpawningPowerups() {
-  if (isSpawningPowerups) return;
-  
-  console.log('Starting powerup spawning for all types');
-  isSpawningPowerups = true;
-  
-  // Start spawning each type
-  for (const typeConfig of powerupConfig.types) {
-    startSpawningPowerupOfType(typeConfig.type);
-  }
-}
-
-// Start spawning a specific type of powerup
-function startSpawningPowerupOfType(powerupType) {
-  // Find the type configuration
-  const typeConfig = powerupConfig.types.find(t => t.type === powerupType);
-  if (!typeConfig) {
-    console.error(`Cannot start spawning: Type ${powerupType} not found in configuration`);
-    return;
-  }
-  
-  // Check if already spawning this type
-  if (powerupSpawningTimers[powerupType]) {
-    console.log(`Already spawning ${powerupType} powerups`);
-    return;
-  }
-  
-  console.log(`Starting ${powerupType} powerup spawning with interval ${typeConfig.spawnInterval}ms`);
-  
-  // Immediately spawn the first powerup of this type
-  spawnPowerupOfType(powerupType);
-  
-  // Set up interval for subsequent spawns
-  powerupSpawningTimers[powerupType] = setInterval(() => {
-    // Check if we've reached max powerups for this type
-    const currentCount = powerupsByType[powerupType]?.length || 0;
-    if (currentCount >= typeConfig.maxPowerups) {
-      console.log(`Maximum ${powerupType} powerup count (${typeConfig.maxPowerups}) reached during spawning, stopping`);
-      clearInterval(powerupSpawningTimers[powerupType]);
-      powerupSpawningTimers[powerupType] = null;
-      return;
-    }
-    
-    // Apply spawn chance for this type
-    if (Math.random() < (typeConfig.spawnChance || 0.3)) {
-      // Spawn another powerup of this type
-      spawnPowerupOfType(powerupType);
-    }
-  }, typeConfig.spawnInterval);
-}
-
-// Stop the powerup spawning process
-function stopSpawningPowerups() {
-  if (!isSpawningPowerups) return;
-  
-  console.log('Stopping all powerup spawning');
-  
-  // Clear all spawning timers
-  for (const type in powerupSpawningTimers) {
-    if (powerupSpawningTimers[type]) {
-      clearInterval(powerupSpawningTimers[type]);
-      powerupSpawningTimers[type] = null;
-    }
-  }
-  
-  isSpawningPowerups = false;
-}
-
-// Initialize terrain data and player data at server startup
-initializeTerrainData();
-loadPlayerData();
-loadBillboardData(); // Load billboard data on startup
-loadBotBillboardData(); // Load bot billboard data on startup
-loadPowerupData(); // Load powerup data on startup
-
-// Load bot configuration and start bot management
-(async function initializeBotSystem() {
-  await loadBotConfig();
-  
-  // Set up periodic checking for bot billboards
-  botCheckTimer = setInterval(checkBotBillboards, botConfig.checkInterval);
-  
-  // Perform initial check
-  checkBotBillboards();
-})();
-
-// Load powerup configuration and start powerup management
-(async function initializePowerupSystem() {
-  await loadPowerupConfig();
-  
-  // Set up periodic checking for powerups
-  powerupCheckTimer = setInterval(checkPowerups, powerupConfig.checkInterval);
-  
-  // Perform initial check
-  checkPowerups();
-})();
-
-// Log server startup
-console.log('WebSocket server running on port 8090');
-console.log(`Terrain seed: ${CONFIG.world.terrainSeed}`);
-
-// Create a simple HTTP server for handling bot billboard saving
-const http = require('http');
-const url = require('url');
-
-const httpServer = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight CORS request
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-  
-  // Handle save-bot-billboards endpoint
-  if (parsedUrl.pathname === '/save-bot-billboards' && req.method === 'POST') {
-    let body = '';
-    
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    
-    req.on('end', () => {
-      try {
-        const data = JSON.parse(body);
+      if (Array.isArray(loadedPowerups)) {
+        // Clear existing powerups
+        powerups.length = 0;
         
-        // Update bot billboards
-        botBillboards.length = 0;
-        data.forEach(billboard => {
-          botBillboards.push(billboard);
-        });
+        // Reset powerupsByType
+        for (const type in powerupsByType) {
+          powerupsByType[type] = [];
+        }
         
-        // Save to bot billboard file
-        saveBotBillboardData();
-        
-        // Add bot billboards to the main billboards array for sync
-        // but don't save them to billboard-data.json
-        data.forEach(botBillboard => {
-          const existingIndex = billboards.findIndex(b => b.id === botBillboard.id);
-          if (existingIndex !== -1) {
-            billboards[existingIndex] = botBillboard;
+        // Add current timestamp to each powerup, so we can track lifespan
+        const now = Date.now();
+        loadedPowerups.forEach(powerup => {
+          if (!powerup.spawnTime) {
+            powerup.spawnTime = now;
+          }
+          powerups.push(powerup);
+          
+          // Also add to by-type collection
+          if (powerupsByType[powerup.type]) {
+            powerupsByType[powerup.type].push(powerup);
           } else {
-            billboards.push(botBillboard);
+            // Initialize if this type doesn't exist yet
+            powerupsByType[powerup.type] = [powerup];
           }
         });
         
-        // No need to save the main billboard data as we don't want bots there
-        // saveBillboardData();  <-- This line is removed
-        
-        // Send success response
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, count: botBillboards.length }));
-      } catch (error) {
-        console.error('Error saving bot billboards:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: error.message }));
-      }
-    });
-  }
-  // Serve bot-config.json
-  else if (parsedUrl.pathname === '/bot-config.json' && req.method === 'GET') {
-    try {
-      const configFilePath = path.join(__dirname, 'code', 'bot-config.json');
-      if (fs.existsSync(configFilePath)) {
-        const data = fs.readFileSync(configFilePath, 'utf8');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(data);
+        console.log(`Loaded ${powerups.length} powerups`);
       } else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'Bot configuration not found' }));
+        console.log('Invalid powerup data format, starting with empty powerups');
       }
-    } catch (error) {
-      console.error('Error serving bot config:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: error.message }));
-    }
-  }
-  // Serve powerups-config.json
-  else if (parsedUrl.pathname === '/powerups-config.json' && req.method === 'GET') {
-    try {
-      const configFilePath = path.join(__dirname, 'code', 'powerups-config.json');
-      if (fs.existsSync(configFilePath)) {
-        const data = fs.readFileSync(configFilePath, 'utf8');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(data);
-      } else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'Powerup configuration not found' }));
+    } else {
+      console.log('No powerup data file found, starting with empty powerups');
+      // Create directory if it doesn't exist
+      const dir = path.dirname(POWERUP_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
-    } catch (error) {
-      console.error('Error serving powerup config:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: error.message }));
+      // Create empty file
+      fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify([]), 'utf8');
     }
+  } catch (error) {
+    console.error('Error loading powerup data:', error);
   }
-  else {
-    // Handle 404 for other endpoints
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: false, error: 'Endpoint not found' }));
+}
+
+// Save powerup data to file
+function savePowerupData() {
+  try {
+    // Create directory if it doesn't exist
+    const dir = path.dirname(POWERUP_DATA_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify(powerups, null, 2), 'utf8');
+    console.log(`Saved ${powerups.length} powerups`);
+  } catch (error) {
+    console.error('Error saving powerup data:', error);
   }
-});
+}
 
-// Start HTTP server for bot billboard handling on port 8091
-httpServer.listen(8091, () => {
-  console.log('HTTP server for bot billboard management running on port 8091');
-});
-
-// WebSocket server
-server.on('connection', (socket) => {
+// Setup WebSocket connection handling
+wsServer.on('connection', (socket) => {
   console.log('Player connected');
 
   socket.on('message', (message) => {
@@ -1529,4 +839,25 @@ server.on('connection', (socket) => {
   socket.on('close', () => {
     console.log('Player disconnected');
   });
+});
+
+// Start the server
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`WebSocket server running on same port`);
+  
+  // Load data
+  loadPlayerData();
+  loadBillboardData();
+  loadBotBillboardData();
+  loadBotConfig();
+  loadPowerupConfig();
+  loadPowerupData();
+  initializeTerrainData();
+  
+  // Start bot billboard system
+  // ... bot billboard code ...
+  
+  // Start powerup system
+  // ... powerup code ...
 });

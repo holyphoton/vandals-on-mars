@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: vandals-on-mars
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    disk:
+      name: game-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+    autoDeploy: false 
