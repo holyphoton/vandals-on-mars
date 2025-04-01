@@ -23,7 +23,7 @@
   },
   "billboard": {
     "startSize": 5,
-    "maxSize": 20,
+    "maxSize": 40,
     "growthPerDamage": 0.2,
     "decayRate": 0.1,
     "decayInterval": 86400,

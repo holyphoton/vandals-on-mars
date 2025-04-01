@@ -1442,8 +1442,8 @@ class ShooterGun extends Gun {
      */
     growPlayerBillboards(damageAmount) {
         // Get growth per damage value from config
-        const growthPerDamage = CONFIG.billboard?.growthPerDamage || 0.1;
-        const maxSize = CONFIG.billboard?.maxSize || 15;
+        const growthPerDamage = CONFIG.billboard?.growthPerDamage || 0.2;
+        const maxSize = CONFIG.billboard?.maxSize || 40;
         const healthSizeMultiplier = CONFIG.billboard?.healthSizeMultiplier || 4;
         const startSize = CONFIG.billboard?.startSize || 5;
         
