@@ -443,7 +443,7 @@ class PlayerCamera {
         shooterCrosshair.style.borderRadius = '50%';
         shooterCrosshair.style.opacity = '0.7';
         shooterCrosshair.style.display = 'none'; // Hidden by default
-        shooterCrosshair.style.zIndex = '10000'; // Higher z-index to ensure it's on top
+        shooterCrosshair.style.zIndex = '10'; // Higher z-index to ensure it's on top
         shooterCrosshair.style.pointerEvents = 'none'; // Make sure it doesn't interfere with clicks
         document.body.appendChild(shooterCrosshair);
         
@@ -461,7 +461,7 @@ class PlayerCamera {
         billboardCrosshair.style.borderRadius = '3px';
         billboardCrosshair.style.opacity = '0.7';
         billboardCrosshair.style.display = 'none'; // Hidden by default
-        billboardCrosshair.style.zIndex = '10000'; // Higher z-index to ensure it's on top
+        billboardCrosshair.style.zIndex = '10'; // Higher z-index to ensure it's on top
         billboardCrosshair.style.pointerEvents = 'none'; // Make sure it doesn't interfere with clicks
         document.body.appendChild(billboardCrosshair);
         

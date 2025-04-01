@@ -776,7 +776,7 @@ class PlayerControls {
         // Skip key handling if input or textarea is focused
         if (document.activeElement && 
             (document.activeElement.tagName === 'INPUT' || 
-                document.activeElement.tagName === 'TEXTAREA')) {
+             document.activeElement.tagName === 'TEXTAREA')) {
             return;
         }
         
