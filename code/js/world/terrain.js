@@ -518,6 +518,39 @@ class Terrain {
         railingMesh.rotation.x = Math.PI / 2; // Rotate to horizontal
         towerGroup.add(railingMesh);
         
+        // Add an exit portal at the base of the tower near the edge
+        const portal = this.createExitPortal(radius * 0.9);
+        
+        // Position the portal at the front of the tower
+        // Use a fixed position at the "front" of the tower (in global Z direction)
+        // and completely outside the tower wall
+        const portalYOffset = 3; // Height from base
+        
+        // Fixed placement at the front of the tower
+        // Clearly outside the tower wall with no possibility of clipping
+        const portalDistance = radius * 1.5; // Ensure proper distance from tower center
+        
+        // Position at the front (global Z direction)
+        // For the north pole tower, this will be +Z direction
+        // For the south pole tower, this will be -Z direction
+        const frontDirection = position.phi < Math.PI/2 ? 1 : -1; // Determine if north or south pole
+        const portalZ = frontDirection * portalDistance;
+        
+        portal.position.set(0, portalYOffset, portalZ);
+        
+        // Rotate the portal to face away from the tower (toward +Z or -Z)
+        const portalRotation = new THREE.Quaternion();
+        // If at north pole, rotate to face +Z, if at south pole, rotate to face -Z
+        const rotationAngle = frontDirection > 0 ? 0 : Math.PI;
+        portalRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngle);
+        portal.quaternion.copy(portalRotation);
+        
+        towerGroup.add(portal);
+        
+        // Create a portal box for collision detection
+        const portalBox = new THREE.Box3();
+        portalBox.setFromObject(portal);
+        
         // Position the tower on the surface of the globe (but slightly embedded)
         // Use the cartesian position we calculated with the slight underground offset
         towerGroup.position.set(cartesian.x, cartesian.y, cartesian.z);
@@ -570,10 +603,150 @@ class Terrain {
             color: color,
             collider: {
                 radius: radius * 1.8 // Larger collision radius to ensure players can't get too close
+            },
+            portal: {
+                active: true,
+                box: portalBox
             }
         };
         
         return towerGroup;
+    }
+    
+    /**
+     * Create an exit portal for the vibeverse
+     * @param {number} size - Size of the portal
+     * @returns {THREE.Group} - The created portal object
+     */
+    createExitPortal(size = 15) {
+        // Create portal group to contain all portal elements
+        const portalGroup = new THREE.Group();
+        
+        // Create portal effect
+        const portalGeometry = new THREE.TorusGeometry(size, size * 0.13, 16, 100);
+        const portalMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00ff00,
+            emissive: 0x00ff00,
+            transparent: true,
+            opacity: 0.8
+        });
+        const portal = new THREE.Mesh(portalGeometry, portalMaterial);
+        portalGroup.add(portal);
+        
+        // Create portal inner surface
+        const portalInnerGeometry = new THREE.CircleGeometry(size * 0.87, 32);
+        const portalInnerMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        });
+        const portalInner = new THREE.Mesh(portalInnerGeometry, portalInnerMaterial);
+        portalGroup.add(portalInner);
+        
+        // Add portal label - create a separate group for the label that won't be affected by portal rotation
+        const labelGroup = new THREE.Group();
+        
+        // Create text texture
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 512;
+        canvas.height = 64;
+        context.fillStyle = '#00ff00';
+        context.font = 'bold 32px Arial';
+        context.textAlign = 'center';
+        context.fillText('VIBEVERSE PORTAL', canvas.width/2, canvas.height/2);
+        const texture = new THREE.CanvasTexture(canvas);
+        
+        // Create label with correct side facing forward
+        const labelGeometry = new THREE.PlaneGeometry(size * 2, size * 0.33);
+        const labelMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.FrontSide // Ensure we only render the front side
+        });
+        const label = new THREE.Mesh(labelGeometry, labelMaterial);
+        
+        // Position the label above the portal
+        label.position.y = size * 1.33;
+        
+        // Add label to its own group
+        labelGroup.add(label);
+        
+        // Add a handler to ensure label always faces the camera
+        portalGroup.updateLabel = function(camera) {
+            if (camera && label) {
+                // Make the label look at the camera, but only rotate around Y axis to keep it upright
+                const cameraPosition = camera.position.clone();
+                const labelPosition = new THREE.Vector3();
+                label.getWorldPosition(labelPosition);
+                
+                // Get direction to camera
+                const direction = new THREE.Vector3().subVectors(cameraPosition, labelPosition);
+                
+                // Project direction onto XZ plane to keep label upright
+                direction.y = 0;
+                direction.normalize();
+                
+                // Compute rotation to face the camera
+                label.lookAt(labelPosition.clone().add(direction));
+            }
+        };
+        
+        // Add label group to portal group
+        portalGroup.add(labelGroup);
+        
+        // Create particle system for portal effect
+        const portalParticleCount = 1000;
+        const portalParticles = new THREE.BufferGeometry();
+        const portalPositions = new Float32Array(portalParticleCount * 3);
+        const portalColors = new Float32Array(portalParticleCount * 3);
+
+        for (let i = 0; i < portalParticleCount * 3; i += 3) {
+            // Create particles in a ring around the portal
+            const angle = Math.random() * Math.PI * 2;
+            const radius = size + (Math.random() - 0.5) * size * 0.27;
+            portalPositions[i] = Math.cos(angle) * radius;
+            portalPositions[i + 1] = Math.sin(angle) * radius;
+            portalPositions[i + 2] = (Math.random() - 0.5) * size * 0.27;
+
+            // Green color with slight variation
+            portalColors[i] = 0;
+            portalColors[i + 1] = 0.8 + Math.random() * 0.2;
+            portalColors[i + 2] = 0;
+        }
+
+        portalParticles.setAttribute('position', new THREE.BufferAttribute(portalPositions, 3));
+        portalParticles.setAttribute('color', new THREE.BufferAttribute(portalColors, 3));
+
+        const portalParticleMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.6
+        });
+
+        const portalParticleSystem = new THREE.Points(portalParticles, portalParticleMaterial);
+        portalGroup.add(portalParticleSystem);
+        
+        // Add animation function to the portal group
+        portalGroup.animate = (camera) => {
+            const positions = portalParticles.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i + 1] += 0.05 * Math.sin(Date.now() * 0.001 + i);
+            }
+            portalParticles.attributes.position.needsUpdate = true;
+            
+            // Rotate the portal torus
+            portal.rotation.z += 0.005;
+            
+            // Update label orientation if camera is available
+            if (camera && portalGroup.updateLabel) {
+                portalGroup.updateLabel(camera);
+            }
+        };
+        
+        return portalGroup;
     }
 
     /**

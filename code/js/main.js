@@ -86,34 +86,47 @@ class Game {
      */
     async initialize() {
         try {
-            if (this.isInitialized) {
-                console.warn('Game is already initialized, skipping');
-                return;
+            console.log('Initializing game');
+            
+            // Set up debug mode if requested
+            if (CONSTANTS.DEBUG_MODE) {
+                console.log('Debug mode enabled');
+                window.game = this;
             }
-            
-            console.log('Initializing game...');
-            
-            // Log mobile detection information
-            const isMobile = Helpers && typeof Helpers.isMobile === 'function' ? Helpers.isMobile() : false;
-            console.log('Mobile device detection at game initialization:', isMobile);
             
             // Show loading screen
             this.showLoadingScreen();
             this.updateLoadingProgress(0.1, 'Loading configuration...');
             
+            // Check if there's a portal parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const comingFromPortal = urlParams.get('portal') === 'true';
+            
+            // Get username from URL parameter or use default "Anonymous"
+            if (comingFromPortal) {
+                this.username = urlParams.get('username') || 'Anonymous';
+                console.log('Coming from portal with username:', this.username);
+            }
+            
+            // Create clock for timing
+            this.clock = new THREE.Clock();
+            
             // Load configuration
             await this.loadConfiguration();
+            this.updateLoadingProgress(0.2, 'Configuration loaded');
             
-            // Create Three.js objects
+            // Set up Three.js scene
             this.setupThreeJS();
+            this.updateLoadingProgress(0.5, 'Rendering engine ready');
             
             // Create game objects
-            this.createGameObjects();
+            await this.createGameObjects();
+            this.updateLoadingProgress(0.7, 'World created');
             
-            // Setup event listeners
+            // Set up event listeners
             this.setupEventListeners();
             
-            // Connect to the server
+            // Use multiplayer if available
             if (CONFIG.isMultiplayer) {
                 try {
                     // Connect to server and wait for connection to be established
@@ -133,9 +146,18 @@ class Game {
                 }
             }
             
-            // Hide loading screen and show start screen
-            this.hideLoadingScreen();
-            this.showStartScreen();
+            // If coming from a portal, skip the start screen and start the game directly
+            if (comingFromPortal) {
+                this.hideLoadingScreen();
+                this.startGame();
+                
+                // Create a start portal where the player comes from
+                this.createStartPortal();
+            } else {
+                // Hide loading screen and show start screen for regular users
+                this.hideLoadingScreen();
+                this.showStartScreen();
+            }
             
             // Set initialization flag
             this.isInitialized = true;
@@ -246,9 +268,6 @@ class Game {
         canvas.style.zIndex = '1'; // Below UI elements
         document.body.appendChild(canvas);
         
-        // Create clock for timing
-        this.clock = new THREE.Clock();
-        
         // Add window resize handler
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
         
@@ -258,7 +277,7 @@ class Game {
     /**
      * Create game objects
      */
-    createGameObjects() {
+    async createGameObjects() {
         this.updateLoadingProgress(0.5, 'Creating game world...');
         
         // Create Mars globe
@@ -853,14 +872,19 @@ class Game {
                 return;
             }
             
-            // Update game objects
+            // Perform game update
             this.update(deltaTime);
             
-            // Render scene
+            // Render the scene
             this.render();
+            
+            // Check for portal collisions
+            this.checkPortalCollisions();
+            
+            // Animate portals
+            this.animatePortals();
         } catch (error) {
-            console.error("Error in animation loop:", error);
-            // Don't stop the animation loop on error, just skip this frame
+            console.error('Error in animation loop:', error);
         }
     }
 
@@ -1849,6 +1873,217 @@ class Game {
         }
         
         console.log(`Successfully processed ${powerups.length} powerups from server`);
+    }
+
+    /**
+     * Check if player has entered a portal
+     */
+    checkPortalCollisions() {
+        // Skip if we don't have the required objects
+        if (!this.playerCamera || !this.terrain) return;
+        
+        // Get player's current position
+        const playerPos = this.playerCamera.camera.position.clone();
+        
+        // Get a player bounding box
+        const playerBox = new THREE.Box3();
+        const playerSize = 1.0; // Approximate player size
+        playerBox.setFromCenterAndSize(playerPos, new THREE.Vector3(playerSize, playerSize, playerSize));
+        
+        // Check for tower portals
+        const urlParams = new URLSearchParams(window.location.search);
+        const comingFromPortal = urlParams.get('portal') === 'true';
+        
+        // Check for start portal collision if coming from a portal
+        if (comingFromPortal && this.startPortalBox) {
+            if (playerBox.intersectsBox(this.startPortalBox)) {
+                // Handle entering the start portal - return to the previous game
+                this.enterStartPortal();
+            }
+        }
+        
+        // Check for exit portal collisions with tower portals
+        if (this.terrain.features.towers) {
+            for (const tower of this.terrain.features.towers) {
+                if (tower.userData && tower.userData.portal && tower.userData.portal.active) {
+                    // Find the portal among the tower's children
+                    for (let i = 0; i < tower.children.length; i++) {
+                        const child = tower.children[i];
+                        // Check if the child has the animate method, which would indicate it's a portal
+                        if (child.animate && typeof child.animate === 'function') {
+                            // Get portal world position (it's at the base of the tower now)
+                            const portalWorldPos = new THREE.Vector3();
+                            child.getWorldPosition(portalWorldPos);
+                            
+                            // Create portal collision box
+                            const portalBox = new THREE.Box3();
+                            portalBox.setFromObject(child);
+                            
+                            // Check if player is inside portal
+                            if (playerBox.intersectsBox(portalBox)) {
+                                // Player entered an exit portal
+                                this.enterExitPortal();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Animate all portal effects
+     */
+    animatePortals() {
+        // Skip if camera not available
+        if (!this.playerCamera || !this.playerCamera.camera) return;
+        
+        // Get the player's camera for label orientation
+        const camera = this.playerCamera.camera;
+        
+        // Animate tower portals
+        if (this.terrain && this.terrain.features.towers) {
+            for (const tower of this.terrain.features.towers) {
+                if (tower.children) {
+                    for (const child of tower.children) {
+                        if (child.animate && typeof child.animate === 'function') {
+                            child.animate(camera);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Animate start portal if it exists
+        if (this.startPortal && this.startPortal.animate && typeof this.startPortal.animate === 'function') {
+            this.startPortal.animate(camera);
+        }
+    }
+    
+    /**
+     * Create a start portal where the player enters the game from another vibeverse game
+     */
+    createStartPortal() {
+        if (!this.scene || !this.playerCamera) return;
+        
+        console.log('Creating start portal');
+        
+        // Get player position
+        const playerPos = this.playerCamera.camera.position.clone();
+        
+        // Get the direction the player is facing
+        const direction = this.playerCamera.getDirection();
+        
+        // Create a position behind the player on the surface of the planet
+        // First get the normal vector at the player's position (points outward from center)
+        const surfaceNormal = playerPos.clone().normalize();
+        
+        // Calculate a position 10 units behind the player in the direction they're facing
+        const behindPlayerPos = new THREE.Vector3().subVectors(playerPos, direction.multiplyScalar(10));
+        
+        // Project this position onto the planet surface
+        const distanceFromCenter = this.globe.radius;
+        const portalPos = behindPlayerPos.normalize().multiplyScalar(distanceFromCenter);
+        
+        // Create the start portal with the same size as tower portals
+        const portal = this.terrain.createExitPortal(6);
+        portal.position.copy(portalPos);
+        
+        // Orient the portal to face the player
+        // Create a rotation that makes the portal face the player
+        const portalToPlayer = new THREE.Vector3().subVectors(playerPos, portalPos).normalize();
+        const tangentUp = portalPos.clone().normalize(); // Use surface normal as up vector
+        
+        // Create an orthogonal basis for portal orientation
+        const portalRight = new THREE.Vector3().crossVectors(portalToPlayer, tangentUp).normalize();
+        const portalUp = new THREE.Vector3().crossVectors(portalRight, portalToPlayer).normalize();
+        
+        // Create rotation matrix from basis vectors
+        const rotMatrix = new THREE.Matrix4().makeBasis(
+            portalRight,
+            portalUp,
+            portalToPlayer.clone().negate() // Forward direction is negative portalToPlayer
+        );
+        
+        // Apply rotation
+        portal.quaternion.setFromRotationMatrix(rotMatrix);
+        
+        // Adjust position slightly above the surface to prevent z-fighting
+        const finalPosition = portalPos.clone().add(
+            surfaceNormal.clone().multiplyScalar(1.5) // Raise 1.5 units above surface
+        );
+        portal.position.copy(finalPosition);
+        
+        // Add to scene
+        this.scene.add(portal);
+        this.startPortal = portal;
+        
+        // Create a collision box for the portal
+        this.startPortalBox = new THREE.Box3();
+        this.startPortalBox.setFromObject(portal);
+        
+        // Get ref from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        this.portalRefUrl = urlParams.get('ref');
+        
+        console.log('Start portal created with ref:', this.portalRefUrl);
+    }
+    
+    /**
+     * Handle player entering the exit portal
+     */
+    enterExitPortal() {
+        console.log('Player entered exit portal');
+        
+        // Create URL parameters
+        const params = new URLSearchParams();
+        params.append('portal', 'true');
+        params.append('username', this.getUsername());
+        params.append('color', 'white');
+        params.append('speed', '5');
+        params.append('ref', 'vandalsonmars.com');
+        
+        // Build the URL
+        const nextPage = 'https://portal.pieter.com/?' + params.toString();
+        
+        // Navigate to the vibeverse portal
+        window.location.href = nextPage;
+    }
+    
+    /**
+     * Handle player entering the start portal to go back to previous game
+     */
+    enterStartPortal() {
+        if (!this.portalRefUrl) {
+            console.log('No ref URL found for start portal');
+            return;
+        }
+        
+        console.log('Player entered start portal, returning to:', this.portalRefUrl);
+        
+        // Ensure the ref URL has the proper protocol
+        let url = this.portalRefUrl;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        
+        // Copy all URL parameters except 'ref'
+        const currentParams = new URLSearchParams(window.location.search);
+        const newParams = new URLSearchParams();
+        
+        for (const [key, value] of currentParams) {
+            if (key !== 'ref') { // Skip ref param since it's in the base URL
+                newParams.append(key, value);
+            }
+        }
+        
+        // Build the full URL with parameters
+        const paramString = newParams.toString();
+        const returnUrl = url + (paramString ? '?' + paramString : '');
+        
+        // Navigate back to the source game
+        window.location.href = returnUrl;
     }
 }
 

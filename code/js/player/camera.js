@@ -666,6 +666,16 @@ class PlayerCamera {
     }
     
     /**
+     * Get the current camera direction vector
+     * @returns {THREE.Vector3} Direction vector
+     */
+    getDirection() {
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+        return direction;
+    }
+    
+    /**
      * Toggle between first-person and other camera modes
      */
     toggleControls() {
