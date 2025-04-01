@@ -256,7 +256,7 @@ body, html {
     padding: 10px 15px;
     display: flex;
     align-items: center;
-    font-size: 14px;
+    font-size: 11px;
     font-family: 'Courier New', monospace;
     text-transform: uppercase;
     cursor: pointer;
@@ -271,7 +271,7 @@ body, html {
 }
 
 .mobile-action-button .key-hint {
-    font-size: 12px;
+    font-size: 10px;
     opacity: 0.7;
     margin-left: 4px;
     color: #ccc;
@@ -417,9 +417,8 @@ body.game-paused {
     border-radius: 5px;
     color: white;
     font-family: 'Courier New', monospace;
-    font-size: 14px;
-    text-transform:uppercase;
     pointer-events: auto; /* Make the HUD section receive pointer events */
+    text-transform: uppercase;
 }
 
 #weapon-indicator-container {

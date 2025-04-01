@@ -207,12 +207,36 @@
     "username": "Anonymous",
     "billboardText": "Anonymous's Billboard",
     "position": {
-      "x": -59.03214312368732,
-      "y": -28.662380738302122,
-      "z": 77.82617817056871
+      "x": -57.450448310446305,
+      "y": -27.656151703666062,
+      "z": 79.35882598597681
     },
-    "shootingAmmo": 170,
+    "shootingAmmo": 158,
     "billboardAmmo": 0,
-    "lastUpdate": 1743514976233
+    "lastUpdate": 1743516328795
+  },
+  "player_95581_lzjfv": {
+    "username": "Anonymous",
+    "billboardText": "Wazza",
+    "position": {
+      "x": -50.531798851524755,
+      "y": -72.01247594705697,
+      "z": -51.22480466340095
+    },
+    "shootingAmmo": 160,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743516443395
+  },
+  "player_48317_qgdng": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -81.78476788274538,
+      "y": 18.35133495155463,
+      "z": 57.77300622142931
+    },
+    "shootingAmmo": 195,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743516438725
   }
 }

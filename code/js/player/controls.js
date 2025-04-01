@@ -468,20 +468,105 @@ class PlayerControls {
         
         // Add click/touch handlers to each indicator
         gunIndicators.forEach(indicator => {
+            // Make all children non-interactive so parent gets the events
+            Array.from(indicator.children).forEach(child => {
+                child.style.pointerEvents = 'none';
+            });
+            
             // For mouse clicks (desktop)
             indicator.addEventListener('click', (event) => {
                 this.handleWeaponIndicatorSelection(indicator, event);
             });
             
-            // For touch events (mobile)
+            // For touch events (mobile) - using touchstart for more responsive feel
+            indicator.addEventListener('touchstart', (event) => {
+                event.preventDefault(); // Prevent default to ensure event is captured
+                
+                // Visual feedback
+                indicator.style.opacity = '0.8';
+                
+                // Get the touch coordinates
+                const touch = event.touches[0];
+                const rect = indicator.getBoundingClientRect();
+                
+                // Create a larger touch area with extra padding (10px on all sides)
+                const touchPadding = 10;
+                const expandedRect = {
+                    left: rect.left - touchPadding,
+                    right: rect.right + touchPadding,
+                    top: rect.top - touchPadding,
+                    bottom: rect.bottom + touchPadding
+                };
+                
+                // Check if the touch is within the expanded area
+                if (touch.clientX >= expandedRect.left && 
+                    touch.clientX <= expandedRect.right && 
+                    touch.clientY >= expandedRect.top && 
+                    touch.clientY <= expandedRect.bottom) {
+                    console.log(`Touch in expanded area of indicator: ${indicator.getAttribute('data-weapon')}`);
+                    
+                    // Mark this touch as handled to prevent shooting
+                    event._handledByWeaponSelector = true;
+                }
+            });
+            
+            // Handle the touch end event
             indicator.addEventListener('touchend', (event) => {
+                event.preventDefault(); // Prevent default
+                
+                // Reset visual feedback
+                indicator.style.opacity = '1';
+                
+                // Handle the weapon selection
                 this.handleWeaponIndicatorSelection(indicator, event);
             });
             
             // Make sure the indicator is clickable
             indicator.style.pointerEvents = 'auto';
             indicator.style.cursor = 'pointer';
+            
+            // Add extra CSS for larger touch target
+            indicator.style.position = 'relative';
+            indicator.style.zIndex = '100';
         });
+        
+        // Add a global touch handler to detect touches near weapon indicators
+        document.addEventListener('touchstart', (event) => {
+            if (event._handledByWeaponSelector) return;
+            
+            const touch = event.touches[0];
+            gunIndicators.forEach(indicator => {
+                const rect = indicator.getBoundingClientRect();
+                // Use an even larger detection area (20px)
+                const touchPadding = 20;
+                const expandedRect = {
+                    left: rect.left - touchPadding,
+                    right: rect.right + touchPadding,
+                    top: rect.top - touchPadding,
+                    bottom: rect.bottom + touchPadding
+                };
+                
+                if (touch.clientX >= expandedRect.left && 
+                    touch.clientX <= expandedRect.right && 
+                    touch.clientY >= expandedRect.top && 
+                    touch.clientY <= expandedRect.bottom) {
+                    console.log(`Global handler: Touch near indicator ${indicator.getAttribute('data-weapon')}`);
+                    
+                    // Prevent default and propagation
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Trigger the weapon selection
+                    this.handleWeaponIndicatorSelection(indicator, event);
+                    
+                    // Visual feedback
+                    indicator.style.opacity = '0.8';
+                    setTimeout(() => {
+                        indicator.style.opacity = '1';
+                    }, 200);
+                }
+            });
+        }, true); // Use capture phase
     }
 
     /**
@@ -492,6 +577,9 @@ class PlayerControls {
     handleWeaponIndicatorSelection(indicator, event) {
         // Prevent default behavior
         event.preventDefault();
+        
+        // Stop propagation to prevent other handlers from firing
+        event.stopPropagation();
         
         // Get the weapon type from the data attribute
         const weaponType = indicator.getAttribute('data-weapon');
@@ -515,11 +603,22 @@ class PlayerControls {
                 
                 // Add visual feedback
                 indicator.classList.add('active');
+                
+                // Reset any opacity changes from touchstart
+                if (indicator.style.opacity !== '1') {
+                    indicator.style.opacity = '1';
+                }
+                
                 setTimeout(() => {
                     // The class will be removed by the weaponManager's updateIndicator
                 }, 200);
             } else {
                 console.log(`Already using ${weaponType} gun`);
+                
+                // Reset opacity even if already using this weapon
+                if (indicator.style.opacity !== '1') {
+                    indicator.style.opacity = '1';
+                }
             }
         }
     }
@@ -606,7 +705,6 @@ class PlayerControls {
         
         // Check specific actionable UI elements that should block shooting
         const blockingElements = [
-            'mobile-switch-weapon',
             'mobile-edit-billboard',
             'hud-section',
             'billboard-popup',
