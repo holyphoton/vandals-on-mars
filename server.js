@@ -513,7 +513,7 @@ function savePowerupData() {
     }
     
     fs.writeFileSync(POWERUP_DATA_FILE, JSON.stringify(powerups, null, 2), 'utf8');
-    console.log(`Saved ${powerups.length} powerups`);
+    //console.log(`Saved ${powerups.length} powerups`);
   } catch (error) {
     console.error('Error saving powerup data:', error);
   }
@@ -943,7 +943,7 @@ function spawnPowerupOfType(type) {
     }
     powerupsByType[type].push(powerupData);
     
-    console.log(`Spawned ${type} powerup (${currentCount + 1}/${maxCount})`);
+    //console.log(`Spawned ${type} powerup (${currentCount + 1}/${maxCount})`);
     
     // Save to file
     savePowerupData();
