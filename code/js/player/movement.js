@@ -13,6 +13,7 @@ class PlayerMovement {
     constructor(camera, globe, controls) {
         this.camera = camera;
         this.globe = globe;
+        this.scene = globe ? globe.scene : null;
         this.controls = controls;
         
         // Movement state
@@ -48,8 +49,17 @@ class PlayerMovement {
         this.initialMovementComplete = false;
         this.hasPerformedInitialJump = false; // Flag to track if we've done the initial teleport
         
+        // Equator debugging
+        this.equatorLine = null;
+        
         // Initialize
         this.setupKeyControls();
+        
+        // Create equator line if we have a scene
+        if (this.scene && this.globe) {
+            // Delay creation slightly to ensure globe is initialized
+            setTimeout(() => this.createEquatorLine(), 1000);
+        }
     }
     
     /**
@@ -125,6 +135,9 @@ class PlayerMovement {
     setTerrain(terrain) {
         this.terrain = terrain;
         console.log('Terrain reference set for collision detection');
+        
+        // Create the equator line when terrain is set
+        this.createEquatorLine();
     }
     
     /**
@@ -231,6 +244,12 @@ class PlayerMovement {
         // Calculate local up vector (from planet center to player)
         const up = cameraPosition.clone().normalize();
         
+        // Check if we are near the equator and need to teleport past it
+        if (this.handleEquatorCrossing()) {
+            // We teleported, so skip the rest of the movement handling
+            return;
+        }
+        
         // Calculate movement direction in the tangent plane
         const moveDirection = this.calculateMoveDirection(cameraPosition);
         
@@ -262,6 +281,131 @@ class PlayerMovement {
             // Store last valid position for collision recovery
             this.lastValidPosition = this.camera.camera.position.clone();
         }
+    }
+    
+    /**
+     * Detect and handle equator proximity to prevent the flickering/slowdown issue
+     * @returns {boolean} True if we teleported, false otherwise
+     */
+    handleEquatorCrossing() {
+        if (!this.camera || !this.camera.spherical) {
+            return false;
+        }
+        
+        // Get current spherical coordinates
+        const phi = this.camera.spherical.phi;
+        
+        // Equator is at phi = 90 degrees (π/2 radians)
+        const equatorPhi = Math.PI / 2;
+        
+        // Calculate how close we are to the equator (in radians)
+        const distanceToEquator = Math.abs(phi - equatorPhi);
+        
+        // Convert to degrees for easier debugging
+        const distanceToDegrees = distanceToEquator * 180 / Math.PI;
+        
+        // Define multiple bands with different assist intensities
+        // Very close: 0.5° from equator = stronger assist
+        // Close: 1° from equator = moderate assist
+        // Approaching: 1.5° from equator = gentle assist
+        const veryCloseBand = 0.5 * Math.PI / 180; // 0.5 degrees in radians
+        const closeBand = 1.0 * Math.PI / 180;     // 1.0 degrees in radians
+        const approachingBand = 1.5 * Math.PI / 180; // 1.5 degrees in radians
+        
+        // Check if we are within any band and moving
+        const isMoving = this.moveForward || this.moveBackward || this.moveLeft || this.moveRight;
+        if (distanceToEquator < approachingBand && isMoving) {
+            // Determine assist intensity based on proximity
+            let assistIntensity = 0;
+            let assistName = "";
+            
+            if (distanceToEquator < veryCloseBand) {
+                // Very close to equator - stronger assist
+                assistIntensity = 0.7; // 0.7 degrees
+                assistName = "micro";
+            } else if (distanceToEquator < closeBand) {
+                // Close to equator - moderate assist
+                assistIntensity = 0.4; // 0.4 degrees
+                assistName = "mini";
+            } else {
+                // Approaching equator - gentle assist
+                assistIntensity = 0.2; // 0.2 degrees
+                assistName = "nano";
+            }
+            
+            // Determine the direction we're moving (north to south or south to north)
+            const movingTowardsSouth = phi < equatorPhi;
+            
+            // Store the current true heading before crossing the equator
+            // Get camera's current true forward direction in world space
+            const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.camera.quaternion);
+            
+            // Get current direction
+            const moveDirection = this.calculateMoveDirection(this.camera.camera.position);
+            
+            // Only boost if we're actually moving toward the equator
+            const upVector = this.camera.camera.position.clone().normalize();
+            const movingTowardEquator = moveDirection.dot(upVector) * (movingTowardsSouth ? -1 : 1) < 0;
+            
+            if (movingTowardEquator && moveDirection.lengthSq() > 0) {
+                // Save the true world-space forward direction before crossing
+                const worldForward = cameraDirection.clone();
+                
+                // Calculate angular distance to boost (in radians)
+                const angularBoost = assistIntensity * Math.PI / 180;
+                
+                // Convert angular distance to linear distance along the surface
+                // Arc length = radius × angle
+                const globeRadius = this.globe.radius;
+                const surfaceDistance = globeRadius * angularBoost;
+                
+                // Calculate boost direction - normalized move direction
+                const boostDirection = moveDirection.clone().normalize();
+                
+                // Apply precisely calculated boost
+                const boostedPosition = this.camera.camera.position.clone().add(
+                    boostDirection.multiplyScalar(surfaceDistance)
+                );
+                
+                // Apply the position change
+                this.camera.camera.position.copy(boostedPosition);
+                
+                // Maintain correct height from planet surface
+                this.updatePlayerHeight();
+                
+                // After crossing, we need to recalculate spherical coordinates
+                this.updateCameraSphericalCoordinates();
+                
+                // Preserve the original heading direction
+                // This is critical to maintain orientation when crossing the equator
+                
+                // 1. Get the current up vector after crossing
+                const newUpVector = this.camera.camera.position.clone().normalize();
+                
+                // 2. Project our stored world forward onto the new tangent plane
+                const upComponent = newUpVector.clone().multiplyScalar(worldForward.dot(newUpVector));
+                const tangentForward = worldForward.clone().sub(upComponent).normalize();
+                
+                // 3. Compute the new looking direction by preserving our heading
+                const lookTarget = this.camera.camera.position.clone().add(tangentForward);
+                
+                // 4. Make the camera look in the preserved forward direction
+                this.camera.camera.lookAt(lookTarget);
+                this.camera.camera.up.copy(newUpVector);
+                
+                // We need to update the camera's internals to maintain consistency
+                if (this.camera.updateCameraPositionAndOrientation) {
+                    this.camera.updateCameraPositionAndOrientation();
+                }
+                
+                // Update last valid position
+                this.lastValidPosition = this.camera.camera.position.clone();
+                
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -484,6 +628,55 @@ class PlayerMovement {
         //     y: targetPos.y.toFixed(2),
         //     z: targetPos.z.toFixed(2)
         // });
+    }
+    
+    /**
+     * Create a red line at the equator for debugging
+     */
+    createEquatorLine() {
+        // Remove any existing equator line
+        if (this.equatorLine) {
+            if (this.scene) {
+                this.scene.remove(this.equatorLine);
+            } else if (this.globe && this.globe.scene) {
+                this.globe.scene.remove(this.equatorLine);
+            }
+        }
+
+        if (!this.globe) {
+            console.warn("Cannot create equator line: globe not available");
+            return null;
+        }
+        
+        // Use TorusGeometry to create a ring at the equator
+        const equatorRadius = this.globe.radius;
+        const tubeRadius = 0.2; // Thickness of the line
+        const torusGeometry = new THREE.TorusGeometry(equatorRadius, tubeRadius, 8, 64);
+        
+        // Create a red material
+        const equatorMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.7,
+            wireframe: false
+        });
+        
+        // Create the torus mesh
+        this.equatorLine = new THREE.Mesh(torusGeometry, equatorMaterial);
+        
+        // Rotate to align with equator (90 degrees around X-axis)
+        this.equatorLine.rotation.x = Math.PI / 2;
+        
+        // Add the line to the proper scene
+        const targetScene = this.scene || (this.globe && this.globe.scene);
+        if (targetScene) {
+            targetScene.add(this.equatorLine);
+            console.log("Created red torus at equator for debugging");
+        } else {
+            console.warn("Could not add equator line - no scene available");
+        }
+        
+        return this.equatorLine;
     }
 }
 
