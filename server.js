@@ -482,6 +482,514 @@ function savePowerupData() {
   }
 }
 
+// Generate a random position on the globe surface
+function getRandomPositionOnGlobe() {
+  // Use the world radius from CONFIG
+  const radius = CONFIG.world.radius || 100;
+  
+  // Generate random spherical coordinates
+  const theta = Math.random() * Math.PI * 2; // 0 to 2π
+  const phi = Math.acos(2 * Math.random() - 1); // 0 to π
+  
+  // Convert to Cartesian coordinates
+  const x = radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.sin(phi) * Math.sin(theta);
+  const z = radius * Math.cos(phi);
+  
+  return { x, y, z };
+}
+
+// Calculate quaternion for proper billboard orientation
+function calculateQuaternion(position) {
+  // Normalized position vector (direction from center to position) - this is the "up" vector
+  const length = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
+  const up = {
+    x: position.x / length,
+    y: position.y / length,
+    z: position.z / length
+  };
+  
+  // Find a reference vector different from up
+  // Use world up (0,1,0) as the reference unless up is too close to it
+  let reference;
+  const worldUpDot = Math.abs(up.y); // Dot product with (0,1,0)
+  
+  if (worldUpDot > 0.9) {
+    // If up is too close to world up, use world right instead
+    reference = { x: 1, y: 0, z: 0 };
+  } else {
+    reference = { x: 0, y: 1, z: 0 };
+  }
+  
+  // Calculate right vector (cross product of up and reference)
+  const right = {
+    x: up.y * reference.z - up.z * reference.y,
+    y: up.z * reference.x - up.x * reference.z,
+    z: up.x * reference.y - up.y * reference.x
+  };
+  
+  // Normalize right vector
+  const rightLength = Math.sqrt(right.x * right.x + right.y * right.y + right.z * right.z);
+  const rightNorm = {
+    x: right.x / rightLength,
+    y: right.y / rightLength,
+    z: right.z / rightLength
+  };
+  
+  // Calculate forward vector (cross product of right and up)
+  const forward = {
+    x: rightNorm.y * up.z - rightNorm.z * up.y,
+    y: rightNorm.z * up.x - rightNorm.x * up.z,
+    z: rightNorm.x * up.y - rightNorm.y * up.x
+  };
+  
+  // Create a rotation matrix from these three orthogonal vectors
+  // Matrix rows are rightNorm, up, forward (for a right-handed coordinate system)
+  const rotMatrix = [
+    rightNorm.x, up.x, forward.x, 0,
+    rightNorm.y, up.y, forward.y, 0,
+    rightNorm.z, up.z, forward.z, 0,
+    0, 0, 0, 1
+  ];
+  
+  // Convert rotation matrix to quaternion
+  const m11 = rotMatrix[0], m12 = rotMatrix[1], m13 = rotMatrix[2];
+  const m21 = rotMatrix[4], m22 = rotMatrix[5], m23 = rotMatrix[6];
+  const m31 = rotMatrix[8], m32 = rotMatrix[9], m33 = rotMatrix[10];
+  
+  const trace = m11 + m22 + m33;
+  let qx, qy, qz, qw;
+  
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1.0);
+    qw = 0.25 / s;
+    qx = (m32 - m23) * s;
+    qy = (m13 - m31) * s;
+    qz = (m21 - m12) * s;
+  } else if (m11 > m22 && m11 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+    qw = (m32 - m23) / s;
+    qx = 0.25 * s;
+    qy = (m12 + m21) / s;
+    qz = (m13 + m31) / s;
+  } else if (m22 > m33) {
+    const s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+    qw = (m13 - m31) / s;
+    qx = (m12 + m21) / s;
+    qy = 0.25 * s;
+    qz = (m23 + m32) / s;
+  } else {
+    const s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+    qw = (m21 - m12) / s;
+    qx = (m13 + m31) / s;
+    qy = (m23 + m32) / s;
+    qz = 0.25 * s;
+  }
+  
+  return { x: qx, y: qy, z: qz, w: qw };
+}
+
+// Generate a unique ID for bot billboards
+function generateBotId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `bot_${timestamp}_${random}`;
+}
+
+// Generate a unique ID for powerups
+function generatePowerupId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `powerup_${timestamp}_${random}`;
+}
+
+// BOT BILLBOARD SYSTEM //
+
+// Check if more bot billboards need to be spawned
+function checkBotBillboards() {
+  // Get the current count of bot billboards
+  const currentBotCount = botBillboards.length;
+  
+  console.log(`Checking bot billboards: ${currentBotCount}/${botConfig.maxBots}`);
+  
+  // If we have more than the maximum, trim the excess billboards
+  if (currentBotCount > botConfig.maxBots) {
+    console.log(`Found ${currentBotCount} bot billboards, exceeding maximum of ${botConfig.maxBots}`);
+    console.log(`Trimming excess bot billboards...`);
+    
+    // Sort billboards by timestamp (oldest first)
+    botBillboards.sort((a, b) => a.timestamp - b.timestamp);
+    
+    // Keep only the newest up to maxBots
+    const excess = botBillboards.splice(0, currentBotCount - botConfig.maxBots);
+    console.log(`Removed ${excess.length} excess bot billboards`);
+    
+    // Update the main billboards array to remove excess bot billboards
+    for (const billboard of excess) {
+      const index = billboards.findIndex(b => b.id === billboard.id);
+      if (index !== -1) {
+        billboards.splice(index, 1);
+      }
+    }
+    
+    // Save the updated bot billboards
+    saveBotBillboardData();
+    
+    // Stop any active spawning
+    if (isSpawningBots) {
+      stopSpawningBots();
+    }
+    
+    return;
+  }
+  
+  // If we need to spawn more billboards
+  if (currentBotCount < botConfig.maxBots) {
+    const botsToSpawn = botConfig.maxBots - currentBotCount;
+    console.log(`Need to spawn ${botsToSpawn} more bot billboards`);
+    
+    // Start spawning bots if not already spawning
+    if (!isSpawningBots) {
+      startSpawningBots();
+    }
+  } else {
+    console.log('Maximum bot count reached, no new spawns needed');
+    
+    // Stop any active spawning
+    if (isSpawningBots) {
+      stopSpawningBots();
+    }
+  }
+}
+
+// Start spawning bots at the specified interval
+function startSpawningBots() {
+  if (isSpawningBots) return;
+  
+  console.log(`Starting bot spawning with interval ${botConfig.spawnInterval}ms`);
+  isSpawningBots = true;
+  
+  // Immediately spawn the first bot
+  spawnBotBillboard();
+  
+  // Set up interval for subsequent spawns
+  botSpawningTimer = setInterval(() => {
+    // Check if we've reached max bots
+    if (botBillboards.length >= botConfig.maxBots) {
+      console.log('Maximum bot count reached during spawning, stopping');
+      stopSpawningBots();
+      return;
+    }
+    
+    // Otherwise spawn another bot
+    spawnBotBillboard();
+  }, botConfig.spawnInterval);
+}
+
+// Stop the bot spawning process
+function stopSpawningBots() {
+  if (!isSpawningBots) return;
+  
+  console.log('Stopping bot spawning');
+  
+  if (botSpawningTimer) {
+    clearInterval(botSpawningTimer);
+    botSpawningTimer = null;
+  }
+  
+  isSpawningBots = false;
+}
+
+// Spawn a single bot billboard
+function spawnBotBillboard() {
+  try {
+    // Check if we've reached the maximum before attempting to spawn
+    if (botBillboards.length >= botConfig.maxBots) {
+      console.log(`Maximum bot count (${botConfig.maxBots}) reached, not spawning a new billboard`);
+      
+      // Stop the spawning process if it's still running
+      if (isSpawningBots) {
+        stopSpawningBots();
+      }
+      
+      return null;
+    }
+    
+    // Generate a random position
+    const position = getRandomPositionOnGlobe();
+    
+    // Calculate quaternion for orientation
+    const quaternion = calculateQuaternion(position);
+    
+    // Get random message
+    const messages = botConfig.messages || [
+      "Mars is mine!", 
+      "Bot was here", 
+      "Mars billboard"
+    ];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    
+    // Get random color
+    const colors = botConfig.colors || ["#FF5733", "#33FF57", "#3357FF"];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Get random sender
+    const senders = botConfig.botSenders || ["MarsBot", "RedRover"];
+    const randomSender = senders[Math.floor(Math.random() * senders.length)];
+    
+    // Get billboard size
+    const width = botConfig.billboardSize?.width || 5;
+    const height = botConfig.billboardSize?.height || 5;
+    
+    // Create the billboard data
+    const billboardData = {
+      id: generateBotId(),
+      type: 'billboard_data',
+      position: position,
+      quaternion: quaternion,
+      width: width,
+      height: height,
+      health: botConfig.health || 100,
+      text: randomMessage,
+      color: randomColor,
+      owner: randomSender,
+      player_id: 'bot_system',
+      billboard_category: 'bot',
+      timestamp: Date.now()
+    };
+    
+    // Add to bot billboards array
+    botBillboards.push(billboardData);
+    
+    // Also add to main billboards array for client syncing
+    billboards.push(billboardData);
+    
+    console.log(`Bot billboard spawned: "${randomMessage}" by ${randomSender} (${botBillboards.length}/${botConfig.maxBots})`);
+    
+    // Save bot billboards to file
+    saveBotBillboardData();
+    
+    // Broadcast to all connected clients
+    broadcastBillboardData(billboardData);
+    
+    return billboardData;
+  } catch (error) {
+    console.error('Error spawning bot billboard:', error);
+    return null;
+  }
+}
+
+// POWERUP SYSTEM //
+
+// Start spawning powerups
+function startPowerupSystem() {
+  console.log('Starting powerup system');
+  isSpawningPowerups = true;
+  
+  // Start spawning for each powerup type
+  for (const type in powerupConfig) {
+    if (!powerupConfig[type].spawnInterval) continue;
+    
+    console.log(`Setting up spawning for powerup type: ${type}`);
+    startSpawningPowerupOfType(type);
+  }
+  
+  // Set up periodic check for expired powerups
+  powerupCheckTimer = setInterval(checkPowerups, 10000); // Check every 10 seconds
+}
+
+// Start spawning a specific type of powerup
+function startSpawningPowerupOfType(type) {
+  const typeConfig = powerupConfig[type];
+  if (!typeConfig) {
+    console.error(`Powerup type ${type} not found in configuration`);
+    return;
+  }
+  
+  // Clear any existing timer
+  if (powerupSpawningTimers[type]) {
+    clearInterval(powerupSpawningTimers[type]);
+  }
+  
+  console.log(`Starting to spawn powerups of type ${type} every ${typeConfig.spawnInterval}ms`);
+  
+  // Immediately spawn first powerup
+  const randomChance = Math.random();
+  if (randomChance < (typeConfig.spawnChance || 0.2)) {
+    spawnPowerupOfType(type);
+  }
+  
+  // Set up interval for subsequent spawns
+  powerupSpawningTimers[type] = setInterval(() => {
+    // Check if we've reached max count for this type
+    const currentCount = powerupsByType[type]?.length || 0;
+    const maxCount = typeConfig.maxPowerups || 10;
+    
+    if (currentCount >= maxCount) {
+      console.log(`Maximum ${type} powerup count (${maxCount}) reached, skipping spawn`);
+      return;
+    }
+    
+    // Apply spawn chance
+    const randomChance = Math.random();
+    if (randomChance < (typeConfig.spawnChance || 0.2)) {
+      spawnPowerupOfType(type);
+    }
+  }, typeConfig.spawnInterval);
+}
+
+// Spawn a powerup of a specific type
+function spawnPowerupOfType(type) {
+  try {
+    const typeConfig = powerupConfig[type];
+    if (!typeConfig) {
+      console.error(`Powerup type ${type} not found in configuration`);
+      return null;
+    }
+    
+    // Check if we've reached the maximum for this type
+    const currentCount = powerupsByType[type]?.length || 0;
+    const maxCount = typeConfig.maxPowerups || 10;
+    
+    if (currentCount >= maxCount) {
+      console.log(`Maximum ${type} powerup count (${maxCount}) reached, not spawning`);
+      return null;
+    }
+    
+    // Generate a random position
+    const basePosition = getRandomPositionOnGlobe();
+    
+    // Make powerups float 2 units above the surface
+    const length = Math.sqrt(
+      basePosition.x * basePosition.x + 
+      basePosition.y * basePosition.y + 
+      basePosition.z * basePosition.z
+    );
+    
+    const normalVector = {
+      x: basePosition.x / length,
+      y: basePosition.y / length,
+      z: basePosition.z / length
+    };
+    
+    const floatHeight = 2.0;
+    const position = {
+      x: basePosition.x + normalVector.x * floatHeight,
+      y: basePosition.y + normalVector.y * floatHeight,
+      z: basePosition.z + normalVector.z * floatHeight
+    };
+    
+    // Calculate quaternion for orientation
+    const quaternion = calculateQuaternion(position);
+    
+    // Create the powerup data
+    const powerupData = {
+      id: generatePowerupId(),
+      type: type,
+      position: position,
+      quaternion: quaternion,
+      size: typeConfig.size || 1.5,
+      color: typeConfig.color || "#FFFF00",
+      lifespan: typeConfig.lifespan || 60000, // 1 minute default
+      spawnTime: Date.now(),
+      isCollected: false
+    };
+    
+    // Add to powerups array
+    powerups.push(powerupData);
+    
+    // Add to type-specific collection
+    if (!powerupsByType[type]) {
+      powerupsByType[type] = [];
+    }
+    powerupsByType[type].push(powerupData);
+    
+    console.log(`Spawned ${type} powerup (${currentCount + 1}/${maxCount})`);
+    
+    // Save to file
+    savePowerupData();
+    
+    // Broadcast to all clients
+    broadcastPowerupData(powerupData);
+    
+    return powerupData;
+  } catch (error) {
+    console.error(`Error spawning ${type} powerup:`, error);
+    return null;
+  }
+}
+
+// Check powerups for expiration and count
+function checkPowerups() {
+  const now = Date.now();
+  const expiredPowerups = [];
+  
+  // Check each powerup for expiration
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const powerup = powerups[i];
+    
+    // Skip if no lifespan or no spawn time
+    if (!powerup.lifespan || !powerup.spawnTime) continue;
+    
+    // Check if expired
+    if (now - powerup.spawnTime > powerup.lifespan) {
+      expiredPowerups.push(powerup);
+      powerups.splice(i, 1);
+      
+      // Also remove from type-specific collection
+      if (powerupsByType[powerup.type]) {
+        const typeIndex = powerupsByType[powerup.type].findIndex(p => p.id === powerup.id);
+        if (typeIndex !== -1) {
+          powerupsByType[powerup.type].splice(typeIndex, 1);
+        }
+      }
+    }
+  }
+  
+  // If any powerups expired, save and notify clients
+  if (expiredPowerups.length > 0) {
+    console.log(`Removed ${expiredPowerups.length} expired powerups`);
+    savePowerupData();
+    
+    // Broadcast removals
+    expiredPowerups.forEach(powerup => {
+      broadcastPowerupRemoval(powerup.id);
+    });
+  }
+  
+  // Check if we need to spawn more of each type
+  for (const type in powerupConfig) {
+    const typeConfig = powerupConfig[type];
+    if (!typeConfig) continue;
+    
+    const currentCount = powerupsByType[type]?.length || 0;
+    const maxCount = typeConfig.maxPowerups || 10;
+    
+    if (currentCount < maxCount && !powerupSpawningTimers[type]) {
+      // Start spawning this type if not already spawning
+      startSpawningPowerupOfType(type);
+    }
+  }
+}
+
+// Broadcast billboard data to all connected clients
+function broadcastBillboardData(billboardData) {
+  wsServer.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(billboardData));
+    }
+  });
+}
+
+// Broadcast powerup data to all connected clients
+function broadcastPowerupData(powerupData) {
+  wsServer.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(powerupData));
+    }
+  });
+}
+
 // Setup WebSocket connection handling
 wsServer.on('connection', (socket) => {
   console.log('Player connected');
@@ -891,8 +1399,11 @@ httpServer.listen(PORT, () => {
   initializeTerrainData();
   
   // Start bot billboard system
-  // ... bot billboard code ...
+  console.log('Starting bot billboard system...');
+  botCheckTimer = setInterval(checkBotBillboards, botConfig.checkInterval || 30000);
+  checkBotBillboards(); // Initial check
   
   // Start powerup system
-  // ... powerup code ...
+  console.log('Starting powerup system...');
+  startPowerupSystem();
 });
