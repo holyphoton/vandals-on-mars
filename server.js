@@ -1039,7 +1039,7 @@ wsServer.on('connection', (socket) => {
   socket.on('message', (message) => {
     try {
       const data = JSON.parse(message);
-      console.log('Received message type:', data.type);
+      //console.log('Received message type:', data.type);
 
       // Handle different message types
       if (data.type === 'billboard_data') {
