@@ -182,5 +182,856 @@
     "player_id": "player_85027_kuzoq",
     "billboard_category": "player",
     "timestamp": 1743505664533
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_86162_zndgt",
+    "position": {
+      "x": 6.374768286816466,
+      "y": -94.33523613135579,
+      "z": 38.211856187978434
+    },
+    "quaternion": {
+      "x": 0.3235528273489682,
+      "y": -0.16977259293337219,
+      "z": -0.9261921430651616,
+      "w": 0.09305347240985334
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_85601_umpnr",
+    "billboard_category": "player",
+    "timestamp": 1743506067995
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_81159_uuaou",
+    "position": {
+      "x": 5.753403580697531,
+      "y": -94.21437017877325,
+      "z": 38.60662118153698
+    },
+    "quaternion": {
+      "x": 0.3130119847844814,
+      "y": -0.17372329960708363,
+      "z": -0.9294886868528018,
+      "w": 0.08885096267098835
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_85601_umpnr",
+    "billboard_category": "player",
+    "timestamp": 1743506079056
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_40897_pbcho",
+    "position": {
+      "x": -80.06958612581718,
+      "y": -32.755638945664,
+      "z": 53.99861012009149
+    },
+    "quaternion": {
+      "x": 0.5140334368994077,
+      "y": -0.05315689624100084,
+      "z": 0.6295776149119469,
+      "w": 0.5801517016549985
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_83514_jqmsa",
+    "billboard_category": "player",
+    "timestamp": 1743506127767
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_41623_wadnn",
+    "position": {
+      "x": -80.06958612581718,
+      "y": -32.755638945664,
+      "z": 53.99861012009149
+    },
+    "quaternion": {
+      "x": 0.5140334368994077,
+      "y": -0.05315689624100084,
+      "z": 0.6295776149119469,
+      "w": 0.5801517016549985
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_83514_jqmsa",
+    "billboard_category": "player",
+    "timestamp": 1743506133643
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_39447_jvdbg",
+    "position": {
+      "x": -80.06958612581718,
+      "y": -32.755638945664,
+      "z": 53.99861012009149
+    },
+    "quaternion": {
+      "x": 0.5140334368994077,
+      "y": -0.05315689624100084,
+      "z": 0.6295776149119469,
+      "w": 0.5801517016549985
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_83514_jqmsa",
+    "billboard_category": "player",
+    "timestamp": 1743506135156
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_46297_ybyub",
+    "position": {
+      "x": -9.229584431848926,
+      "y": -92.32172490089994,
+      "z": -42.32533854014551
+    },
+    "quaternion": {
+      "x": 0.031157830256946496,
+      "y": -0.21398457622950973,
+      "z": 0.975538527573705,
+      "w": 0.039552142405740676
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_87069_tixoe",
+    "billboard_category": "player",
+    "timestamp": 1743506440557
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_83087_riaej",
+    "position": {
+      "x": -10.263049939157753,
+      "y": -92.16091794031367,
+      "z": -42.43766499638176
+    },
+    "quaternion": {
+      "x": 0.08211380204151196,
+      "y": -0.21684957918484518,
+      "z": 0.9721703187578292,
+      "w": 0.033443307969511754
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_87069_tixoe",
+    "billboard_category": "player",
+    "timestamp": 1743506441943
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_21840_aoilt",
+    "position": {
+      "x": -10.273163604100034,
+      "y": -92.15987518770231,
+      "z": -42.43748242945763
+    },
+    "quaternion": {
+      "x": 0.08260788806435851,
+      "y": -0.2168705277080073,
+      "z": 0.9721258300518982,
+      "w": 0.03338385219091469
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_87069_tixoe",
+    "billboard_category": "player",
+    "timestamp": 1743506442042
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_87345_gnsex",
+    "position": {
+      "x": -75.27185742839295,
+      "y": -45.99239145658437,
+      "z": 51.01588427170494
+    },
+    "quaternion": {
+      "x": 0.10755460806625136,
+      "y": 0.2367585891051972,
+      "z": 0.8450469709012948,
+      "w": 0.46719695390614174
+    },
+    "width": 4.8,
+    "height": 4.8,
+    "health": 92.16,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_83514_jqmsa",
+    "billboard_category": "player",
+    "timestamp": 1743506495353
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_53840_wkswi",
+    "position": {
+      "x": -33.95007593100601,
+      "y": -28.782968660484652,
+      "z": 91.75431030403142
+    },
+    "quaternion": {
+      "x": 0.1892124865394142,
+      "y": 0.49680086577558447,
+      "z": 0.7780226791578363,
+      "w": 0.3347659561817247
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_47183_lluno",
+    "billboard_category": "player",
+    "timestamp": 1743506626695
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_29797_ymffy",
+    "position": {
+      "x": 14.72293270735318,
+      "y": -45.503869586175014,
+      "z": 90.06971469466932
+    },
+    "quaternion": {
+      "x": -0.7673437122014226,
+      "y": 0.14719231051621168,
+      "z": 0.3664499380096995,
+      "w": -0.505205397835897
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_76515_bzlwp",
+    "billboard_category": "player",
+    "timestamp": 1743506655012
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_27943_mhdyo",
+    "position": {
+      "x": -94.03209665040269,
+      "y": 33.19455236050009,
+      "z": 14.112213751050682
+    },
+    "quaternion": {
+      "x": -0.5035823803188757,
+      "y": 0.7610435557134332,
+      "z": 0.28566887326381407,
+      "w": 0.2925932114516892
+    },
+    "width": 1.7999999999999976,
+    "height": 1.7999999999999976,
+    "health": 12.959999999999965,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_32982_mflxu",
+    "billboard_category": "player",
+    "timestamp": 1743506943568
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_45167_zfqyn",
+    "position": {
+      "x": -25.414303978487627,
+      "y": -88.12074906490759,
+      "z": -44.5955954947192
+    },
+    "quaternion": {
+      "x": 0.7899304787837675,
+      "y": 0.024599527275590522,
+      "z": -0.5550306391658417,
+      "w": -0.2595104844383414
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_45467_aysyt",
+    "billboard_category": "player",
+    "timestamp": 1743506888925
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_57178_ksrvx",
+    "position": {
+      "x": -25.414303978487627,
+      "y": -88.12074906490759,
+      "z": -44.5955954947192
+    },
+    "quaternion": {
+      "x": 0.7899304787837675,
+      "y": 0.024599527275590522,
+      "z": -0.5550306391658417,
+      "w": -0.2595104844383414
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_45467_aysyt",
+    "billboard_category": "player",
+    "timestamp": 1743506903909
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_35060_fwvce",
+    "position": {
+      "x": -25.100310194543148,
+      "y": -88.23192971310617,
+      "z": -44.55357906205975
+    },
+    "quaternion": {
+      "x": 0.7913991649313362,
+      "y": 0.025197142459680844,
+      "z": -0.5534271799723505,
+      "w": -0.25840050740217557
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_45467_aysyt",
+    "billboard_category": "player",
+    "timestamp": 1743506904994
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_46998_kjcfr",
+    "position": {
+      "x": -20.20392332815539,
+      "y": -87.10492343878032,
+      "z": -49.03523421861303
+    },
+    "quaternion": {
+      "x": 0.9492738680983792,
+      "y": -0.05965735537967008,
+      "z": -0.16108314969479393,
+      "w": -0.26338629838898087
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_45467_aysyt",
+    "billboard_category": "player",
+    "timestamp": 1743506931113
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_31493_zognv",
+    "position": {
+      "x": -58.24705422300768,
+      "y": 81.69994757046729,
+      "z": 18.22963634647981
+    },
+    "quaternion": {
+      "x": 0.0768756679201225,
+      "y": 0.054096523600207364,
+      "z": 0.30581309614097085,
+      "w": 0.9474397331993631
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_65002_kjdpn",
+    "billboard_category": "player",
+    "timestamp": 1743507150635
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_86220_dawmz",
+    "position": {
+      "x": -54.06894414831568,
+      "y": 35.53771998484044,
+      "z": -78.82601180426035
+    },
+    "quaternion": {
+      "x": -0.24223871262177316,
+      "y": -0.415994946647288,
+      "z": 0.5167995084477337,
+      "w": 0.7079455335966509
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_80645_xpyzs",
+    "billboard_category": "player",
+    "timestamp": 1743507177036
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_83441_ickjj",
+    "position": {
+      "x": -5.350264860076198,
+      "y": -91.00742227312729,
+      "z": -45.70496862626348
+    },
+    "quaternion": {
+      "x": 0.5330709115104457,
+      "y": 0.17791883303659764,
+      "z": -0.813656997151718,
+      "w": -0.14880384114117118
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26172_upibt",
+    "billboard_category": "player",
+    "timestamp": 1743507361257
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_86326_pyekc",
+    "position": {
+      "x": -78.99284947912199,
+      "y": 49.636531781672375,
+      "z": -41.18573592708773
+    },
+    "quaternion": {
+      "x": -0.4908159055806148,
+      "y": 0.8394049851504257,
+      "z": -0.1254420030319451,
+      "w": 0.19688403086341918
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_69402_pdexd",
+    "billboard_category": "player",
+    "timestamp": 1743507639390
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_92914_gqvqj",
+    "position": {
+      "x": -78.99284947912199,
+      "y": 49.636531781672375,
+      "z": -41.18573592708773
+    },
+    "quaternion": {
+      "x": -0.4908159055806148,
+      "y": 0.8394049851504257,
+      "z": -0.1254420030319451,
+      "w": 0.19688403086341918
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_69402_pdexd",
+    "billboard_category": "player",
+    "timestamp": 1743507670173
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_76644_pvjjy",
+    "position": {
+      "x": -77.84571479274979,
+      "y": 62.345127021748134,
+      "z": -21.28497651039222
+    },
+    "quaternion": {
+      "x": -0.4369436778379752,
+      "y": 0.8895341187563224,
+      "z": -0.058368816176579574,
+      "w": 0.12000981319867554
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_69402_pdexd",
+    "billboard_category": "player",
+    "timestamp": 1743507724913
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_47864_zkjoy",
+    "position": {
+      "x": 54.97104188628382,
+      "y": 34.20062504946141,
+      "z": 78.79354161454211
+    },
+    "quaternion": {
+      "x": -0.5312984691893488,
+      "y": -0.17085434006310213,
+      "z": 0.2236938417248318,
+      "w": -0.7990568166864245
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_51413_ydghh",
+    "billboard_category": "player",
+    "timestamp": 1743507794470
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_41657_stwjg",
+    "position": {
+      "x": -4.24090672121263,
+      "y": -68.89881108549898,
+      "z": -75.06589732486181
+    },
+    "quaternion": {
+      "x": 0.8423140706620412,
+      "y": -0.17826278236415993,
+      "z": 0.35820736001023445,
+      "w": -0.361132765092048
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_82896_snkfp",
+    "billboard_category": "player",
+    "timestamp": 1743508171460
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_81056_ywkub",
+    "position": {
+      "x": 15.441891194910506,
+      "y": -100.79098970361204,
+      "z": -1.6262813074363838
+    },
+    "quaternion": {
+      "x": 0.8525523067510805,
+      "y": 0.06077879294851812,
+      "z": 0.5170347564184298,
+      "w": -0.0462121546399622
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_38252_bfrvi",
+    "billboard_category": "player",
+    "timestamp": 1743508209420
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_84895_cxnbz",
+    "position": {
+      "x": 93.13318223725791,
+      "y": 8.230247012968395,
+      "z": -40.72338149598135
+    },
+    "quaternion": {
+      "x": -0.49127223907859524,
+      "y": -0.28508618636826333,
+      "z": -0.46722513502594587,
+      "w": 0.6775530434236793
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_30655_crdlr",
+    "billboard_category": "player",
+    "timestamp": 1743508276474
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_15768_sntmg",
+    "position": {
+      "x": -41.519000085765285,
+      "y": -88.79726847127519,
+      "z": 28.127178029772228
+    },
+    "quaternion": {
+      "x": 0.9649170223758274,
+      "y": -0.20032629294966578,
+      "z": 0.06558379091255029,
+      "w": 0.15653524412077457
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_66243_gpxrv",
+    "billboard_category": "player",
+    "timestamp": 1743508362472
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_23587_bzytj",
+    "position": {
+      "x": 78.77585318515055,
+      "y": 42.16603005364372,
+      "z": 51.002724060203086
+    },
+    "quaternion": {
+      "x": 0.0479773815810795,
+      "y": 0.5167658728580378,
+      "z": 0.5410875066105313,
+      "w": -0.6617216285537992
+    },
+    "width": 7.280000000000002,
+    "height": 7.280000000000002,
+    "health": 211.99360000000013,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595923
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_72163_ppeba",
+    "position": {
+      "x": 78.76372473856692,
+      "y": 42.15953810944418,
+      "z": 50.994871605556476
+    },
+    "quaternion": {
+      "x": 0.0479773815810795,
+      "y": 0.5167658728580378,
+      "z": 0.5410875066105313,
+      "w": -0.6617216285537992
+    },
+    "width": 7.240000000000002,
+    "height": 7.240000000000002,
+    "health": 209.67040000000011,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595924
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_21379_tywff",
+    "position": {
+      "x": 78.76372473856692,
+      "y": 42.15953810944418,
+      "z": 50.994871605556476
+    },
+    "quaternion": {
+      "x": 0.0479773815810795,
+      "y": 0.5167658728580378,
+      "z": 0.5410875066105313,
+      "w": -0.6617216285537992
+    },
+    "width": 7.240000000000002,
+    "height": 7.240000000000002,
+    "health": 209.67040000000011,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595924
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_10791_zylsl",
+    "position": {
+      "x": 91.04063441234592,
+      "y": -44.91426148470123,
+      "z": 9.707337486739567
+    },
+    "quaternion": {
+      "x": 0.5991671602754337,
+      "y": 0.4110626174934454,
+      "z": 0.6010073553245953,
+      "w": -0.332890969226631
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_82896_snkfp",
+    "billboard_category": "player",
+    "timestamp": 1743508524258
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_57647_nrjzm",
+    "position": {
+      "x": -9.23046591855567,
+      "y": 80.06562769077735,
+      "z": 62.483711168657486
+    },
+    "quaternion": {
+      "x": 0.2619675842487915,
+      "y": 0.45141825042334527,
+      "z": 0.19702143542499886,
+      "w": 0.8299259617403539
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_82896_snkfp",
+    "billboard_category": "player",
+    "timestamp": 1743508705642
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_63698_bppuq",
+    "position": {
+      "x": -9.23046591855567,
+      "y": 80.06562769077735,
+      "z": 62.483711168657486
+    },
+    "quaternion": {
+      "x": 0.2619675842487915,
+      "y": 0.45141825042334527,
+      "z": 0.19702143542499886,
+      "w": 0.8299259617403539
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_82896_snkfp",
+    "billboard_category": "player",
+    "timestamp": 1743508705761
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_66400_qoqoq",
+    "position": {
+      "x": 1.9654424713586183,
+      "y": 98.50131187428056,
+      "z": 22.15872460372881
+    },
+    "quaternion": {
+      "x": -0.08590114339564306,
+      "y": 0.5574652807301733,
+      "z": 0.07003001675184832,
+      "w": -0.8227692575063108
+    },
+    "width": 2.4799999999999978,
+    "height": 2.4799999999999978,
+    "health": 24.601599999999955,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595925
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_73200_ztjfg",
+    "position": {
+      "x": -3.059313692432491,
+      "y": 98.67930159609463,
+      "z": 23.65325310074477
+    },
+    "quaternion": {
+      "x": -0.10316088108726758,
+      "y": 0.5930252828749832,
+      "z": 0.0578941090620108,
+      "w": -0.796446557290733
+    },
+    "width": 3.839999999999999,
+    "height": 3.839999999999999,
+    "health": 58.98239999999997,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595738
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_53018_mudsh",
+    "position": {
+      "x": -37.48460368035471,
+      "y": 87.13169645168554,
+      "z": 37.92704457713077
+    },
+    "quaternion": {
+      "x": -0.006388367829032807,
+      "y": 0.700345937846058,
+      "z": 0.2710865565344221,
+      "w": 0.6602929917584434
+    },
+    "width": 5.44,
+    "height": 5.44,
+    "health": 118.37440000000002,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509595738
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_72937_tvbhl",
+    "position": {
+      "x": -35.014978106369185,
+      "y": 86.84880897593968,
+      "z": 36.246010813009825
+    },
+    "quaternion": {
+      "x": 0.7083460993540491,
+      "y": 0.0188660324664211,
+      "z": -0.6510222543626484,
+      "w": 0.27213948753066675
+    },
+    "width": 1.04,
+    "height": 1.04,
+    "health": 4.3264000000000005,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_26251_cajzn",
+    "billboard_category": "player",
+    "timestamp": 1743509591823
   }
 ]

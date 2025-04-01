@@ -1268,7 +1268,7 @@ class Game {
                 if (data.id && data.id.startsWith('powerup_') && data.position && data.type) {
                     this.processPowerupData(data);
                 } else {
-                    console.log('Received unknown message type:', data.type);
+                   // console.log('Received unknown message type:', data.type);
                 }
         }
     }

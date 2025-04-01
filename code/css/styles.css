@@ -185,7 +185,7 @@ body, html {
 /* Mobile Controls */
 #mobile-controls {
     position: absolute;
-    bottom: 0;
+    bottom: 110px;
     left: 0;
     width: 100%;
     height: 200px;
@@ -208,10 +208,84 @@ body, html {
     right: 50px;
 }
 
+/* Fire Button */
+#fire-button {
+    position: absolute;
+    bottom: 190px; /* Position above the left joystick */
+    left: 30px; /* Center above left joystick */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgb(255 255 255 / 20%); /* Semi-transparent red */
+    color: white;
+    font-size: 24px;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.1s, background-color 0.1s;
+    touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+    -webkit-tap-highlight-color: transparent; /* Removes tap highlight on iOS */
+    cursor: pointer;
+}
+
+#fire-button:active, 
+#fire-button.active {
+    transform: scale(0.9);
+    background-color: rgba(255, 100, 100, 0.9);
+}
+
+/* Mobile Action Buttons */
+#mobile-action-buttons {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    display: none; /* Hidden by default */
+    z-index: 25;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.mobile-action-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    text-transform:uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-action-button .action-icon {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.mobile-action-button:active, .mobile-action-button.active {
+    background-color: rgba(51, 153, 255, 0.7);
+    transform: scale(0.95);
+}
+
 /* Show mobile controls on touch devices */
 @media (hover: none) and (pointer: coarse), (max-width: 768px) {
     #mobile-controls {
         display: block !important; /* Important to override any inline styles */
+    }
+    
+    #mobile-action-buttons {
+        display: flex !important; /* Show action buttons on mobile */
+    }
+    
+    /* Hide keyboard help text on mobile */
+    .hud-help {
+        display: none !important;
     }
     
     /* Hide desktop-specific UI elements on mobile */
@@ -322,7 +396,7 @@ body.game-paused {
 
 .hud-section {
     position: absolute;
-    bottom: 20px;
+    bottom: 40px;
     right: 20px;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px;

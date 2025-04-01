@@ -53,6 +53,53 @@ class PlayerControls {
     initialize() {
         console.log('Initializing player controls, mobile:', this.isMobile);
         
+        // IMPORTANT: Add touch handlers for shooting FIRST, before other event listeners
+        // to ensure they get priority
+        document.addEventListener('touchstart', (event) => {
+            // Check if not touching joysticks or other UI elements
+            const touch = event.touches[0];
+            
+            console.log("Touch detected at", touch.clientX, touch.clientY);
+            
+            // Check if touch is on any NippleJS or joystick elements
+            if (this.isTouchingJoystick(touch)) {
+                console.log("Touch on joystick - ignoring");
+                return; // Don't shoot if touching joysticks
+            }
+            
+            // Check if touch is on UI element
+            if (this.isTouchingUI(touch)) {
+                console.log("Touch on UI element - ignoring");
+                return; // Don't shoot if touching UI
+            }
+            
+            console.log("Touch valid for shooting, proceeding...");
+            
+            // Ensure proper lockstate before shooting
+            if (this.playerCamera.manualControlActive && !this.playerCamera.isLocked) {
+                console.log("Setting lock state for manual controls");
+                // Create proper CustomEvent with detail to prevent errors
+                const fakeEvent = new CustomEvent("lockchange", {
+                    detail: { locked: true }
+                });
+                document.dispatchEvent(fakeEvent);
+            }
+            
+            // Log weapon state
+            if (!this.weaponManager) {
+                console.error("WeaponManager not available");
+                return;
+            }
+            
+            console.log("WeaponManager available, checking weapon type");
+            console.log("Active weapon index:", this.weaponManager.activeWeaponIndex);
+            console.log("Is billboard gun active:", this.weaponManager.isBillboardGunActive());
+            console.log("Is shooter gun active:", this.weaponManager.isShooterGunActive());
+            
+            // Special handling for touch shooting
+            this.handleTouchShooting();
+        }, true); // Use capture phase to ensure this runs before other handlers
+        
         // Keyboard event listeners
         document.addEventListener('keydown', this.onKeyDown.bind(this), false);
         document.addEventListener('keyup', this.onKeyUp.bind(this), false);
@@ -118,8 +165,18 @@ class PlayerControls {
                 const x = data.vector.x;
                 const y = data.vector.y;
                 
+                // Reduce sensitivity by 30%
+                const sensitivityFactor = 0.7; // 70% of original sensitivity (30% reduction)
+                const adjustedX = x * sensitivityFactor;
+                const adjustedY = y * sensitivityFactor;
+                
                 // Update camera movement
-                this.touchControls.camera = { x, y };
+                this.touchControls.camera = { 
+                    x: adjustedX, 
+                    y: adjustedY,
+                    rawX: x, // Keep raw values for reference if needed
+                    rawY: y
+                };
                 
                 // Update camera rotation using the camera's joystick method
                 if (this.playerCamera && typeof this.playerCamera.updateCameraFromJoystick === 'function') {
@@ -129,23 +186,93 @@ class PlayerControls {
             
             this.joysticks.right.on('end', () => {
                 // Reset camera movement on release
-                this.touchControls.camera = { x: 0, y: 0 };
+                this.touchControls.camera = { x: 0, y: 0, rawX: 0, rawY: 0 };
             });
         }
         
-        // Add tap to shoot
-        document.addEventListener('touchstart', (event) => {
-            // Check if not touching joysticks or other UI elements
-            const touch = event.touches[0];
+        // Set up fire button
+        const fireButton = document.getElementById('fire-button');
+        if (fireButton) {
+            // Handle touch start - start firing
+            fireButton.addEventListener('touchstart', (event) => {
+                event.preventDefault(); // Prevent default touch behavior
+                
+                // Add active state for visual feedback
+                fireButton.classList.add('active');
+                
+                console.log("Fire button pressed");
+                
+                // Fire the active weapon
+                if (this.weaponManager) {
+                    // Call our touch shooting handler
+                    this.handleTouchShooting();
+                }
+            });
             
-            // Check if touch is on any NippleJS or joystick elements
-            if (this.isTouchingJoystick(touch) || this.isTouchingUI(touch)) {
-                return; // Don't shoot if touching joysticks or UI
-            }
+            // Handle touch end - stop firing
+            fireButton.addEventListener('touchend', (event) => {
+                event.preventDefault();
+                
+                // Remove active state
+                fireButton.classList.remove('active');
+                
+                console.log("Fire button released");
+            });
             
-            // Safe to trigger click/shoot action
-            this.onClick(event);
-        });
+            // Also handle touch cancel in case finger moves off button
+            fireButton.addEventListener('touchcancel', (event) => {
+                fireButton.classList.remove('active');
+            });
+        }
+        
+        // Set up mobile action buttons
+        this.setupMobileActionButtons();
+    }
+
+    /**
+     * Set up mobile action buttons for weapon switching and billboard editing
+     */
+    setupMobileActionButtons() {
+        // Get button elements
+        const switchWeaponButton = document.getElementById('mobile-switch-weapon');
+        const editBillboardButton = document.getElementById('mobile-edit-billboard');
+        
+        // Add event listener for weapon switching
+        if (switchWeaponButton) {
+            switchWeaponButton.addEventListener('touchend', (event) => {
+                event.preventDefault(); // Prevent default touch behavior
+                
+                // Switch weapon if weapon manager exists
+                if (this.weaponManager) {
+                    this.weaponManager.switchWeapon();
+                    this.updateAmmoDisplay();
+                    
+                    // Add visual feedback
+                    switchWeaponButton.classList.add('active');
+                    setTimeout(() => {
+                        switchWeaponButton.classList.remove('active');
+                    }, 200);
+                }
+            });
+        }
+        
+        // Add event listener for billboard editing
+        if (editBillboardButton) {
+            editBillboardButton.addEventListener('touchend', (event) => {
+                event.preventDefault(); // Prevent default touch behavior
+                
+                // Show billboard popup if game exists
+                if (window.game) {
+                    window.game.showBillboardPopup();
+                    
+                    // Add visual feedback
+                    editBillboardButton.classList.add('active');
+                    setTimeout(() => {
+                        editBillboardButton.classList.remove('active');
+                    }, 200);
+                }
+            });
+        }
     }
 
     /**
@@ -201,37 +328,95 @@ class PlayerControls {
      * @returns {boolean} - True if touching UI
      */
     isTouchingUI(touch) {
-        // Check common UI elements
-        const gameUI = document.getElementById('game-ui');
-        const billboardPopup = document.getElementById('billboard-popup');
+        // Check mobile action buttons first
+        const mobileActionButtons = document.getElementById('mobile-action-buttons');
+        if (this.isTouchingElement(touch, mobileActionButtons)) {
+            console.log("Touch on mobile action buttons");
+            return true;
+        }
+
+        // Get the exact element being touched
+        const touchedElement = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!touchedElement) {
+            console.log("No element found at touch point");
+            return false;
+        }
         
-        if (this.isTouchingElement(touch, gameUI) || 
-            this.isTouchingElement(touch, billboardPopup)) {
+        console.log("Element at touch point:", touchedElement.tagName, 
+                    touchedElement.id ? `#${touchedElement.id}` : '', 
+                    touchedElement.className ? `.${touchedElement.className.replace(/ /g, '.')}` : '');
+        
+        // IMPORTANT: Check for canvas, render, or game elements - NEVER block shooting on these
+        if (touchedElement.tagName === 'CANVAS' || 
+            touchedElement.id === 'game-canvas' || 
+            touchedElement.id === 'renderCanvas' ||
+            touchedElement.classList.contains('game-container')) {
+            console.log("Touch on game canvas/render area - ALLOW shooting");
+            return false;
+        }
+        
+        // Check specific actionable UI elements that should block shooting
+        const blockingElements = [
+            'mobile-switch-weapon',
+            'mobile-edit-billboard',
+            'billboard-popup',
+            'ammo-display',
+            'billboard-count',
+            'weapon-indicator-container',
+            'fire-button'
+        ];
+        
+        // Check if the element or any parent has a blocking ID
+        let currentElement = touchedElement;
+        while (currentElement) {
+            if (currentElement.id && blockingElements.includes(currentElement.id)) {
+                console.log(`Touch on blocking UI element #${currentElement.id}`);
+                return true;
+            }
+            
+            // Only check the first level of game-ui - don't block entire UI container
+            if (currentElement.id === 'game-ui') {
+                // Only block if touching specific controls inside game-ui, not the container itself
+                const controlElements = currentElement.querySelectorAll('.ammo-display, .billboard-count, .gun-indicator');
+                for (const control of controlElements) {
+                    if (this.isTouchingElement(touch, control)) {
+                        console.log("Touch on specific UI control within game-ui");
+                        return true;
+                    }
+                }
+                // If we're here, we're touching game-ui but not any specific control
+                console.log("Touch on game-ui container but not on controls - ALLOW shooting");
+                return false;
+            }
+            
+            currentElement = currentElement.parentElement;
+        }
+        
+        // Check input elements
+        if (touchedElement.tagName === 'INPUT' || 
+            touchedElement.tagName === 'BUTTON' || 
+            touchedElement.tagName === 'TEXTAREA') {
+            console.log("Touch on form element");
             return true;
         }
         
-        // Check element and all its parents for UI-related attributes
-        let element = document.elementFromPoint(touch.clientX, touch.clientY);
-        while (element) {
-            // Check if it's an input element
-            if (element.tagName === 'INPUT' || 
-                element.tagName === 'BUTTON' || 
-                element.tagName === 'TEXTAREA') {
-                return true;
+        // Check specific UI classes
+        const uiClassNames = [
+            'popup-container', 'gun-indicator', 
+            'nipple', 'front', 'back', 'collection'
+        ];
+        
+        if (touchedElement.classList) {
+            for (const className of uiClassNames) {
+                if (touchedElement.classList.contains(className)) {
+                    console.log(`Touch on element with UI class ${className}`);
+                    return true;
+                }
             }
-            
-            // Check for UI-related classes
-            if (element.classList && 
-                (element.classList.contains('ui-container') || 
-                 element.classList.contains('hud-section') || 
-                 element.classList.contains('popup-container') || 
-                 element.classList.contains('custom-crosshair'))) {
-                return true;
-            }
-            
-            element = element.parentElement;
         }
         
+        // If we got here, it's not a UI element
+        console.log("Touch is NOT on UI element - ALLOW shooting");
         return false;
     }
 
@@ -328,7 +513,10 @@ class PlayerControls {
         
         // If manual control is active, simulate a "locked" state and dispatch fake lockchange event
         if (this.playerCamera.manualControlActive) {
-            const fakeEvent = new Event("lockchange");
+            // Create a proper CustomEvent with detail property to avoid "Cannot read properties of undefined (reading 'locked')" error
+            const fakeEvent = new CustomEvent("lockchange", {
+                detail: { locked: true }
+            });
             document.dispatchEvent(fakeEvent);
         }
         
@@ -495,6 +683,66 @@ class PlayerControls {
         if (this.weaponManager) {
             this.weaponManager.updateWeaponIndicator();
         }
+    }
+
+    /**
+     * Handle touch shooting with specific handling for mobile
+     */
+    handleTouchShooting() {
+        if (!this.weaponManager) {
+            console.error("WeaponManager not available for touch shooting");
+            return;
+        }
+        
+        // Determine which gun to fire based on active weapon
+        if (this.weaponManager.isBillboardGunActive()) {
+            console.log("Firing billboard gun on touch");
+            this.weaponManager.fire();
+        } else if (this.weaponManager.isShooterGunActive()) {
+            console.log("Firing shooter gun on touch");
+            
+            // Try multiple approaches to guarantee the shooter gun fires
+            try {
+                // Try direct shooter gun access first
+                if (this.weaponManager.shooterGun) {
+                    console.log("Shooting method 1: Direct access to shooterGun.fire()");
+                    
+                    // Get ammo info before firing
+                    const beforeAmmo = this.weaponManager.shooterGun.ammo;
+                    console.log("Ammo before firing:", beforeAmmo);
+                    
+                    // Call fire directly
+                    const success = this.weaponManager.shooterGun.fire();
+                    
+                    // Check if firing was successful
+                    const afterAmmo = this.weaponManager.shooterGun.ammo;
+                    console.log("Firing success:", success, "Ammo after:", afterAmmo);
+                    
+                    if (beforeAmmo === afterAmmo) {
+                        console.log("Direct firing didn't reduce ammo, trying alternative method");
+                        // Try firing through the weaponManager as fallback
+                        this.weaponManager.fire();
+                    }
+                } else {
+                    // Fallback to standard fire method
+                    console.log("Shooting method 2: Standard weaponManager.fire()");
+                    this.weaponManager.fire();
+                }
+            } catch (error) {
+                console.error("Error firing shooter gun:", error);
+                // Final fallback: simulate desktop mouse clicking
+                try {
+                    console.log("Shooting method 3: Simulating desktop click events");
+                    this.onMouseDown({ button: 0 });
+                    setTimeout(() => this.onMouseUp({ button: 0 }), 200);
+                } catch (e) {
+                    console.error("All shooting methods failed:", e);
+                }
+            }
+        }
+        
+        // Update ammo display after firing
+        this.updateAmmoDisplay();
     }
 }
 

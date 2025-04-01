@@ -18,7 +18,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -40,7 +40,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -62,7 +62,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -84,7 +84,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -106,7 +106,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -128,7 +128,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -150,7 +150,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -172,7 +172,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -194,7 +194,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -216,7 +216,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -238,7 +238,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -260,7 +260,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -282,7 +282,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -304,7 +304,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -326,7 +326,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -348,7 +348,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -370,7 +370,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -392,7 +392,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -414,7 +414,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -436,7 +436,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627408,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -458,7 +458,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505627410,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -480,7 +480,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505627410,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -502,7 +502,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505632412,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -524,29 +524,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505637414,
-    "isCollected": false
-  },
-  {
-    "id": "powerup_1743505641414_9036",
-    "type": "billboard_ammo",
-    "position": {
-      "x": 65.03231391019219,
-      "y": 60.74491205008988,
-      "z": 49.848307970412286
-    },
-    "quaternion": {
-      "x": 0.19900055786604354,
-      "y": 0.8009672332565309,
-      "z": 0.40327360594623174,
-      "w": -0.3952476033646567
-    },
-    "size": 2.5,
-    "color": "#33CC33",
-    "text": "Billboard",
-    "effectAmount": 1,
-    "lifespan": null,
-    "createdAt": 1743505641414,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -568,7 +546,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505647416,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -590,7 +568,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505652418,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -612,7 +590,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743505655416,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -634,7 +612,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505662419,
+    "createdAt": 1743509669537,
     "isCollected": false
   },
   {
@@ -656,7 +634,469 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743505672421,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505988562_3521",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -82.71157445628731,
+      "y": 25.91151372789494,
+      "z": -53.771636643226266
+    },
+    "quaternion": {
+      "x": -0.5367859276394882,
+      "y": 0.37766349071083455,
+      "z": 0.2912793225271342,
+      "w": 0.6959795341390831
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743505988563_9320",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -71.86720851095991,
+      "y": 43.4859506434097,
+      "z": 57.8625650786512
+    },
+    "quaternion": {
+      "x": -0.2312486129917628,
+      "y": 0.7617131909270562,
+      "z": 0.48307106544150347,
+      "w": 0.36463603701543057
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506008566_6967",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -94.29879526987258,
+      "y": 32.566820865438444,
+      "z": -21.240042122582867
+    },
+    "quaternion": {
+      "x": -0.45560293416341835,
+      "y": 0.5072937000172412,
+      "z": 0.3643963331724601,
+      "w": 0.63426680559128
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506028570_1229",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 96.49942275692462,
+      "y": 28.26236731853096,
+      "z": 17.120163583703683
+    },
+    "quaternion": {
+      "x": -0.386210939999163,
+      "y": -0.6124067667067913,
+      "z": -0.4607603428656315,
+      "w": 0.5133215058411661
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506033570_2588",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -24.57200203169033,
+      "y": 39.65420606424554,
+      "z": -90.70700445703716
+    },
+    "quaternion": {
+      "x": -0.5479969631275522,
+      "y": 0.10990114768518063,
+      "z": 0.07291066686674239,
+      "w": 0.8260176153070267
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506043573_5192",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 75.43716926018286,
+      "y": -68.03101626905745,
+      "z": -9.22032100361835
+    },
+    "quaternion": {
+      "x": 0.6835955489155009,
+      "y": 0.27047429286199376,
+      "z": 0.6051301507699345,
+      "w": -0.3055458771328387
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506053575_5658",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 75.67795569627647,
+      "y": -59.374913722774664,
+      "z": 33.93326748259708
+    },
+    "quaternion": {
+      "x": 0.4834250539059527,
+      "y": 0.383689641303064,
+      "z": 0.7465612606458221,
+      "w": -0.24845273296076617
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506058575_530",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 19.53994087965285,
+      "y": -20.410759564821763,
+      "z": -98.00812009423866
+    },
+    "quaternion": {
+      "x": -0.7708839028462233,
+      "y": -0.062126101976067605,
+      "z": -0.07609698612551663,
+      "w": 0.6293549113881981
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506083580_5782",
+    "type": "shooting_ammo",
+    "position": {
+      "x": 82.30235304194906,
+      "y": -60.14983857063178,
+      "z": 3.509929299190406
+    },
+    "quaternion": {
+      "x": 0.6168407651153023,
+      "y": 0.3270235447173832,
+      "z": 0.6437077134445467,
+      "w": -0.3133742991128015
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506121590_8277",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 20.717201310856456,
+      "y": 75.49641633276089,
+      "z": -65.38416238475402
+    },
+    "quaternion": {
+      "x": -0.3562096557483453,
+      "y": -0.14254934804223515,
+      "z": -0.05508365394769336,
+      "w": 0.9218243626592594
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506128591_5967",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 0.665214435430455,
+      "y": -7.690721719221851,
+      "z": 101.70747410683438
+    },
+    "quaternion": {
+      "x": 0.002397958690022267,
+      "y": 0.6799231131894947,
+      "z": 0.733276118569817,
+      "w": -0.0022234837553413455
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506156595_498",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -42.79915843696238,
+      "y": -71.6867580930074,
+      "z": -58.59386274348561
+    },
+    "quaternion": {
+      "x": 0.8771920179843643,
+      "y": -0.11958601535254686,
+      "z": -0.28625135896799775,
+      "w": -0.36646078645005603
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506266327_5696",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 40.17218993103006,
+      "y": -91.83694085812039,
+      "z": 18.872505132264408
+    },
+    "quaternion": {
+      "x": 0.703498525698892,
+      "y": 0.21149253656493333,
+      "z": 0.6747376578918138,
+      "w": -0.07134300483919452
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506280329_2972",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -98.20431646048445,
+      "y": 16.705199155660388,
+      "z": 21.928259157962025
+    },
+    "quaternion": {
+      "x": -0.40434797033718006,
+      "y": 0.5952715772731619,
+      "z": 0.5045933885109921,
+      "w": 0.4770115097625213
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506287329_3596",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 25.359995086522947,
+      "y": 97.96297458636771,
+      "z": -12.811177127891343
+    },
+    "quaternion": {
+      "x": 0.04283332742925671,
+      "y": 0.6942948607585674,
+      "z": -0.13399494887584928,
+      "w": 0.7058082643759126
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506417042_1976",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -28.094049874453436,
+      "y": -94.08952822938129,
+      "z": 27.602265110388743
+    },
+    "quaternion": {
+      "x": 0.6791378100723847,
+      "y": 0.0022332655256657344,
+      "z": 0.7071032545004243,
+      "w": 0.19690564981758532
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506487135_5509",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 35.80275882871289,
+      "y": -94.86871767948038,
+      "z": 11.049383064409719
+    },
+    "quaternion": {
+      "x": 0.7019068478763216,
+      "y": 0.1662242141588602,
+      "z": 0.6872914306371567,
+      "w": -0.08559659399956433
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506625589_7900",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 20.386883914088738,
+      "y": -99.02917448141436,
+      "z": -13.475814105391157
+    },
+    "quaternion": {
+      "x": 0.6971234271208904,
+      "y": 0.023322581973715815,
+      "z": 0.7067220508588078,
+      "w": -0.1184015513379135
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743506924301_320",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -80.30431613725113,
+      "y": 61.085100148863766,
+      "z": 14.960860587937752
+    },
+    "quaternion": {
+      "x": -0.2862079042541972,
+      "y": 0.6876969550189566,
+      "z": 0.3444535819334929,
+      "w": 0.5714102409768852
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743508733248_6918",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -12.317526053874214,
+      "y": -40.33489691972337,
+      "z": -92.87289508994226
+    },
+    "quaternion": {
+      "x": -0.8334816916084903,
+      "y": 0.03622156928206181,
+      "z": 0.05503047058920995,
+      "w": 0.5486054274056394
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743508775262_9499",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 50.53120862283037,
+      "y": 4.193513130359322,
+      "z": -88.50430160586264
+    },
+    "quaternion": {
+      "x": -0.669254663333308,
+      "y": -0.18505810764125177,
+      "z": -0.17759999632064927,
+      "w": 0.6973592572768823
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743509669537,
     "isCollected": false
   }
 ]

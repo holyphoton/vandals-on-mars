@@ -22,5 +22,149 @@
     "shootingAmmo": 200,
     "billboardAmmo": 3,
     "lastUpdate": 1743505650036
+  },
+  "player_83514_jqmsa": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": 57.32370367289355,
+      "y": -42.18658062932034,
+      "z": -72.78410136855538
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743506296845
+  },
+  "player_85601_umpnr": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -2.5299902081972228,
+      "y": -88.51494845908466,
+      "z": 50.218951092511
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743506107519
+  },
+  "player_47183_lluno": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -27.48737860678155,
+      "y": -22.161887622492262,
+      "z": 95.48054647065794
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743506771280
+  },
+  "player_76515_bzlwp": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": 7.549500878994551,
+      "y": -51.84854883886048,
+      "z": 87.28100033674201
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743506774969
+  },
+  "player_32982_mflxu": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -91.82354636607666,
+      "y": 41.37461803831307,
+      "z": 14.826237383121487
+    },
+    "shootingAmmo": 184,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743507023969
+  },
+  "player_45467_aysyt": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -22.81434087338851,
+      "y": -81.33878834023301,
+      "z": -56.80446603794113
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743507012664
+  },
+  "player_65002_kjdpn": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -56.3776347802542,
+      "y": 80.04464229481246,
+      "z": 27.88651173022172
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743507148021
+  },
+  "player_69402_pdexd": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -31.372447970094782,
+      "y": 59.272960921838134,
+      "z": -76.58802525148394
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743508016959
+  },
+  "player_51413_ydghh": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": 52.28842756466408,
+      "y": 24.97131759241536,
+      "z": 83.69942437384864
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743507805112
+  },
+  "player_30655_crdlr": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": 93.2474566542635,
+      "y": 17.45296489344359,
+      "z": -36.926221630969465
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 2,
+    "lastUpdate": 1743508315478
+  },
+  "player_26251_cajzn": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -24.35587545587407,
+      "y": 92.18544483660236,
+      "z": 35.66335782081795
+    },
+    "shootingAmmo": 109,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743509587038
+  },
+  "player_82896_snkfp": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": 0.2647515595666326,
+      "y": 78.16435824216721,
+      "z": 65.21888535694133
+    },
+    "shootingAmmo": 196,
+    "billboardAmmo": 1,
+    "lastUpdate": 1743509732415
   }
 }
