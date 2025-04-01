@@ -118,6 +118,21 @@ app.get('/powerups-config.json', (req, res) => {
   }
 });
 
+// Serve config.json
+app.get('/config.json', (req, res) => {
+  try {
+    const configFilePath = path.join(__dirname, 'code', 'config.json');
+    if (fs.existsSync(configFilePath)) {
+      res.sendFile(configFilePath);
+    } else {
+      res.status(404).json({ success: false, error: 'Game configuration not found' });
+    }
+  } catch (error) {
+    console.error('Error serving game config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Save bot billboards API endpoint
 app.post('/save-bot-billboards', express.json(), (req, res) => {
   try {
@@ -562,7 +577,7 @@ wsServer.on('connection', (socket) => {
           ...data
         };
         
-        server.clients.forEach(client => {
+        wsServer.clients.forEach(client => {
           if (client !== socket && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(broadcastData));
           }
@@ -604,7 +619,7 @@ wsServer.on('connection', (socket) => {
             timestamp: Date.now()
           };
           
-          server.clients.forEach(client => {
+          wsServer.clients.forEach(client => {
             if (client !== socket && client.readyState === WebSocket.OPEN) {
               client.send(JSON.stringify(removalData));
             }
@@ -815,7 +830,7 @@ wsServer.on('connection', (socket) => {
       // Broadcast the general message to all other clients for other message types
       // But don't broadcast billboard data or removals that are already handled above
       if (data.type !== 'billboard_data' && data.type !== 'billboard_remove') {
-        server.clients.forEach(client => {
+        wsServer.clients.forEach(client => {
           if (client !== socket && client.readyState === WebSocket.OPEN) {
             // Ensure we're sending a string, not a raw message object
             if (typeof message === 'string') {
@@ -840,6 +855,26 @@ wsServer.on('connection', (socket) => {
     console.log('Player disconnected');
   });
 });
+
+// Broadcast powerup data to all connected clients
+function broadcastPowerupRemoval(powerupId) {
+  console.log(`[DEBUG SERVER] Broadcasting powerup removal for ID: ${powerupId} to all clients`);
+  
+  const removalData = {
+    type: 'powerup_removed',
+    id: powerupId
+  };
+  
+  let clientCount = 0;
+  wsServer.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(removalData));
+      clientCount++;
+    }
+  });
+  
+  console.log(`[DEBUG SERVER] Sent powerup_removed message to ${clientCount} connected clients`);
+}
 
 // Start the server
 httpServer.listen(PORT, () => {
