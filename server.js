@@ -5,12 +5,29 @@ const path = require('path');
 const http = require('http');
 const url = require('url');
 
+// Try to load .env.local file for local development if dotenv is available
+try {
+  const dotenv = require('dotenv');
+  if (fs.existsSync('.env.local')) {
+    console.log('Loading .env.local configuration');
+    dotenv.config({ path: '.env.local' });
+  }
+} catch (error) {
+  console.log('dotenv not available, skipping .env.local loading');
+}
+
 // Get port from environment variable or use default
 const PORT = process.env.PORT || 3000;
-const WS_PORT = process.env.WS_PORT || 8090;
+const WS_PORT = process.env.WS_PORT || PORT;
 
 // Get data directory from environment variable or use current directory
-const DATA_DIR = process.env.DATA_DIR || __dirname;
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+
+// Create data directory if it doesn't exist
+if (!fs.existsSync(DATA_DIR)) {
+  console.log(`Creating data directory: ${DATA_DIR}`);
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 // Game configuration
 const CONFIG = {
