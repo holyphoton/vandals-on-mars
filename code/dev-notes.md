@@ -518,3 +518,53 @@ Currently, the system supports two types of powerups:
    - 20 maximum instances with 6-second spawn interval
 
 The system is designed to be easily extensible, allowing new powerup types to be added by simply updating the configuration file. 
+
+## Render.com Deployment Guide
+
+### Overview
+This guide documents how "Vandals on Mars" is deployed to Render.com with persistent storage and WebSocket support.
+
+### Configuration Files
+1. **render.yaml**:
+   - Defines the web service configuration
+   - Configures persistent disk storage for game data
+   - Sets up proper environment variables
+
+2. **package.json**:
+   - Includes Express and WebSocket dependencies
+   - Defines scripts for both production and development environments
+
+### Server Configuration
+- Static files are served from the `/code` directory
+- Persistent data is stored at `/opt/render/project/src/data`
+- Server serves both HTTP and WebSocket traffic on the same port
+- Environment variables are loaded from `.env.local` in development
+
+### WebSocket Configuration
+- The server uses the same port for both HTTP and WebSocket traffic
+- Client WebSocket connection uses "auto" URL setting in `config.json` to detect proper protocol
+- Automatic protocol detection supports both local development and production
+
+### Local Development Setup
+1. **Environment Variables**:
+   - Create a `.env.local` file for local configuration
+   - Environment handled with dotenv package
+
+2. **Startup Scripts**:
+   - `start.sh`: Production startup script
+   - `start-dev.sh`: Development startup with auto-reload
+
+3. **Data Directory**:
+   - Local data directory created automatically under project root
+   - Configurable via environment variables
+
+### Deployed URL
+The game is deployed and accessible at:
+https://vandals-on-mars.onrender.com/
+
+### Troubleshooting
+If WebSocket connections fail:
+- Check that client is using correct protocol (wss:// for HTTPS, ws:// for HTTP)
+- Verify port configuration matches between client and server
+- Ensure "auto" setting is enabled in client config
+- Check Render.com logs for any connection refusal errors 
