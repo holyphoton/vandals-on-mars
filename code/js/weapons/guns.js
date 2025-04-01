@@ -273,7 +273,10 @@ class BillboardGun extends Gun {
             color: 0xffffff,
             side: THREE.DoubleSide,
             map: textTexture,
-            transparent: true
+            transparent: true,
+            emissive: 0xaaaaaa, // Add emissive property to make it glow
+            emissiveMap: textTexture, // Use the same texture for the emissive map
+            emissiveIntensity: 0.6 // Control the glow intensity
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
@@ -287,7 +290,9 @@ class BillboardGun extends Gun {
         // Create legs for the billboard
         const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8);
         const legMaterial = new THREE.MeshStandardMaterial({
-            color: 0x333333 // Dark gray
+            color: 0x333333, // Dark gray
+            emissive: 0x222222, // Subtle emissive for legs
+            emissiveIntensity: 0.3 // Less intense than the sign
         });
         
         // Left leg - positioned at lower left corner of sign (scaled by width)
@@ -472,7 +477,10 @@ class BillboardGun extends Gun {
             color: 0xffffff,
             side: THREE.DoubleSide,
             map: textTexture,
-            transparent: true
+            transparent: true,
+            emissive: 0xaaaaaa, // Add emissive property to make it glow
+            emissiveMap: textTexture, // Use the same texture for the emissive map
+            emissiveIntensity: 0.6 // Control the glow intensity
         });
         const signMesh = new THREE.Mesh(signGeometry, signMaterial);
         
@@ -486,7 +494,9 @@ class BillboardGun extends Gun {
         // Create legs for the billboard
         const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4.0, 8);
         const legMaterial = new THREE.MeshStandardMaterial({
-            color: 0x333333 // Dark gray
+            color: 0x333333, // Dark gray
+            emissive: 0x222222, // Subtle emissive for legs
+            emissiveIntensity: 0.3 // Less intense than the sign
         });
         
         // Left leg - positioned at lower left corner of sign (scaled by width)
@@ -1355,16 +1365,17 @@ class ShooterGun extends Gun {
         // Flash the billboard red
         if (signMesh && signMesh.material) {
             const originalColor = signMesh.material.color.clone();
+            const originalEmissive = signMesh.material.emissive ? signMesh.material.emissive.clone() : new THREE.Color(0xaaaaaa);
             const damageColor = new THREE.Color(1, 0.3, 0.3);
             
             signMesh.material.color = damageColor;
-            signMesh.material.emissive = new THREE.Color(0.5, 0, 0);
+            signMesh.material.emissive = new THREE.Color(0.8, 0, 0);
             
             // Reset after a short time
             setTimeout(() => {
                 if (signMesh.material) {
                     signMesh.material.color = originalColor;
-                    signMesh.material.emissive = new THREE.Color(0, 0, 0);
+                    signMesh.material.emissive = originalEmissive;
                 }
             }, 200);
         }
@@ -1528,6 +1539,24 @@ class ShooterGun extends Gun {
             // 2. Scale the sign mesh for width and height
             if (signMesh) {
                 signMesh.scale.set(widthScale, heightScale, 1);
+                
+                // Briefly make the sign glow brighter to indicate growth
+                if (signMesh.material && signMesh.material.emissive) {
+                    const originalEmissive = signMesh.material.emissive.clone();
+                    const originalIntensity = signMesh.material.emissiveIntensity || 0.6;
+                    
+                    // Increase emissive intensity temporarily
+                    signMesh.material.emissive.set(0xffffff);
+                    signMesh.material.emissiveIntensity = 1.0;
+                    
+                    // Reset after a short time
+                    setTimeout(() => {
+                        if (signMesh.material) {
+                            signMesh.material.emissive.copy(originalEmissive);
+                            signMesh.material.emissiveIntensity = originalIntensity;
+                        }
+                    }, 300);
+                }
             }
             
             // 3. Scale the legs for height (maintain their width)
