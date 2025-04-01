@@ -11,8 +11,8 @@ createBotBillboard(botData) {
     console.log(`Creating bot billboard at position: ${JSON.stringify(botData.position)}`);
     
     // Get configuration values
-    const startSize = CONFIG.billboard?.startSize || 5;
-    const startHealth = CONFIG.billboard?.startHealth || 100;
+    const startSize = this.config.billboard?.startSize || 5;
+    const startHealth = this.config.billboard?.startHealth || 100;
     
     // Create billboard data
     const billboardData = {

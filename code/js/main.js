@@ -586,7 +586,7 @@ class Game {
             console.log('Starting game with username:', this.username);
             
             // Set the billboard text to include the username
-            this.billboardText = `${this.username}'s Billboard`;
+            this.billboardText = `${this.username}'s Turf`;
             window.billboardText = this.billboardText;
             
             // Hide start screen
