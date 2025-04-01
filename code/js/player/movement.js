@@ -49,17 +49,8 @@ class PlayerMovement {
         this.initialMovementComplete = false;
         this.hasPerformedInitialJump = false; // Flag to track if we've done the initial teleport
         
-        // Equator debugging
-        this.equatorLine = null;
-        
         // Initialize
         this.setupKeyControls();
-        
-        // Create equator line if we have a scene
-        if (this.scene && this.globe) {
-            // Delay creation slightly to ensure globe is initialized
-            setTimeout(() => this.createEquatorLine(), 1000);
-        }
     }
     
     /**
@@ -135,9 +126,6 @@ class PlayerMovement {
     setTerrain(terrain) {
         this.terrain = terrain;
         console.log('Terrain reference set for collision detection');
-        
-        // Create the equator line when terrain is set
-        this.createEquatorLine();
     }
     
     /**
@@ -628,55 +616,6 @@ class PlayerMovement {
         //     y: targetPos.y.toFixed(2),
         //     z: targetPos.z.toFixed(2)
         // });
-    }
-    
-    /**
-     * Create a red line at the equator for debugging
-     */
-    createEquatorLine() {
-        // Remove any existing equator line
-        if (this.equatorLine) {
-            if (this.scene) {
-                this.scene.remove(this.equatorLine);
-            } else if (this.globe && this.globe.scene) {
-                this.globe.scene.remove(this.equatorLine);
-            }
-        }
-
-        if (!this.globe) {
-            console.warn("Cannot create equator line: globe not available");
-            return null;
-        }
-        
-        // Use TorusGeometry to create a ring at the equator
-        const equatorRadius = this.globe.radius;
-        const tubeRadius = 0.2; // Thickness of the line
-        const torusGeometry = new THREE.TorusGeometry(equatorRadius, tubeRadius, 8, 64);
-        
-        // Create a red material
-        const equatorMaterial = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            transparent: true,
-            opacity: 0.7,
-            wireframe: false
-        });
-        
-        // Create the torus mesh
-        this.equatorLine = new THREE.Mesh(torusGeometry, equatorMaterial);
-        
-        // Rotate to align with equator (90 degrees around X-axis)
-        this.equatorLine.rotation.x = Math.PI / 2;
-        
-        // Add the line to the proper scene
-        const targetScene = this.scene || (this.globe && this.globe.scene);
-        if (targetScene) {
-            targetScene.add(this.equatorLine);
-            console.log("Created red torus at equator for debugging");
-        } else {
-            console.warn("Could not add equator line - no scene available");
-        }
-        
-        return this.equatorLine;
     }
 }
 
