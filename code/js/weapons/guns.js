@@ -1785,7 +1785,7 @@ class WeaponManager {
         this.globe = globe;
         
         this.weapons = [];
-        this.activeWeaponIndex = 1; // Initialize with shooter gun (index 1)
+        this.activeWeaponIndex = 0;
         this.billboardGun = null; // Expose billboard gun
         this.shooterGun = null; // Expose shooter gun
         
