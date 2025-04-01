@@ -647,8 +647,6 @@ function checkBotBillboards() {
   // Get the current count of bot billboards
   const currentBotCount = botBillboards.length;
   
-  console.log(`Checking bot billboards: ${currentBotCount}/${botConfig.maxBots}`);
-  
   // If we have more than the maximum, trim the excess billboards
   if (currentBotCount > botConfig.maxBots) {
     console.log(`Found ${currentBotCount} bot billboards, exceeding maximum of ${botConfig.maxBots}`);
@@ -690,8 +688,6 @@ function checkBotBillboards() {
       startSpawningBots();
     }
   } else {
-    console.log('Maximum bot count reached, no new spawns needed');
-    
     // Stop any active spawning
     if (isSpawningBots) {
       stopSpawningBots();
@@ -871,7 +867,6 @@ function startSpawningPowerupOfType(type) {
     const maxCount = typeConfig.maxPowerups || 10;
     
     if (currentCount >= maxCount) {
-      console.log(`Maximum ${type} powerup count (${maxCount}) reached, skipping spawn`);
       return;
     }
     
@@ -897,7 +892,6 @@ function spawnPowerupOfType(type) {
     const maxCount = typeConfig.maxPowerups || 10;
     
     if (currentCount >= maxCount) {
-      console.log(`Maximum ${type} powerup count (${maxCount}) reached, not spawning`);
       return null;
     }
     
