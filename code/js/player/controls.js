@@ -627,7 +627,7 @@ class PlayerControls {
             // Only check the first level of game-ui - don't block entire UI container
             if (currentElement.id === 'game-ui') {
                 // Only block if touching specific controls inside game-ui, not the container itself
-                const controlElements = currentElement.querySelectorAll('.ammo-display, .billboard-count, .gun-indicator');
+                const controlElements = currentElement.querySelectorAll('.ammo-display, .billboard-count, .gun-indicator, .hud-section');
                 for (const control of controlElements) {
                     if (this.isTouchingElement(touch, control)) {
                         console.log("Touch on specific UI control within game-ui");

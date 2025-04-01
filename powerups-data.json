@@ -18,7 +18,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -40,7 +40,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -62,7 +62,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -84,7 +84,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -106,7 +106,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -128,7 +128,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -150,7 +150,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -172,7 +172,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -194,7 +194,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -216,7 +216,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -238,7 +238,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -260,7 +260,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -282,7 +282,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -304,7 +304,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -326,7 +326,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -348,7 +348,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -370,7 +370,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -392,7 +392,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -414,7 +414,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -436,7 +436,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -458,7 +458,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -480,29 +480,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
-    "isCollected": false
-  },
-  {
-    "id": "powerup_1743505647416_2735",
-    "type": "shooting_ammo",
-    "position": {
-      "x": 12.875379376000343,
-      "y": -96.11020217042196,
-      "z": -31.63943180091391
-    },
-    "quaternion": {
-      "x": 0.6897075572839824,
-      "y": -0.06758751780295821,
-      "z": 0.7038692545048653,
-      "w": -0.15589575178741225
-    },
-    "size": 1.5,
-    "color": "#FF5500",
-    "text": "Ammo",
-    "effectAmount": 100,
-    "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -524,7 +502,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -546,7 +524,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -568,7 +546,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -590,7 +568,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -612,7 +590,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -634,7 +612,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -656,7 +634,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -678,7 +656,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -700,7 +678,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -722,7 +700,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -744,7 +722,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -766,7 +744,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -788,7 +766,7 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -810,7 +788,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -832,7 +810,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -854,29 +832,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
-    "isCollected": false
-  },
-  {
-    "id": "powerup_1743506266327_5696",
-    "type": "billboard_ammo",
-    "position": {
-      "x": 40.17218993103006,
-      "y": -91.83694085812039,
-      "z": 18.872505132264408
-    },
-    "quaternion": {
-      "x": 0.703498525698892,
-      "y": 0.21149253656493333,
-      "z": 0.6747376578918138,
-      "w": -0.07134300483919452
-    },
-    "size": 2.5,
-    "color": "#33CC33",
-    "text": "Billboard",
-    "effectAmount": 1,
-    "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -898,7 +854,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -920,7 +876,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -942,51 +898,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
-    "isCollected": false
-  },
-  {
-    "id": "powerup_1743506487135_5509",
-    "type": "billboard_ammo",
-    "position": {
-      "x": 35.80275882871289,
-      "y": -94.86871767948038,
-      "z": 11.049383064409719
-    },
-    "quaternion": {
-      "x": 0.7019068478763216,
-      "y": 0.1662242141588602,
-      "z": 0.6872914306371567,
-      "w": -0.08559659399956433
-    },
-    "size": 2.5,
-    "color": "#33CC33",
-    "text": "Billboard",
-    "effectAmount": 1,
-    "lifespan": null,
-    "createdAt": 1743513901710,
-    "isCollected": false
-  },
-  {
-    "id": "powerup_1743506625589_7900",
-    "type": "billboard_ammo",
-    "position": {
-      "x": 20.386883914088738,
-      "y": -99.02917448141436,
-      "z": -13.475814105391157
-    },
-    "quaternion": {
-      "x": 0.6971234271208904,
-      "y": 0.023322581973715815,
-      "z": 0.7067220508588078,
-      "w": -0.1184015513379135
-    },
-    "size": 2.5,
-    "color": "#33CC33",
-    "text": "Billboard",
-    "effectAmount": 1,
-    "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -1008,7 +920,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -1030,7 +942,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513901710,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -1052,7 +964,7 @@
     "text": "Billboard",
     "effectAmount": 1,
     "lifespan": null,
-    "createdAt": 1743513934722,
+    "createdAt": 1743515019695,
     "isCollected": false
   },
   {
@@ -1074,7 +986,117 @@
     "text": "Ammo",
     "effectAmount": 100,
     "lifespan": null,
-    "createdAt": 1743513937721,
+    "createdAt": 1743515019695,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743513976601_9086",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -50.27614992478929,
+      "y": 84.82784957053543,
+      "z": 26.087251407128363
+    },
+    "quaternion": {
+      "x": -0.15067805654851613,
+      "y": 0.817808913132088,
+      "z": 0.24793816015759562,
+      "w": 0.4970023879360557
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743515019695,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743514617808_2328",
+    "type": "shooting_ammo",
+    "position": {
+      "x": -88.57855754718467,
+      "y": -28.347925699059797,
+      "z": -41.883579735030786
+    },
+    "quaternion": {
+      "x": -0.6753120778075076,
+      "y": 0.3214873757604728,
+      "z": 0.4276844837736542,
+      "w": 0.5076272718572301
+    },
+    "size": 1.5,
+    "color": "#FF5500",
+    "text": "Ammo",
+    "effectAmount": 100,
+    "lifespan": null,
+    "createdAt": 1743515019695,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743514617812_2754",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -44.528411905003196,
+      "y": 67.84860077518215,
+      "z": -61.78825055031355
+    },
+    "quaternion": {
+      "x": -0.38937399314293897,
+      "y": 0.2802916126783599,
+      "z": 0.12568497600517645,
+      "w": 0.8683477368731176
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743515019695,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743514624815_2910",
+    "type": "billboard_ammo",
+    "position": {
+      "x": -16.51359876086422,
+      "y": -60.611131887854754,
+      "z": -80.35914227540175
+    },
+    "quaternion": {
+      "x": 0.888231676485434,
+      "y": -0.045567511087843765,
+      "z": -0.09032098590586005,
+      "w": -0.4481185226322698
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743515019695,
+    "isCollected": false
+  },
+  {
+    "id": "powerup_1743514652818_4055",
+    "type": "billboard_ammo",
+    "position": {
+      "x": 35.94714919096019,
+      "y": -82.62113565162755,
+      "z": 47.807430475588305
+    },
+    "quaternion": {
+      "x": 0.3013857427173658,
+      "y": 0.2923355200103306,
+      "z": 0.9023149123263147,
+      "w": -0.09764413356954267
+    },
+    "size": 2.5,
+    "color": "#33CC33",
+    "text": "Billboard",
+    "effectAmount": 1,
+    "lifespan": null,
+    "createdAt": 1743515019695,
     "isCollected": false
   }
 ]

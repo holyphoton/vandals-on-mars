@@ -202,5 +202,17 @@
     "shootingAmmo": 393,
     "billboardAmmo": 3,
     "lastUpdate": 1743513942300
+  },
+  "player_33983_gqktj": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -59.03214312368732,
+      "y": -28.662380738302122,
+      "z": 77.82617817056871
+    },
+    "shootingAmmo": 170,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743514976233
   }
 }

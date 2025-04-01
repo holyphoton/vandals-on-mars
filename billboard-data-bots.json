@@ -143,12 +143,12 @@
     "timestamp": 1743505223500
   },
   {
-    "id": "bot_1743505225501_3200",
     "type": "billboard_data",
+    "id": "bot_1743505225501_3200",
     "position": {
-      "x": -52.95462584120431,
-      "y": -77.704177305839,
-      "z": -34.027465836303335
+      "x": -53.49984666886535,
+      "y": -78.50421951537992,
+      "z": -34.37781262455392
     },
     "quaternion": {
       "x": 0.8272990786641883,
@@ -156,15 +156,14 @@
       "z": -0.4517710935535608,
       "w": -0.29303903346643706
     },
-    "width": 5,
-    "height": 5,
-    "health": 100,
+    "width": 2.599999999999998,
+    "height": 2.599999999999998,
+    "health": 27.039999999999957,
     "text": "Better than Luna, cheaper than Europa",
-    "color": "#33FF57",
     "owner": "RedRover",
     "player_id": "bot_system",
     "billboard_category": "bot",
-    "timestamp": 1743505225501
+    "timestamp": 1743514601491
   },
   {
     "id": "bot_1743505227501_2772",
@@ -454,27 +453,27 @@
     "timestamp": 1743508763257
   },
   {
-    "id": "bot_1743508802268_6218",
+    "id": "bot_1743514626811_7756",
     "type": "billboard_data",
     "position": {
-      "x": 5.614945793600806,
-      "y": -93.83695718247066,
-      "z": 34.10422042020741
+      "x": -57.80112031866349,
+      "y": 2.328846719090369,
+      "z": 81.56964486171536
     },
     "quaternion": {
-      "x": 0.6995622139836095,
-      "y": 0.14213551745181816,
-      "z": 0.6926741619828936,
-      "w": 0.10301800214695771
+      "x": -0.21201136173508256,
+      "y": 0.6815804568871232,
+      "z": 0.6658880903723868,
+      "w": 0.21700763669740353
     },
     "width": 5,
     "height": 5,
     "health": 100,
-    "text": "Better than Luna, cheaper than Europa",
-    "color": "#33FF57",
-    "owner": "MartianMiner",
+    "text": "Alien parking only, humans towed",
+    "color": "#3357FF",
+    "owner": "Curiosity2.0",
     "player_id": "bot_system",
     "billboard_category": "bot",
-    "timestamp": 1743508802268
+    "timestamp": 1743514626811
   }
 ]
