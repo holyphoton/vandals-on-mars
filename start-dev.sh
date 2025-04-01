@@ -19,9 +19,10 @@ fi
 
 # Install dependencies if needed
 echo -e "${YELLOW}Checking dependencies...${NC}"
-if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}Installing dependencies...${NC}"
-    npm install
+if [ ! -d "node_modules" ] || [ ! -d "node_modules/express" ] || [ ! -d "node_modules/ws" ] || [ ! -d "node_modules/dotenv" ] || [ ! -d "node_modules/nodemon" ]; then
+    echo -e "${YELLOW}Installing or repairing dependencies...${NC}"
+    npm install express ws dotenv
+    npm install --save-dev nodemon
     echo -e "${GREEN}✓ Dependencies installed${NC}"
 else
     echo -e "${GREEN}✓ Dependencies already installed${NC}"
