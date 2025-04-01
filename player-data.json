@@ -166,5 +166,29 @@
     "shootingAmmo": 186,
     "billboardAmmo": 1,
     "lastUpdate": 1743510840954
+  },
+  "player_61020_sobzf": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -72.96990372310668,
+      "y": -37.76755568243195,
+      "z": -60.10195411477857
+    },
+    "shootingAmmo": 194,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743511356472
+  },
+  "player_18038_psrvf": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -101.07462554398991,
+      "y": -4.711685441367685,
+      "z": -11.17855498013176
+    },
+    "shootingAmmo": 200,
+    "billboardAmmo": 0,
+    "lastUpdate": 1743511355799
   }
 }

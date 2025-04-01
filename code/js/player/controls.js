@@ -314,18 +314,49 @@ class PlayerControls {
      * Set up the info popup controls
      */
     setupInfoPopupControls() {
+        console.log("Setting up info popup controls");
+        
         const closeInfoButton = document.getElementById('close-info');
         if (closeInfoButton) {
+            console.log("Found close info button");
+            
             // For mouse clicks (desktop)
             closeInfoButton.addEventListener('click', (event) => {
+                console.log("Close info button clicked");
+                
+                // Prevent event propagation to stop it from triggering pointer lock
+                event.stopPropagation();
+                
+                // Hide the popup
                 this.hideInfoPopup();
+                
+                // Prevent default browser action
+                event.preventDefault();
             });
             
             // For touch events (mobile)
             closeInfoButton.addEventListener('touchend', (event) => {
-                event.preventDefault(); // Prevent default behavior
+                console.log("Close info button touched");
+                
+                // Prevent default behavior
+                event.preventDefault();
+                
+                // Stop propagation to prevent other handlers from firing
+                event.stopPropagation();
+                
+                // Hide the popup
                 this.hideInfoPopup();
             });
+        } else {
+            console.warn("Close info button not found");
+        }
+        
+        // Also add a handler for the popup overlay itself to close when clicking outside
+        const infoPopup = document.getElementById('info-popup');
+        if (infoPopup) {
+            console.log("Found info popup element");
+        } else {
+            console.warn("Info popup element not found");
         }
     }
 
@@ -335,12 +366,62 @@ class PlayerControls {
     showInfoPopup() {
         const infoPopup = document.getElementById('info-popup');
         if (infoPopup) {
+            console.log("Showing info popup");
+            
+            // Show the popup
             infoPopup.style.display = 'flex';
+            
+            // Exit pointer lock if active to allow interaction with the popup
+            if (document.pointerLockElement) {
+                console.log("Exiting pointer lock");
+                document.exitPointerLock();
+            }
+            
+            // Clear any existing click handler
+            if (this._infoPopupClickHandler) {
+                infoPopup.removeEventListener('click', this._infoPopupClickHandler);
+            }
+            
+            // Store click handler reference so we can remove it later
+            this._infoPopupClickHandler = (event) => {
+                // Only prevent propagation if clicking the overlay (not the content)
+                if (event.target === infoPopup) {
+                    console.log("Clicked on popup overlay");
+                    event.stopPropagation();
+                    this.hideInfoPopup();
+                }
+            };
+            
+            // Add click handler with stored reference
+            infoPopup.addEventListener('click', this._infoPopupClickHandler);
+            
+            // Directly set up the close button handler each time we show the popup
+            const closeButton = document.getElementById('close-info');
+            if (closeButton) {
+                // Clear any existing handler
+                if (this._closeInfoButtonHandler) {
+                    closeButton.removeEventListener('click', this._closeInfoButtonHandler);
+                }
+                
+                // Create a new handler and store the reference
+                this._closeInfoButtonHandler = (event) => {
+                    console.log("Close button clicked directly");
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.hideInfoPopup();
+                };
+                
+                // Add the new handler
+                closeButton.addEventListener('click', this._closeInfoButtonHandler);
+            }
             
             // Pause the game if it's running
             if (window.game && typeof window.game.pauseGame === 'function') {
                 window.game.pauseGame();
             }
+            
+            // Add a class to the body to indicate a popup is open
+            document.body.classList.add('popup-open');
         }
     }
 
@@ -350,12 +431,31 @@ class PlayerControls {
     hideInfoPopup() {
         const infoPopup = document.getElementById('info-popup');
         if (infoPopup) {
+            console.log("Hiding info popup");
+            
+            // Hide the popup
             infoPopup.style.display = 'none';
+            
+            // Remove the event listener using the stored reference
+            if (this._infoPopupClickHandler) {
+                infoPopup.removeEventListener('click', this._infoPopupClickHandler);
+                this._infoPopupClickHandler = null;
+            }
+            
+            // Remove the close button handler
+            const closeButton = document.getElementById('close-info');
+            if (closeButton && this._closeInfoButtonHandler) {
+                closeButton.removeEventListener('click', this._closeInfoButtonHandler);
+                this._closeInfoButtonHandler = null;
+            }
             
             // Resume the game if it was paused
             if (window.game && typeof window.game.resumeGame === 'function') {
                 window.game.resumeGame();
             }
+            
+            // Remove the popup-open class
+            document.body.classList.remove('popup-open');
         }
     }
 
