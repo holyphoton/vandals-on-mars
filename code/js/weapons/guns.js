@@ -1785,7 +1785,7 @@ class WeaponManager {
         this.globe = globe;
         
         this.weapons = [];
-        this.activeWeaponIndex = 0;
+        this.activeWeaponIndex = 1; // Initialize with shooter gun (index 1)
         this.billboardGun = null; // Expose billboard gun
         this.shooterGun = null; // Expose shooter gun
         
@@ -1854,8 +1854,8 @@ class WeaponManager {
             this.shooterGun.weaponManager = this;
         }
         
-        // Set first weapon as active
-        this.activeWeaponIndex = 0;
+        // Set shooter gun as active (index 1)
+        this.activeWeaponIndex = 1;
         this.updateWeaponVisibility();
         
         console.log(`Initialized ${this.weapons.length} weapons`);

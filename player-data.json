@@ -190,5 +190,17 @@
     "shootingAmmo": 200,
     "billboardAmmo": 0,
     "lastUpdate": 1743511355799
+  },
+  "player_89977_uzciu": {
+    "username": "Anonymous",
+    "billboardText": "Anonymous's Billboard",
+    "position": {
+      "x": -17.49450847209691,
+      "y": -7.149813541365073,
+      "z": -100.03030710561396
+    },
+    "shootingAmmo": 393,
+    "billboardAmmo": 3,
+    "lastUpdate": 1743513942300
   }
 }

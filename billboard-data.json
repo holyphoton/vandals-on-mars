@@ -1171,5 +1171,28 @@
     "player_id": "player_61020_sobzf",
     "billboard_category": "player",
     "timestamp": 1743513774415
+  },
+  {
+    "type": "billboard_data",
+    "id": "billboard_18377_pvzhw",
+    "position": {
+      "x": 22.050456820570222,
+      "y": -2.3678356453359775,
+      "z": -99.53939475584954
+    },
+    "quaternion": {
+      "x": -0.7152577135196193,
+      "y": -0.15492780173809773,
+      "z": 0.00396447523198226,
+      "w": 0.6814602427401188
+    },
+    "width": 5,
+    "height": 5,
+    "health": 100,
+    "text": "Anonymous's Billboard",
+    "owner": "Anonymous",
+    "player_id": "player_89977_uzciu",
+    "billboard_category": "player",
+    "timestamp": 1743513916338
   }
 ]
