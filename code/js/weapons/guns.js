@@ -1208,9 +1208,9 @@ class ShooterGun extends Gun {
                     
                     // For debugging
                     if (Math.random() < 0.002) {
-                        console.log(`Billboard ${billboard.id} dimensions: ${billboardWidth}x${billboardHeight}`);
-                        console.log(`Sign dimensions: ${signHalfWidth * 2}x${signHalfHeight * 2}`);
-                        console.log(`Local position relative to sign: (${localX.toFixed(2)}, ${localY.toFixed(2)}, ${localZ.toFixed(2)})`);
+                        //console.log(`Billboard ${billboard.id} dimensions: ${billboardWidth}x${billboardHeight}`);
+                        //console.log(`Sign dimensions: ${signHalfWidth * 2}x${signHalfHeight * 2}`);
+                       // console.log(`Local position relative to sign: (${localX.toFixed(2)}, ${localY.toFixed(2)}, ${localZ.toFixed(2)})`);
                     }
                     
                     // First do a distance check to the sign center (optimization)

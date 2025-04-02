@@ -44,6 +44,7 @@ class Game {
         this.weaponManager = null;
         this.botManager = null; // Bot Manager for automated billboard spawning
         this.powerupManager = null; // Powerup Manager for spawning and handling powerups
+        this.otherPlayersManager = null; // Other Players Manager for tracking other players
         
         // WebSocket connection for multiplayer
         this.socket = null;
@@ -380,6 +381,14 @@ class Game {
             console.warn('PowerupManager class not found, powerups will not be available');
         }
         
+        // Create other players manager
+        if (window.OtherPlayersManager) {
+            console.log('Setting up other players manager');
+            this.otherPlayersManager = new OtherPlayersManager(this, this.scene, this.globe);
+        } else {
+            console.warn('OtherPlayersManager class not found, other players tracking will not be available');
+        }
+        
         this.updateLoadingProgress(0.9, 'Player ready');
     }
     
@@ -471,7 +480,7 @@ class Game {
             });
         }
         
-        // Add keyboard listener for pausing
+        // Add keyboard listener for game controls
         document.addEventListener('keydown', (event) => {
             if (event.key === 'p' || event.key === 'P') {
                 this.togglePause();
@@ -943,6 +952,11 @@ class Game {
             this.powerupManager.update(deltaTime);
         }
         
+        // Update other players manager
+        if (this.otherPlayersManager) {
+            this.otherPlayersManager.update(deltaTime);
+        }
+        
         // Send a position update to the server periodically
         if (this.connectedToServer && this.playerCamera) {
             this.syncPlayerPosition();
@@ -1316,6 +1330,12 @@ class Game {
             case 'all_powerups':
                 this.processAllPowerups(data.powerups);
                 break;
+            case 'player_position':
+                this.processPlayerPosition(data);
+                break;
+            case 'player_join':
+                this.processPlayerJoin(data);
+                break;
             // Handle powerup data - forwarded directly to powerupManager
             case 'shooting_ammo':
             case 'billboard_ammo':
@@ -1328,6 +1348,57 @@ class Game {
                 } else {
                    // console.log('Received unknown message type:', data.type);
                 }
+        }
+    }
+    
+    /**
+     * Process a player position update from the server
+     * @param {Object} data - Player position data
+     */
+    processPlayerPosition(data) {
+        // Validate data
+        if (!data.username || !data.position) {
+            console.warn('Received invalid player position data:', data);
+            return;
+        }
+        
+        // Update the player in the other players manager
+        if (this.otherPlayersManager) {
+            // Use quaternion if available, otherwise fall back to Euler rotation
+            if (data.quaternion) {
+                this.otherPlayersManager.updatePlayer(
+                    data.username,
+                    data.position,
+                    data.rotation,
+                    data.quaternion // Pass quaternion as fourth parameter
+                );
+            } else {
+                this.otherPlayersManager.updatePlayer(
+                    data.username,
+                    data.position,
+                    data.rotation
+                );
+            }
+        } else {
+            console.error('otherPlayersManager not available - position update cannot be processed');
+        }
+    }
+    
+    /**
+     * Process a player join notification from the server
+     * @param {Object} data - Player join data
+     */
+    processPlayerJoin(data) {
+        if (!data.username) {
+            console.warn('Received invalid player join data:', data);
+            return;
+        }
+        
+        console.log(`Player joined: ${data.username}`);
+        
+        // If we have our position, send it immediately so the new player can see us
+        if (this.playerCamera) {
+            this.syncPlayerPosition();
         }
     }
     
@@ -1561,17 +1632,25 @@ class Game {
     syncPlayerPosition() {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
         
-        // Only sync every 500ms to reduce network traffic
+        // Only sync every 200ms to reduce network traffic but ensure responsive updates
         const now = Date.now();
-        if (!this.lastPositionSync || now - this.lastPositionSync > 500) {
+        if (!this.lastPositionSync || now - this.lastPositionSync > 200) {
             this.lastPositionSync = now;
+            
+            // Initialize sync counter if not exists
+            if (!this.positionSyncCounter) this.positionSyncCounter = 0;
+            this.positionSyncCounter++;
             
             const position = this.playerCamera.camera.position;
             const rotation = this.playerCamera.camera.rotation;
             
+            // Get quaternion for more accurate rotation
+            const quaternion = this.playerCamera.camera.quaternion;
+            
             const playerPosition = {
                 type: 'player_position',
                 username: this.getUsername(),
+                playerId: this.persistence ? this.persistence.playerId : 'anonymous_player',
                 position: {
                     x: position.x,
                     y: position.y,
@@ -1582,10 +1661,21 @@ class Game {
                     y: rotation.y,
                     z: rotation.z
                 },
+                quaternion: {
+                    x: quaternion.x,
+                    y: quaternion.y,
+                    z: quaternion.z,
+                    w: quaternion.w
+                },
                 timestamp: now
             };
             
             this.socket.send(JSON.stringify(playerPosition));
+            
+            // Log only every 100th sync to avoid console spam
+            if (this.positionSyncCounter % 100 === 0) {
+                console.log(`Position sync count: ${this.positionSyncCounter}`);
+            }
         }
     }
     

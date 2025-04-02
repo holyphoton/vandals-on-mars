@@ -1380,21 +1380,57 @@ wsServer.on('connection', (socket) => {
       // Broadcast the general message to all other clients for other message types
       // But don't broadcast billboard data or removals that are already handled above
       if (data.type !== 'billboard_data' && data.type !== 'billboard_remove') {
-        wsServer.clients.forEach(client => {
-          if (client !== socket && client.readyState === WebSocket.OPEN) {
-            // Ensure we're sending a string, not a raw message object
-            if (typeof message === 'string') {
-              client.send(message);
+        // Special handling for player_position and player_join
+        if (data.type === 'player_position' || data.type === 'player_join') {
+          // Make sure this is a fresh message, not a stale one
+          const now = Date.now();
+          const messageAge = now - (data.timestamp || 0);
+          
+          // Only forward if the message is less than 10 seconds old
+          if (messageAge < 10000) {
+            if (data.type === 'player_position') {
+              console.log(`Broadcasting player_position for ${data.username || 'unknown player'} at (${data.position?.x.toFixed(2)}, ${data.position?.y.toFixed(2)}, ${data.position?.z.toFixed(2)})`);
             } else {
-              // If it's not a string (perhaps an object), stringify it
-              try {
-                client.send(JSON.stringify(message));
-              } catch (error) {
-                console.error('Error stringifying message for broadcast:', error);
+              console.log(`Broadcasting ${data.type} for ${data.username || 'unknown player'}`);
+            }
+            
+            // Count connected clients
+            let clientCount = 0;
+            wsServer.clients.forEach(c => {
+              if (c.readyState === WebSocket.OPEN) clientCount++;
+            });
+            
+            // Broadcast to all other connected clients
+            let broadcastCount = 0;
+            wsServer.clients.forEach(client => {
+              if (client !== socket && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(data));
+                broadcastCount++;
+              }
+            });
+            
+            console.log(`Broadcast complete: ${broadcastCount} clients received the update (out of ${clientCount} total connected)`);
+          } else {
+            console.log(`Discarding stale ${data.type} message from ${data.username}, age: ${messageAge}ms`);
+          }
+        } else {
+          // Default broadcasting for other message types
+          wsServer.clients.forEach(client => {
+            if (client !== socket && client.readyState === WebSocket.OPEN) {
+              // Ensure we're sending a string, not a raw message object
+              if (typeof message === 'string') {
+                client.send(message);
+              } else {
+                // If it's not a string (perhaps an object), stringify it
+                try {
+                  client.send(JSON.stringify(message));
+                } catch (error) {
+                  console.error('Error stringifying message for broadcast:', error);
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
     } catch (error) {
       console.error('Error processing message:', error);
